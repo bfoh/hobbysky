@@ -129,45 +129,9 @@ export function PropertiesPage() {
   const loadRoomTypes = async () => {
     try {
       const types = await (blink.db as any).roomTypes.list<RoomType>({ orderBy: { column: 'createdAt', ascending: true } })
-
-      // Ensure default types exist (robust check)
-      const defaults = [
-        { name: 'Standard Room', capacity: 2, basePrice: 100 },
-        { name: 'Executive Suite', capacity: 2, basePrice: 250 },
-        { name: 'Deluxe Room', capacity: 2, basePrice: 150 },
-        { name: 'Family Room', capacity: 4, basePrice: 200 },
-        { name: 'Presidential Suite', capacity: 5, basePrice: 500 }
-      ]
-
-      let seeded = false
-      for (const def of defaults) {
-        // Check if this specific type exists (case-insensitive)
-        const exists = types.some(t => t.name?.toLowerCase() === def.name.toLowerCase())
-        if (!exists) {
-          await (blink.db as any).roomTypes.create({
-            id: crypto.randomUUID(),
-            ...def,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          })
-          seeded = true
-        }
-      }
-
-      if (seeded) {
-        toast.info('Initializing missing room types...')
-        // Reload if we added anything
-        const allTypes = await (blink.db as any).roomTypes.list<RoomType>({ orderBy: { column: 'createdAt', ascending: true } })
-        setRoomTypes(allTypes)
-        if (!formData.propertyTypeId && allTypes.length > 0) {
-          setFormData((prev) => ({ ...prev, propertyTypeId: allTypes[0].id, basePrice: allTypes[0].basePrice ?? prev.basePrice }))
-        }
-        toast.success('Room types updated')
-      } else {
-        setRoomTypes(types)
-        if (!formData.propertyTypeId && types.length > 0) {
-          setFormData((prev) => ({ ...prev, propertyTypeId: types[0].id, basePrice: types[0].basePrice ?? prev.basePrice }))
-        }
+      setRoomTypes(types)
+      if (!formData.propertyTypeId && types.length > 0) {
+        setFormData((prev) => ({ ...prev, propertyTypeId: types[0].id, basePrice: types[0].basePrice ?? prev.basePrice }))
       }
     } catch (error) {
       console.error('Failed to load room types:', error)
@@ -402,19 +366,14 @@ export function PropertiesPage() {
                     }}
                     required
                   >
-                    {!formData.propertyTypeId && <option value="">Select type</option>}
-                    {roomTypes.length > 0 ? (
-                      roomTypes.map((rt) => (
-                        <option key={rt.id} value={rt.id}>{rt.name}</option>
-                      ))
+                    {roomTypes.length === 0 ? (
+                      <option value="" disabled>No room types — create them in Set Prices first</option>
                     ) : (
-                      /* Fallback options if room types not loaded from database */
                       <>
-                        <option value="standard_room">Standard Room</option>
-                        <option value="executive_suite">Executive Suite</option>
-                        <option value="deluxe_room">Deluxe Room</option>
-                        <option value="family_room">Family Room</option>
-                        <option value="presidential_suite">Presidential Suite</option>
+                        {!formData.propertyTypeId && <option value="">Select type</option>}
+                        {roomTypes.map((rt) => (
+                          <option key={rt.id} value={rt.id}>{rt.name}</option>
+                        ))}
                       </>
                     )}
                   </select>
@@ -455,7 +414,10 @@ export function PropertiesPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="basePrice">Price (per night)</Label>
+                <Label htmlFor="basePrice">
+                  Price (per night)
+                  <span className="ml-2 text-xs font-normal text-muted-foreground">— auto-filled from room type</span>
+                </Label>
                 <Input
                   id="basePrice"
                   type="number"
@@ -551,17 +513,21 @@ export function PropertiesPage() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => {
                           setEditingId(property.id)
-                          setFormData({
-                            name: property.name || '',
-                            roomNumber: property.roomNumber || '',
-                            address: property.address || '',
-                            propertyTypeId: property.propertyTypeId || (roomTypes.find(rt => rt.name.toLowerCase() === (property.propertyType || '').toLowerCase())?.id || ''),
-                            bedrooms: Number(property.bedrooms ?? 1),
-                            bathrooms: Number(property.bathrooms ?? 1),
-                            maxGuests: Number(property.maxGuests ?? 2),
-                            basePrice: Number(property.basePrice ?? 0),
-                            description: property.description || ''
-                          })
+                          {
+                            const resolvedTypeId = property.propertyTypeId || (roomTypes.find(rt => rt.name.toLowerCase() === (property.propertyType || '').toLowerCase())?.id || '')
+                            const resolvedType = roomTypes.find(rt => rt.id === resolvedTypeId)
+                            setFormData({
+                              name: property.name || '',
+                              roomNumber: property.roomNumber || '',
+                              address: property.address || '',
+                              propertyTypeId: resolvedTypeId,
+                              bedrooms: Number(property.bedrooms ?? 1),
+                              bathrooms: Number(property.bathrooms ?? 1),
+                              maxGuests: Number(property.maxGuests ?? 2),
+                              basePrice: resolvedType?.basePrice ?? Number(property.basePrice ?? 0),
+                              description: property.description || ''
+                            })
+                          }
                           setDialogOpen(true)
                         }}>
                           <Pencil className="h-4 w-4 mr-2" />

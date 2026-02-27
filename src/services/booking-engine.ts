@@ -416,7 +416,6 @@ class BookingEngine {
       totalPrice: bookingData.amount ?? 0,
       numGuests: bookingData.numGuests ?? 1,
       payment_method: bookingData.payment_method,
-      createdBy: bookingData.createdBy || currentUser?.id || null,
       specialRequests: specialRequests
     }
 

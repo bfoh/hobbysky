@@ -1,0 +1,261 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Colors - Guest House Aesthetic (Light Mode) */
+    --background: 40 20% 98%;
+    /* Warm cream background */
+    --foreground: 141 70% 12%;
+    /* Deep resort green */
+
+    --card: 0 0% 100%;
+    --card-foreground: 141 70% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 141 70% 12%;
+
+    --primary: 41 64% 45%;
+    /* Sharper gold for light background visibility */
+    --primary-foreground: 40 10% 98%;
+
+    --secondary: 151 30% 94%;
+    /* Soft light green */
+    --secondary-foreground: 141 70% 12%;
+
+    --muted: 151 20% 92%;
+    /* Gray/Green tint */
+    --muted-foreground: 151 20% 40%;
+    /* readable muted text */
+
+    --accent: 41 64% 94%;
+    /* Extremely soft gold for hover states */
+    --accent-foreground: 41 64% 35%;
+    /* darker gold text */
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 151 20% 86%;
+    /* subtle green-gray borders */
+    --input: 151 20% 86%;
+    --ring: 41 64% 45%;
+
+    /* Charts */
+    --chart-1: 41 64% 45%;
+    --chart-2: 35 40% 50%;
+    --chart-3: 142 50% 45%;
+    --chart-4: 30 20% 60%;
+    --chart-5: 200 20% 40%;
+
+    /* Sidebar (Keep Sidebar slightly darker rich green even in light mode for contrast, or make it match light mode)
+       Let's make it a very soft green to differentiate it from the main content. */
+    --sidebar: 151 30% 96%;
+    --sidebar-foreground: 141 70% 12%;
+    --sidebar-primary: 41 64% 45%;
+    --sidebar-primary-foreground: 40 10% 98%;
+    --sidebar-accent: 151 30% 90%;
+    --sidebar-accent-foreground: 141 70% 12%;
+    --sidebar-border: 151 20% 86%;
+    --sidebar-ring: 41 64% 45%;
+
+    /* Fonts */
+    --font-sans: 'Inter', -apple-system, system-ui, sans-serif;
+    --font-serif: 'Playfair Display', serif;
+    --font-mono: ui-monospace, SFMono-Regular, monospace;
+
+    /* Shadows - softer and more diffused */
+    --shadow-2xs: 0 1px 2px hsl(0 0% 0% / 0.05);
+    --shadow-xs: 0 2px 4px hsl(0 0% 0% / 0.04);
+    --shadow-sm: 0 4px 6px -1px hsl(30 10% 10% / 0.02), 0 2px 4px -2px hsl(30 10% 10% / 0.02);
+    --shadow: 0 10px 15px -3px hsl(30 10% 10% / 0.03), 0 4px 6px -4px hsl(30 10% 10% / 0.03);
+    --shadow-md: 0 12px 20px -6px hsl(30 10% 10% / 0.04), 0 6px 10px -4px hsl(30 10% 10% / 0.04);
+    --shadow-lg: 0 20px 25px -5px hsl(30 10% 10% / 0.05), 0 8px 10px -6px hsl(30 10% 10% / 0.05);
+    --shadow-xl: 0 25px 50px -12px hsl(30 10% 10% / 0.15);
+    --shadow-2xl: 0 35px 60px -15px hsl(30 10% 10% / 0.2);
+
+    /* Misc */
+    --tracking-normal: 0em;
+    --spacing: 0.25rem;
+    --radius: 0.75rem;
+    /* Sleeker, rounder corners */
+  }
+
+  .dark {
+    --background:          150 22% 10%;
+    --foreground:          40 15% 94%;
+
+    --card:                150 25%  7%;
+    --card-foreground:     40 15% 94%;
+
+    --popover:             150 25%  7%;
+    --popover-foreground:  40 15% 94%;
+
+    --primary:             41 68% 58%;
+    --primary-foreground:  140 30%  6%;
+
+    --secondary:           150 18% 18%;
+    --secondary-foreground:40 15% 94%;
+
+    --muted:               150 18% 16%;
+    --muted-foreground:    150 15% 62%;
+
+    --accent:              41 68% 58%;
+    --accent-foreground:   140 30%  6%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border:              150 20% 20%;
+    --input:               150 20% 20%;
+    --ring:                41 68% 58%;
+
+    /* Charts */
+    --chart-1: 41 68% 58%;
+    --chart-2: 35 40% 50%;
+    --chart-3: 142 50% 45%;
+    --chart-4: 30 20% 60%;
+    --chart-5: 200 20% 40%;
+
+    /* Sidebar — unified with card surface */
+    --sidebar:                   150 25%  7%;
+    --sidebar-foreground:        40 15% 94%;
+    --sidebar-primary:           41 68% 58%;
+    --sidebar-primary-foreground:140 30%  6%;
+    --sidebar-accent:            150 18% 16%;
+    --sidebar-accent-foreground: 41 68% 58%;
+    --sidebar-border:            150 20% 20%;
+    --sidebar-ring:              41 68% 58%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans), 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    letter-spacing: var(--tracking-normal);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-serif;
+    letter-spacing: -0.02em;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@layer utilities {
+  .delay-100 {
+    animation-delay: 100ms;
+  }
+
+  .delay-300 {
+    animation-delay: 300ms;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Group hover helpers used by CTA glow */
+  .group:hover .group-hover\:translate-y-\[-2rem\] {
+    --tw-translate-y: -2rem;
+    transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+  }
+
+  .group:hover .group-hover\:opacity-100 {
+    opacity: 1;
+  }
+}
+
+@layer base {
+  :root {
+    --brand: 27 96% 61%;
+    --brand-foreground: 31 97% 72%;
+  }
+
+  .dark {
+    --brand: 31 97% 72%;
+    --brand-foreground: 27 96% 61%;
+  }
+}
+
+/* Card stagger entrance animation */
+@keyframes card-enter {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.animate-card-enter {
+  animation: card-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  opacity: 0;
+}
+
+.stagger-1 { animation-delay: 60ms; }
+.stagger-2 { animation-delay: 120ms; }
+.stagger-3 { animation-delay: 180ms; }
+.stagger-4 { animation-delay: 240ms; }
+.stagger-5 { animation-delay: 300ms; }
+.stagger-6 { animation-delay: 360ms; }
+.stagger-7 { animation-delay: 420ms; }
+.stagger-8 { animation-delay: 480ms; }
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  from { background-position: -600px 0; }
+  to   { background-position: 600px 0; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    hsl(150 25% 7%) 0%,
+    hsl(150 20% 14%) 40%,
+    hsl(150 25% 7%) 80%
+  );
+  background-size: 1200px 100%;
+  animation: shimmer 1.8s infinite linear;
+}
+
+/* Force Voice Agent Widget to be on top of everything */
+div[aria-label="Open Hobbysky Guest House Concierge"],
+button[aria-label="Open Hobbysky Guest House Concierge"] {
+  z-index: 2147483647 !important;
+  position: fixed !important;
+  bottom: 20px !important;
+  right: 20px !important;
+  top: auto !important;
+  left: auto !important;
+  transform: none !important;
+}
+
+/* Ensure the container (if it exists) is also on top */
+body>div:has([aria-label="Open Hobbysky Guest House Concierge"]) {
+  z-index: 2147483647 !important;
+}

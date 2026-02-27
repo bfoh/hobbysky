@@ -1,0 +1,44 @@
+# Environment & secrets
+.env
+.env.*
+*.env
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/settings.json
+.idea/
+
+# Claude Code internal
+.claude/
+
+# Logs
+*.log
+tsc_errors.log
+
+# Sensitive files — do NOT commit
+STAFF_CREDENTIALS.md
+
+# Debug / one-off scripts
+debug-*.cjs
+simulate-*.cjs
+check.cjs
+check_duplicates.ts
+check_users_schema.sql
+clean-employees.html
+cleanup_database_script.ts
+debug-all-types.cjs
+find_icons.js
+replace_vars.js
+test-*.html
+test_resolution.js
+auto-imports.d.ts

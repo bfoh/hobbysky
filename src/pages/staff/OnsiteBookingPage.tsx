@@ -157,6 +157,65 @@ export function OnsiteBookingPage() {
     return s1 < e2 && s2 < e1
   }
 
+  // Check if a specific property/room is available for given dates
+  const isPropertyAvailable = (property: any, checkInDate?: Date, checkOutDate?: Date): boolean => {
+    if (property.status === 'maintenance') return false
+
+    if (!checkInDate || !checkOutDate) {
+      const todayIso = new Date().toISOString().split('T')[0]
+      return !bookings.some(booking => {
+        if (booking.status === 'cancelled') return false
+        if (!['reserved', 'confirmed', 'checked-in'].includes(booking.status)) return false
+        if (booking.roomNumber !== property.roomNumber) return false
+        const bCheckIn = (booking.checkIn || booking.dates?.checkIn || '').split('T')[0]
+        const bCheckOut = (booking.checkOut || booking.dates?.checkOut || '').split('T')[0]
+        return bCheckIn <= todayIso && bCheckOut > todayIso
+      })
+    }
+
+    const hasOverlap = bookings.some(booking => {
+      if (booking.status === 'cancelled') return false
+      if (!['reserved', 'confirmed', 'checked-in'].includes(booking.status)) return false
+      if (booking.roomNumber !== property.roomNumber) return false
+      return isOverlap(checkInDate, checkOutDate, booking.checkIn || booking.dates?.checkIn, booking.checkOut || booking.dates?.checkOut)
+    })
+    if (hasOverlap) return false
+
+    return !cart.some(item =>
+      item.roomNumber === property.roomNumber &&
+      isOverlap(checkInDate, checkOutDate, item.checkIn, item.checkOut)
+    )
+  }
+
+  // Add a specific property/room to the cart
+  const addPropertyToCart = (property: any, roomType: RoomType | undefined) => {
+    if (!checkIn || !checkOut) {
+      toast.error('Please select check-in and check-out dates')
+      return
+    }
+    if (!roomType) {
+      toast.error('Room type not found for this room')
+      return
+    }
+    const roomObj = rooms.find(r => r.roomNumber === property.roomNumber)
+    if (!roomObj) {
+      toast.error(`Room ${property.roomNumber} has not been fully configured yet`)
+      return
+    }
+    setCart([...cart, {
+      id: Math.random().toString(36).substr(2, 9),
+      roomTypeId: roomType.id,
+      roomTypeName: roomType.name,
+      roomId: roomObj.id,
+      roomNumber: property.roomNumber,
+      price: roomType.basePrice,
+      checkIn: checkIn as Date,
+      checkOut: checkOut as Date,
+      numGuests: numGuests
+    }])
+    toast.success(`Added Room ${property.roomNumber} (${roomType.name}) to booking`)
+  }
+
   // Calculate available rooms for a specific room type and date range
   const getAvailableRoomCount = (roomTypeId: string, checkInDate?: Date, checkOutDate?: Date) => {
     const propertiesOfType = properties.filter(prop => {
@@ -561,48 +620,70 @@ export function OnsiteBookingPage() {
                     </div>
                   </div>
 
-                  {/* Room List */}
+                  {/* Room List — individual rooms from Properties */}
                   <div>
                     <h3 className="font-semibold text-lg flex items-center gap-2 mb-4">
                       <Plus className="h-5 w-5" /> Available Rooms
                     </h3>
-                    <div className="grid gap-4">
-                      {roomTypes.map((roomType) => {
-                        const available = getAvailableRoomCount(roomType.id, checkIn, checkOut)
-                        return (
-                          <div
-                            key={roomType.id}
-                            className={`p-4 border rounded-lg transition-all hover:border-primary/50 relative overflow-hidden ${available === 0 ? 'opacity-50' : 'bg-white'
-                              }`}
-                          >
-                            <div className="flex justify-between items-start">
-                              <div className="flex-1">
-                                <h3 className="font-semibold text-lg">{roomType.name}</h3>
-                                <p className="text-sm text-muted-foreground">{roomType.description}</p>
-                                <p className="text-sm mt-2">
-                                  <span className="font-medium">Capacity:</span> {roomType.capacity} guests
-                                </p>
-                                <p className="text-sm">
-                                  <span className="font-medium">Available:</span> {available} rooms
-                                </p>
+                    {properties.length === 0 ? (
+                      <div className="text-center py-10 border rounded-lg text-muted-foreground">
+                        <p className="font-medium">No rooms have been set up yet.</p>
+                        <p className="text-sm mt-1">Add rooms from the <strong>Rooms</strong> page first.</p>
+                      </div>
+                    ) : (
+                      <div className="grid gap-3">
+                        {properties
+                          .slice()
+                          .sort((a, b) => String(a.roomNumber).localeCompare(String(b.roomNumber), undefined, { numeric: true }))
+                          .map((property) => {
+                            const roomType = roomTypes.find(rt => rt.id === property.propertyTypeId) ||
+                              roomTypes.find(rt => rt.name.toLowerCase() === (property.propertyType || '').toLowerCase())
+                            const price = roomType?.basePrice ?? property.basePrice ?? 0
+                            const available = isPropertyAvailable(property, checkIn, checkOut)
+                            const alreadyInCart = cart.some(item => item.roomNumber === property.roomNumber)
+                            return (
+                              <div
+                                key={property.id}
+                                className={`p-4 border rounded-lg transition-all hover:border-primary/50 relative overflow-hidden ${!available || alreadyInCart ? 'opacity-50' : 'bg-white'}`}
+                              >
+                                <div className="flex justify-between items-center">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                      <h3 className="font-semibold text-base">Room {property.roomNumber}</h3>
+                                      {roomType && (
+                                        <span className="text-xs bg-secondary/50 px-2 py-0.5 rounded-full text-muted-foreground">
+                                          {roomType.name}
+                                        </span>
+                                      )}
+                                    </div>
+                                    {property.name && property.name !== `Room ${property.roomNumber}` && (
+                                      <p className="text-sm text-muted-foreground mt-0.5">{property.name}</p>
+                                    )}
+                                    <p className="text-xs mt-1">
+                                      <span className={`font-semibold ${available && !alreadyInCart ? 'text-green-600' : 'text-red-500'}`}>
+                                        {alreadyInCart ? 'In cart' : available ? 'Available' : 'Unavailable'}
+                                      </span>
+                                      {roomType && <span className="text-muted-foreground ml-2">· {roomType.capacity} guests max</span>}
+                                    </p>
+                                  </div>
+                                  <div className="text-right shrink-0 ml-4">
+                                    <p className="text-xl font-bold text-primary">{formatCurrencySync(price, currency)}</p>
+                                    <p className="text-xs text-muted-foreground">per night</p>
+                                    <Button
+                                      size="sm"
+                                      className="mt-2 text-white"
+                                      disabled={!available || alreadyInCart || !checkIn || !checkOut}
+                                      onClick={() => addPropertyToCart(property, roomType)}
+                                    >
+                                      {alreadyInCart ? 'Added' : !available ? 'Unavailable' : (!checkIn || !checkOut) ? 'Select Dates' : 'Add Room'}
+                                    </Button>
+                                  </div>
+                                </div>
                               </div>
-                              <div className="text-right">
-                                <p className="text-2xl font-bold text-primary">{formatCurrencySync(roomType.basePrice, currency)}</p>
-                                <p className="text-sm text-muted-foreground">per night</p>
-                                <Button
-                                  size="sm"
-                                  className="mt-2 text-white"
-                                  disabled={available === 0 || !checkIn || !checkOut}
-                                  onClick={() => addToCart(roomType)}
-                                >
-                                  {available === 0 ? 'Sold Out' : (!checkIn || !checkOut) ? 'Select Dates' : 'Add Room'}
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
+                            )
+                          })}
+                      </div>
+                    )}
                   </div>
                 </div>
 

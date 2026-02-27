@@ -160,13 +160,13 @@ export function PropertiesPage() {
         const allTypes = await (blink.db as any).roomTypes.list<RoomType>({ orderBy: { column: 'createdAt', ascending: true } })
         setRoomTypes(allTypes)
         if (!formData.propertyTypeId && allTypes.length > 0) {
-          setFormData((prev) => ({ ...prev, propertyTypeId: allTypes[0].id }))
+          setFormData((prev) => ({ ...prev, propertyTypeId: allTypes[0].id, basePrice: allTypes[0].basePrice ?? prev.basePrice }))
         }
         toast.success('Room types updated')
       } else {
         setRoomTypes(types)
         if (!formData.propertyTypeId && types.length > 0) {
-          setFormData((prev) => ({ ...prev, propertyTypeId: types[0].id }))
+          setFormData((prev) => ({ ...prev, propertyTypeId: types[0].id, basePrice: types[0].basePrice ?? prev.basePrice }))
         }
       }
     } catch (error) {
@@ -274,7 +274,7 @@ export function PropertiesPage() {
         bedrooms: 1,
         bathrooms: 1,
         maxGuests: 2,
-        basePrice: 100,
+        basePrice: roomTypes[0]?.basePrice ?? 100,
         description: ''
       })
       loadProperties()
@@ -342,16 +342,17 @@ export function PropertiesPage() {
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => {
+              const firstType = roomTypes[0]
               setEditingId(null)
               setFormData({
                 name: '',
                 roomNumber: '',
                 address: '',
-                propertyTypeId: roomTypes[0]?.id || '',
+                propertyTypeId: firstType?.id || '',
                 bedrooms: 1,
                 bathrooms: 1,
                 maxGuests: 2,
-                basePrice: 100,
+                basePrice: firstType?.basePrice ?? 100,
                 description: ''
               })
             }}>
@@ -391,7 +392,14 @@ export function PropertiesPage() {
                     id="propertyTypeId"
                     className="w-full px-3 py-2 border rounded-md"
                     value={formData.propertyTypeId}
-                    onChange={(e) => setFormData({ ...formData, propertyTypeId: e.target.value })}
+                    onChange={(e) => {
+                      const selectedType = roomTypes.find(rt => rt.id === e.target.value)
+                      setFormData({
+                        ...formData,
+                        propertyTypeId: e.target.value,
+                        ...(selectedType ? { basePrice: selectedType.basePrice } : {})
+                      })
+                    }}
                     required
                   >
                     {!formData.propertyTypeId && <option value="">Select type</option>}

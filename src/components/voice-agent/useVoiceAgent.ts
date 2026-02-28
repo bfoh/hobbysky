@@ -15,7 +15,6 @@ export const useVoiceAgent = () => {
         vapi.on('call-start', () => {
             setIsConnecting(false);
             setIsConnected(true);
-            setMessages(prev => [...prev, { role: 'ai', text: 'Call started. Hello!' }]);
         });
 
         vapi.on('call-end', () => {
@@ -30,7 +29,15 @@ export const useVoiceAgent = () => {
         vapi.on('message', (message) => {
             if (message.type === 'transcript' && message.transcriptType === 'final') {
                 const role = message.role === 'assistant' ? 'ai' : 'user';
-                setMessages(prev => [...prev, { role, text: message.transcript }]);
+                const transcript = message.transcript;
+                // Deduplicate: skip if the last message has the same role and text
+                setMessages(prev => {
+                    const last = prev[prev.length - 1];
+                    if (last && last.role === role && last.text === transcript) {
+                        return prev;
+                    }
+                    return [...prev, { role, text: transcript }];
+                });
             }
         });
 
@@ -58,20 +65,20 @@ export const useVoiceAgent = () => {
     const getAssistantConfig = () => {
         const dateInfo = getCurrentDateInfo();
         return {
-            name: "Hobbysky Concierge",
-            firstMessage: "Welcome to Hobbysky Guest House. How can I assist you today?",
+            name: "Hobby Sky Concierge",
+            firstMessage: "Welcome to Hobby Sky Guest House. How can I assist you today?",
             model: {
                 provider: "google",
                 model: "gemini-2.5-flash", // Vapi supports gemini-2.5-flash or gemini-2.0-flash
-                systemPrompt: `You are the AI Concierge for Hobbysky Guest House, a premium luxury hotel in Ghana.
+                systemPrompt: `You are the AI Concierge for Hobby Sky Guest House, a premium luxury hotel in Ghana.
 Your goal is to assist guests with information about the hotel and making room bookings.
 
 CURRENT DATE: ${dateInfo.formatted} (Year: ${dateInfo.year})
 
 Tone: Professional, warm, welcoming, and helpful. Keep responses concise (2-3 sentences max).
 
-=== ABOUT hobbysky guest house ===
-Hobbysky Guest House is a premium boutique hotel located at Abuakwa DKC Junction along the Kumasi-Sunyani Road in Kumasi, Ghana. We offer a peaceful retreat just minutes from the vibrant heart of Kumasi, combining modern comfort with the charm and hospitality that make Ghana truly special.
+=== ABOUT HOBBY SKY GUEST HOUSE ===
+Hobby Sky Guest House is a premium boutique hotel located at Abuakwa DKC Junction along the Kumasi-Sunyani Road in Kumasi, Ghana. We offer a peaceful retreat just minutes from the vibrant heart of Kumasi, combining modern comfort with the charm and hospitality that make Ghana truly special.
 
 Our tagline: "Your Premium Retreat in the Heart of Ghana"
 
@@ -85,12 +92,12 @@ Our tagline: "Your Premium Retreat in the Heart of Ghana"
 - Relaxing lounge and garden area for unwinding after your day
 
 === ROOM TYPES ===
-We offer several room categories:
+We offer exactly 3 room categories. Do NOT mention any other room types:
 1. Standard Room - Comfortable and affordable, perfect for budget travelers (capacity: 2 guests)
 2. Executive Suite - Premium accommodation with extra space and luxury features (capacity: 2 guests)
 3. Deluxe Room - More spacious with upgraded amenities (capacity: 2 guests)
-4. Family Room - Ideal for families, accommodates more guests (capacity: 4 guests)
-5. Presidential Suite - Our most luxurious accommodation with exclusive amenities and premium services (capacity: 5 guests)
+
+IMPORTANT: We ONLY have Standard, Executive, and Deluxe rooms. Do not mention Family Room, Presidential Suite, or any other room type. When presenting availability results, only show rooms that match these 3 types.
 
 === CONTACT INFORMATION ===
 - Phone: +233 55 500 9697 (say: plus two three three, five five, five zero zero, nine six nine seven)
@@ -108,9 +115,10 @@ We offer several room categories:
 === BOOKING WORKFLOW ===
 1. When a guest wants to book, ask for: check-in date, check-out date, and number of guests.
 2. Once you have all info, call the checkRoomAvailability tool.
-3. Present the available rooms to the guest with prices. Note: Prices are in Ghana Cedis. ALWAYS pronounce GHC as "Ghana Cedis". 
+3. Present the available rooms to the guest with prices. Note: Prices are in Ghana Cedis. ALWAYS pronounce GHC as "Ghana Cedis". Only show Standard, Executive, and Deluxe rooms from the results.
 4. When they choose a room, ask for their full name and email address.
-5. Call the bookRoom tool to complete the booking.
+5. IMPORTANT: Because this is a voice interface, names and emails can be misheard. After the guest provides their name, repeat it back and ask them to confirm or spell it out if it sounds unusual. For the email address, ALWAYS ask the guest to spell it out letter by letter to ensure accuracy. Repeat the email back to confirm before proceeding.
+6. Call the bookRoom tool to complete the booking.
 
 === DATE RULES ===
 - TODAY is ${dateInfo.formatted}. The current year is ${dateInfo.year}.
@@ -166,8 +174,11 @@ Be helpful, friendly, and make guests feel welcome!`,
                 ]
             },
             voice: {
-                provider: "11labs", // ElevenLabs for premium voice quality
-                voiceId: "cgSgspJ2msm6clMCkdW9" // Jessica / standard female voice
+                provider: "11labs",
+                voiceId: "21m00Tcm4TlvDq8ikWAM", // Rachel - warm, natural female voice
+                stability: 0.6,          // More natural variation
+                similarityBoost: 0.75,   // Balanced clarity
+                speed: 0.9               // Slightly slower for natural pacing
             }
         };
     };
@@ -209,8 +220,8 @@ Be helpful, friendly, and make guests feel welcome!`,
                     content: text
                 }
             });
-            // Immediately add to UI for responsiveness
-            setMessages(prev => [...prev, { role: 'user', text }]);
+            // Don't manually add here — the Vapi transcript event will handle it
+            // to avoid duplicate messages
         } else {
             console.warn('[VAPI] Cannot send message, not connected.');
         }

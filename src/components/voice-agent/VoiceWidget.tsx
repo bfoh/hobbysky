@@ -5,7 +5,7 @@ import { Mic, MicOff, X, MessageSquare, Loader2, Volume2 } from '@/components/ic
 
 export default function VoiceWidget() {
     const [isOpen, setIsOpen] = useState(false);
-    const { isConnecting, isConnected, isSpeaking, messages, toggleCall, handleUserMessage } = useVoiceAgent();
+    const { isConnecting, isConnected, isSpeaking, messages, isMuted, startCall, stopCall, toggleMute, handleUserMessage } = useVoiceAgent();
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const [inputText, setInputText] = useState("");
 
@@ -16,6 +16,11 @@ export default function VoiceWidget() {
 
     const handleOpen = () => {
         setIsOpen(true);
+    };
+
+    const handleClose = () => {
+        stopCall();
+        setIsOpen(false);
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -38,7 +43,7 @@ export default function VoiceWidget() {
                             <h3 className="font-medium">Concierge AI</h3>
                         </div>
                         <button
-                            onClick={() => setIsOpen(false)}
+                            onClick={handleClose}
                             className="hover:bg-amber-800 p-1 rounded-full transition-colors"
                         >
                             <X size={18} />
@@ -58,47 +63,54 @@ export default function VoiceWidget() {
                             <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                 <div
                                     className={`max-w-[80%] p-3 rounded-2xl text-sm ${msg.role === 'user'
-                                        ? 'bg-amber-700 text-white rounded-br-none'
-                                        : 'bg-white border border-gray-200 text-gray-800 rounded-bl-none shadow-sm'
+                                        ? 'bg-amber-600 text-white rounded-br-sm'
+                                        : 'bg-white border border-gray-100 text-gray-800 shadow-sm rounded-bl-sm'
                                         }`}
                                 >
                                     {msg.text}
                                 </div>
                             </div>
                         ))}
+
+                        {isSpeaking && (
+                            <div className="flex justify-start">
+                                <div className="bg-white border border-gray-100 p-3 rounded-2xl shadow-sm rounded-bl-sm flex gap-1">
+                                    <span className="w-2 h-2 bg-amber-400 rounded-full animate-bounce"></span>
+                                    <span className="w-2 h-2 bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
+                                    <span className="w-2 h-2 bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></span>
+                                </div>
+                            </div>
+                        )}
                         <div ref={messagesEndRef} />
                     </div>
 
-                    {/* Controls */}
-                    <div className="p-4 bg-white border-t border-gray-100">
-                        {/* Status Indicators */}
-                        <div className="flex justify-center mb-4 min-h-[24px]">
-                            {isConnecting && (
-                                <span className="text-xs font-semibold text-amber-500 animate-pulse flex items-center gap-1">
-                                    <Loader2 size={12} className="animate-spin" /> Connecting...
+                    {/* Input Area */}
+                    <div className="p-4 bg-white border-t border-gray-100 flex flex-col gap-3">
+                        {/* Status Indicator */}
+                        <div className="flex justify-center text-xs text-gray-400 h-4">
+                            {isConnecting ? (
+                                <span className="flex items-center gap-1 font-medium text-amber-600">
+                                    <Loader2 size={12} className="animate-spin" />
+                                    Connecting Assistant...
                                 </span>
-                            )}
-                            {isConnected && !isSpeaking && (
-                                <span className="text-xs font-semibold text-green-500 flex items-center gap-1">
-                                    <Mic size={12} /> Listening...
+                            ) : isConnected ? (
+                                <span className={`flex items-center gap-1 font-medium ${isMuted ? 'text-red-500' : 'text-green-600'}`}>
+                                    {isMuted ? <MicOff size={12} /> : <Volume2 size={12} className="animate-pulse" />}
+                                    {isMuted ? 'Microphone muted' : 'Agent is listening...'}
                                 </span>
-                            )}
-                            {isSpeaking && (
-                                <span className="text-xs font-semibold text-blue-500 flex items-center gap-1">
-                                    <Volume2 size={12} /> Speaking...
-                                </span>
-                            )}
+                            ) : null
+                            }
                         </div>
 
                         <div className="flex items-center gap-2">
                             <button
-                                onClick={toggleCall}
+                                onClick={isConnected ? toggleMute : startCall}
                                 className={`p-3 rounded-full transition-all duration-300 ${isConnected
-                                    ? 'bg-red-500 text-white shadow-lg ring-4 ring-red-100'
+                                    ? isMuted ? 'bg-red-500 text-white shadow-lg ring-4 ring-red-100' : 'bg-green-500 text-white shadow-lg ring-4 ring-green-100'
                                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                     }`}
                             >
-                                {isConnected ? <MicOff size={20} /> : <Mic size={20} />}
+                                {isConnected ? (isMuted ? <MicOff size={20} /> : <Mic size={20} />) : <Mic size={20} />}
                             </button>
 
                             <form onSubmit={handleSubmit} className="flex-1 flex gap-2">

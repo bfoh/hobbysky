@@ -8,6 +8,7 @@ export const useVoiceAgent = () => {
     const [isConnecting, setIsConnecting] = useState(false);
     const [isConnected, setIsConnected] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
+    const [isMuted, setIsMuted] = useState(false);
     const [messages, setMessages] = useState<{ role: 'user' | 'ai'; text: string }[]>([]);
 
     useEffect(() => {
@@ -20,6 +21,7 @@ export const useVoiceAgent = () => {
         vapi.on('call-end', () => {
             setIsConnecting(false);
             setIsConnected(false);
+            setIsMuted(false);
             setMessages(prev => [...prev, { role: 'ai', text: 'Call ended. Have a great day!' }]);
         });
 
@@ -198,26 +200,48 @@ Be helpful, friendly, and make guests feel welcome!`
         };
     };
 
-    const toggleCall = async () => {
-        if (isConnected) {
-            vapi.stop();
-        } else {
-            setIsConnecting(true);
-            try {
-                console.log('[VAPI] Starting call...');
-
-                await vapi.start(getAssistantConfig() as any);
-            } catch (error) {
-                console.error('[VAPI] Failed to start call:', error);
-                setIsConnecting(false);
-            }
+    const startCall = async () => {
+        if (isConnected) return;
+        setIsConnecting(true);
+        try {
+            console.log('[VAPI] Starting call...');
+            await vapi.start(getAssistantConfig() as any);
+        } catch (error) {
+            console.error('[VAPI] Failed to start call:', error);
+            setIsConnecting(false);
         }
     };
 
-    // Keep handleUserMessage for typing support if needed, but Vapi 
-    // is primarily voice-first. You can use Vapi's send method.
-    const handleUserMessage = async (text: string) => {
+    const stopCall = () => {
+        vapi.stop();
+    };
+
+    const toggleMute = () => {
         if (isConnected) {
+            const nextMuted = !isMuted;
+            vapi.setMuted(nextMuted);
+            setIsMuted(nextMuted);
+        }
+    };
+
+    const handleUserMessage = async (text: string) => {
+        if (!isConnected) {
+            setIsConnecting(true);
+            try {
+                // Auto-connect if the user tries to chat while disconnected
+                await vapi.start(getAssistantConfig() as any);
+                vapi.send({
+                    type: 'add-message',
+                    message: {
+                        role: 'user',
+                        content: text
+                    }
+                });
+            } catch (error) {
+                console.error('[VAPI] Failed to start auto-call:', error);
+                setIsConnecting(false);
+            }
+        } else {
             vapi.send({
                 type: 'add-message',
                 message: {
@@ -225,10 +249,6 @@ Be helpful, friendly, and make guests feel welcome!`
                     content: text
                 }
             });
-            // Don't manually add here — the Vapi transcript event will handle it
-            // to avoid duplicate messages
-        } else {
-            console.warn('[VAPI] Cannot send message, not connected.');
         }
     };
 
@@ -237,7 +257,10 @@ Be helpful, friendly, and make guests feel welcome!`
         isConnected,
         isSpeaking,
         messages,
-        toggleCall,
+        isMuted,
+        startCall,
+        stopCall,
+        toggleMute,
         handleUserMessage
     };
 };

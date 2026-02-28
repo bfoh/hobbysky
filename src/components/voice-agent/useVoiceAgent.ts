@@ -69,8 +69,11 @@ export const useVoiceAgent = () => {
             firstMessage: "Welcome to Hobby Sky Guest House. How can I assist you today?",
             model: {
                 provider: "google",
-                model: "gemini-2.5-flash", // Vapi supports gemini-2.5-flash or gemini-2.0-flash
-                systemPrompt: `You are the AI Concierge for Hobby Sky Guest House, a premium luxury hotel in Ghana.
+                model: "gemini-2.0-flash",
+                messages: [
+                    {
+                        role: "system",
+                        content: `You are the AI Concierge for Hobby Sky Guest House, a premium luxury hotel in Ghana.
 Your goal is to assist guests with information about the hotel and making room bookings.
 
 CURRENT DATE: ${dateInfo.formatted} (Year: ${dateInfo.year})
@@ -127,6 +130,8 @@ IMPORTANT: We ONLY have Standard, Executive, and Deluxe rooms. Do not mention Fa
 
 === END ===
 Be helpful, friendly, and make guests feel welcome!`
+                    }
+                ]
             },
             tools: [
                 {

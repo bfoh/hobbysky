@@ -110,13 +110,50 @@ export const handler = async function (event, context) {
                     }
 
                     // Ensure public.users record exists with first_login flag
+                    // Note: public.users has no phone column — phone is stored on staff only
                     await supabaseAdmin.from('users').upsert({
                         id: existingUser.id,
                         email: existingUser.email,
-                        phone: phone || null,
                         first_login: 1,
                         updated_at: new Date().toISOString()
                     }, { onConflict: 'id' })
+
+                    // Check if a staff record already exists for this user
+                    let recoveredStaff = null
+                    const { data: existingStaff } = await supabaseAdmin
+                        .from('staff')
+                        .select('*')
+                        .eq('user_id', existingUser.id)
+                        .maybeSingle()
+
+                    if (existingStaff) {
+                        recoveredStaff = existingStaff
+                    } else {
+                        // Create a fresh staff record
+                        const { data: newStaff, error: newStaffError } = await supabaseAdmin
+                            .from('staff')
+                            .insert({
+                                id: crypto.randomUUID(),
+                                user_id: existingUser.id,
+                                name: name,
+                                email: existingUser.email,
+                                phone: phone || null,
+                                role: role || 'staff',
+                                created_at: new Date().toISOString(),
+                            })
+                            .select()
+                            .single()
+
+                        if (newStaffError) {
+                            console.error('[create-employee] Failed to create staff during recovery:', newStaffError)
+                            return {
+                                statusCode: 400,
+                                headers,
+                                body: JSON.stringify({ error: `User recovered but staff record failed: ${newStaffError.message}` })
+                            }
+                        }
+                        recoveredStaff = newStaff
+                    }
 
                     console.log('[create-employee] Successfully recovered existing user account')
 
@@ -125,10 +162,16 @@ export const handler = async function (event, context) {
                         headers,
                         body: JSON.stringify({
                             success: true,
-                            user: {
-                                id: existingUser.id,
-                                email: existingUser.email
-                            },
+                            user: { id: existingUser.id, email: existingUser.email },
+                            staffRecord: recoveredStaff ? {
+                                id: recoveredStaff.id,
+                                userId: recoveredStaff.user_id,
+                                name: recoveredStaff.name,
+                                email: recoveredStaff.email,
+                                phone: recoveredStaff.phone,
+                                role: recoveredStaff.role,
+                                createdAt: recoveredStaff.created_at,
+                            } : null,
                             recovered: true
                         })
                     }
@@ -160,30 +203,74 @@ export const handler = async function (event, context) {
 
         console.log('[create-employee] User created successfully:', userData.user.id)
 
+        const userId = userData.user.id
+        const userEmail = userData.user.email
+
         // Create user profile record
-        try {
-            await supabaseAdmin.from('users').insert({
-                id: userData.user.id,
-                email: userData.user.email,
-                phone: phone || null,
-                first_login: 1,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-            })
-            console.log('[create-employee] User profile created')
-        } catch (profileError) {
-            console.warn('[create-employee] Could not create user profile:', profileError)
-            // Non-critical - continue
+        // Note: public.users has no phone column — phone lives on the staff table only
+        const { error: profileError } = await supabaseAdmin.from('users').upsert({
+            id: userId,
+            email: userEmail,
+            first_login: 1,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        }, { onConflict: 'id' })
+
+        if (profileError) {
+            console.error('[create-employee] Could not create user profile:', profileError)
+            // Fatal: staff.user_id has a FK to public.users — cannot insert staff without this
+            return {
+                statusCode: 500,
+                headers,
+                body: JSON.stringify({ error: `Failed to create user profile: ${profileError.message}` })
+            }
         }
+        console.log('[create-employee] User profile created')
+
+        // Create staff record server-side (service role bypasses RLS)
+        const { data: staffRecord, error: staffError } = await supabaseAdmin
+            .from('staff')
+            .insert({
+                id: crypto.randomUUID(),
+                user_id: userId,
+                name: name,
+                email: userEmail,
+                phone: phone || null,
+                role: role || 'staff',
+                created_at: new Date().toISOString(),
+            })
+            .select()
+            .single()
+
+        if (staffError) {
+            console.error('[create-employee] Staff record creation error:', staffError)
+            return {
+                statusCode: 200,
+                headers,
+                body: JSON.stringify({
+                    success: true,
+                    staffError: staffError.message,
+                    user: { id: userId, email: userEmail }
+                })
+            }
+        }
+
+        console.log('[create-employee] Staff record created:', staffRecord.id)
 
         return {
             statusCode: 200,
             headers,
             body: JSON.stringify({
                 success: true,
-                user: {
-                    id: userData.user.id,
-                    email: userData.user.email
+                user: { id: userId, email: userEmail },
+                staffRecord: {
+                    id: staffRecord.id,
+                    userId: staffRecord.user_id,
+                    name: staffRecord.name,
+                    email: staffRecord.email,
+                    phone: staffRecord.phone,
+                    role: staffRecord.role,
+                    createdAt: staffRecord.created_at,
                 }
             })
         }

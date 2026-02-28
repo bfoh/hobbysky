@@ -482,15 +482,18 @@ export const handler = async (event, context) => {
                 );
             }
 
-            // 3. Hotel alert for online bookings
-            if (source === 'online') {
+            // 3. Hotel alert for online and voice agent bookings
+            const isVoiceAgent = source === 'voice agent' || source === 'voice_agent';
+            if (source === 'online' || isVoiceAgent) {
+                const sourceLabel = isVoiceAgent ? '🎤 Voice Agent' : '🌐 Online Website';
+                const alertTitle = isVoiceAgent ? '🎤 New Voice Agent Booking' : '🌐 New Online Booking';
                 const alertHtml = generateEmailHtml({
-                    title: '🌐 New Online Booking',
-                    preheader: `New online booking from ${guestName}`,
+                    title: alertTitle,
+                    preheader: `New booking from ${guestName} via ${sourceLabel}`,
                     content: `
-                    <p>A new booking has been placed via the <strong>Hobbysky Guest House website</strong>.</p>
+                    <p>A new booking has been placed via <strong>${sourceLabel}</strong>.</p>
                     <div style="${EMAIL_STYLES.infoBox}">
-                        <div style="${EMAIL_STYLES.infoRow}"><span style="${EMAIL_STYLES.infoLabel}">Source:</span> 🌐 Online Website</div>
+                        <div style="${EMAIL_STYLES.infoRow}"><span style="${EMAIL_STYLES.infoLabel}">Source:</span> ${sourceLabel}</div>
                         <div style="${EMAIL_STYLES.infoRow}"><span style="${EMAIL_STYLES.infoLabel}">Guest:</span> ${guestName}</div>
                         <div style="${EMAIL_STYLES.infoRow}"><span style="${EMAIL_STYLES.infoLabel}">Email:</span> ${guestEmail}</div>
                         ${guestPhone ? `<div style="${EMAIL_STYLES.infoRow}"><span style="${EMAIL_STYLES.infoLabel}">Phone:</span> ${guestPhone}</div>` : ''}
@@ -511,7 +514,7 @@ export const handler = async (event, context) => {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             to: 'hobbyskyguesthouse@gmail.com',
-                            subject: `🌐 New Online Booking — ${guestName} | Room ${availableRoom.room_number} | ${checkIn}`,
+                            subject: `${isVoiceAgent ? '🎤' : '🌐'} New ${isVoiceAgent ? 'Voice Agent' : 'Online'} Booking — ${guestName} | Room ${availableRoom.room_number} | ${checkIn}`,
                             html: alertHtml
                         })
                     }).then(async res => {
@@ -520,6 +523,20 @@ export const handler = async (event, context) => {
                         else console.log('[CreateBooking] Hotel alert Sent:', txt);
                     }).catch(err => console.error('[CreateBooking] Hotel alert Error:', err))
                 );
+
+                // Also send hotel staff SMS alert for voice agent bookings
+                if (isVoiceAgent) {
+                    const staffAlertMsg = `[Voice Booking] ${guestName}, Room ${availableRoom.room_number}, ${checkIn} to ${checkOut}. GHS ${totalPrice}. Phone: ${guestPhone || 'N/A'}`;
+                    notificationPromises.push(
+                        fetch(`${baseUrl}/.netlify/functions/send-sms`, {
+                            method: 'POST',
+                            body: JSON.stringify({ to: process.env.HOTEL_STAFF_PHONE || '+233550009697', message: staffAlertMsg })
+                        }).then(res => {
+                            if (!res.ok) console.error('[CreateBooking] Staff SMS alert failed:', res.status);
+                            else console.log('[CreateBooking] Staff SMS alert sent');
+                        }).catch(err => console.error('[CreateBooking] Staff SMS alert error:', err))
+                    );
+                }
             }
 
             // Await all notifications with a small timeout fallback?

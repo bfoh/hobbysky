@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Vapi from '@vapi-ai/web';
 
 // Initialize Vapi instance with the public key
@@ -10,12 +10,25 @@ export const useVoiceAgent = () => {
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [isMuted, setIsMuted] = useState(false);
     const [messages, setMessages] = useState<{ role: 'user' | 'ai'; text: string }[]>([]);
+    // Holds a typed message that arrived before the call was ready
+    const pendingMessageRef = useRef<string | null>(null);
 
     useEffect(() => {
         // Event listeners for Vapi connection states
         vapi.on('call-start', () => {
             setIsConnecting(false);
             setIsConnected(true);
+            // Flush any message that was typed before the call connected
+            if (pendingMessageRef.current) {
+                const pending = pendingMessageRef.current;
+                pendingMessageRef.current = null;
+                setTimeout(() => {
+                    vapi.send({
+                        type: 'add-message',
+                        message: { role: 'user', content: pending }
+                    });
+                }, 300);
+            }
         });
 
         vapi.on('call-end', () => {
@@ -225,21 +238,21 @@ Be helpful, friendly, and make guests feel welcome!`
     };
 
     const handleUserMessage = async (text: string) => {
+        // Show the message in the chat immediately
+        setMessages(prev => [...prev, { role: 'user', text }]);
+
         if (!isConnected) {
-            setIsConnecting(true);
-            try {
-                // Auto-connect if the user tries to chat while disconnected
-                await vapi.start(getAssistantConfig() as any);
-                vapi.send({
-                    type: 'add-message',
-                    message: {
-                        role: 'user',
-                        content: text
-                    }
-                });
-            } catch (error) {
-                console.error('[VAPI] Failed to start auto-call:', error);
-                setIsConnecting(false);
+            // Store message; it will be sent once call-start fires
+            pendingMessageRef.current = text;
+            if (!isConnecting) {
+                setIsConnecting(true);
+                try {
+                    await vapi.start(getAssistantConfig() as any);
+                } catch (error) {
+                    console.error('[VAPI] Failed to start auto-call:', error);
+                    setIsConnecting(false);
+                    pendingMessageRef.current = null;
+                }
             }
         } else {
             vapi.send({

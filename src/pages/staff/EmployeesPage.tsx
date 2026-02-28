@@ -405,286 +405,82 @@ export function EmployeesPage() {
       })
 
       // Create employee using Netlify function for auth and Supabase for staff record
-      console.log('📡 [EmployeesPage] Creating employee...')
+      console.log('📡 [EmployeesPage] Calling create-employee function...')
 
+      const defaultPassword = 'User@123'
+
+      // Call Netlify function — creates auth user + staff record server-side (bypasses RLS)
+      let fnResponse: Response
       try {
-        // Use default password that employees must change on first login
-        const defaultPassword = 'User@123'
-
-        console.log('👤 [EmployeesPage] Creating user account with Supabase Auth...')
-
-        let newUser: { id: string; email: string } | null = null
-
-        // First, try using the Netlify function (production) - uses Admin API
-        try {
-          console.log('📡 [EmployeesPage] Calling Netlify function to create auth user...')
-          const response = await fetch('/.netlify/functions/create-employee', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: values.email,
-              password: defaultPassword,
-              name: values.name,
-              role: values.role,
-              phone: values.phone
-            })
-          })
-
-          console.log('📡 [EmployeesPage] Netlify function response status:', response.status)
-
-          if (response.status === 409) {
-            console.warn('❌ [EmployeesPage] User already exists (409)')
-            toast({
-              title: 'User already exists',
-              description: 'An account with this email already exists in the system.',
-              variant: 'destructive',
-            })
-            // Remove optimistic entry
-            setEmployees((prev) => prev.filter(e => e.id !== staffId))
-            return
-          }
-
-          if (response.ok) {
-            const result = await response.json()
-            console.log('📡 [EmployeesPage] Netlify function result:', result)
-            if (result.success && result.user?.id) {
-              newUser = result.user
-              console.log('✅ [EmployeesPage] User created via Netlify function:', newUser.id)
-            } else {
-              console.error('❌ [EmployeesPage] Netlify function returned success:false or no user:', result)
-            }
-          } else {
-            const errorResult = await response.text()
-            console.error('❌ [EmployeesPage] Netlify function failed with status', response.status, ':', errorResult)
-          }
-        } catch (netlifyError) {
-          console.error('❌ [EmployeesPage] Netlify function error:', netlifyError)
-        }
-
-        // Fallback: Use direct Supabase signUp (for local development)
-        if (!newUser) {
-          console.log('👤 [EmployeesPage] Using direct Supabase signUp...')
-
-          // Import supabase directly for signup
-          const { supabase } = await import('@/lib/supabase')
-
-          // Store current session before signing up new user
-          const { data: currentSession } = await supabase.auth.getSession()
-
-          const { data, error } = await supabase.auth.signUp({
+        fnResponse = await fetch('/.netlify/functions/create-employee', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
             email: values.email,
             password: defaultPassword,
-            options: {
-              data: { name: values.name, role: values.role }
-            }
-          })
-
-          if (error) {
-            console.error('[EmployeesPage] Supabase signUp error:', error)
-            throw new Error(error.message)
-          }
-
-          if (!data.user) {
-            throw new Error('Failed to create user account')
-          }
-
-          newUser = { id: data.user.id, email: data.user.email || values.email }
-          console.log('✅ [EmployeesPage] User created via Supabase Auth:', newUser.id)
-
-          // Restore admin session if it was cleared
-          if (currentSession?.session) {
-            await supabase.auth.setSession({
-              access_token: currentSession.session.access_token,
-              refresh_token: currentSession.session.refresh_token
-            })
-            console.log('✅ [EmployeesPage] Admin session restored')
-          }
-
-          // Create user profile record
-          try {
-            await supabase.from('users').insert({
-              id: data.user.id,
-              email: data.user.email,
-              first_login: 1,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            })
-          } catch (profileError) {
-            console.warn('⚠️ [EmployeesPage] Could not create user profile:', profileError)
-          }
-        }
-
-        if (!newUser?.id) {
-          throw new Error('Failed to create user account')
-        }
-
-        console.log('✅ [EmployeesPage] User account created:', newUser.id)
-
-        // Set first login flag to force password change
-        try {
-          await supabase.from('users').update({
-            first_login: 1
-          }).eq('id', newUser.id)
-          console.log('✅ [EmployeesPage] First login flag set')
-        } catch (flagError) {
-          console.warn('⚠️ [EmployeesPage] Could not set first login flag:', flagError)
-          // Don't fail the entire operation, but log the warning
-        }
-
-        // Create staff record
-        console.log('👥 [EmployeesPage] Creating staff record...')
-        const { data: newStaff, error: staffError } = await supabase
-          .from('staff')
-          .insert({
-            id: staffId,
-            user_id: newUser.id,
             name: values.name,
-            email: values.email,
-            phone: values.phone || null,
             role: values.role,
-            created_at: new Date().toISOString(),
+            phone: values.phone
           })
-          .select()
-          .single()
+        })
+      } catch (networkError) {
+        setEmployees((prev) => prev.filter(e => e.id !== staffId))
+        throw new Error('Network error — could not reach the server. Please check your connection.')
+      }
 
-        if (staffError) {
-          console.error('❌ [EmployeesPage] Staff record creation error:', staffError)
-          throw staffError
-        }
+      const result = await fnResponse.json()
 
-        console.log('✅ [EmployeesPage] Staff record created:', newStaff)
-
-        // Update optimistic entry with real userId
-        setEmployees((prev) => prev.map((emp) => (emp.id === staffId ? { ...emp, userId: newUser.id } : emp)))
-
-        // Automatically send welcome email with default credentials
-        console.log('📧 [EmployeesPage] Sending welcome email automatically...')
-        try {
-          const emailResult = await sendStaffWelcomeEmail({
-            name: values.name,
-            email: values.email,
-            tempPassword: defaultPassword,
-            role: getRoleDisplay(values.role as StaffRole),
-            loginUrl: `${window.location.origin}/staff/login`
-          })
-
-          if (emailResult.success) {
-            console.log('✅ [EmployeesPage] Welcome email sent successfully')
-            toast({
-              title: 'Welcome email sent!',
-              description: `Login credentials sent to ${values.email}`,
-            })
-          } else {
-            console.warn('⚠️ [EmployeesPage] Email send failed:', emailResult.error)
-            toast({
-              title: 'Employee created, but email failed',
-              description: 'You can manually share the credentials below',
-              variant: 'destructive'
-            })
-          }
-        } catch (emailError: any) {
-          console.error('❌ [EmployeesPage] Email send error:', emailError)
-          toast({
-            title: 'Email send failed',
-            description: 'Please manually share credentials with the employee',
-            variant: 'destructive'
-          })
-        }
-
-        // Show password dialog with credentials
-        setGeneratedPassword(defaultPassword)
-        setCreatedEmployeeEmail(values.email)
-        setCreatedEmployeeName(values.name)
-        setPasswordDialogOpen(true)
-
-        console.log('✅ [EmployeesPage] Employee creation completed successfully')
-
-        // Show immediate success notification
+      if (fnResponse.status === 409) {
+        setEmployees((prev) => prev.filter(e => e.id !== staffId))
         toast({
-          title: 'Employee created!',
-          description: `${values.name} has been added. Refreshing list...`,
+          title: 'Email already in use',
+          description: 'An account with this email already exists in the system.',
+          variant: 'destructive',
         })
-
-      } catch (createError: any) {
-        console.error('❌ [EmployeesPage] Employee creation failed:', createError)
-        console.error('❌ [EmployeesPage] Error details:', {
-          message: createError.message,
-          status: createError.status,
-          code: createError.code,
-          details: createError.details,
-          stack: createError.stack
-        })
-
-        // Remove optimistic entry
-        setEmployees((prev) => prev.filter((emp) => emp.id !== staffId))
-
-        // Handle specific error cases
-        if (createError.message?.includes('already exists') ||
-          createError.message?.includes('already registered') ||
-          createError.message?.includes('duplicate') ||
-          createError.status === 409) {
-          toast({
-            title: 'Email already in use',
-            description: 'This email is already registered. Please use a different email.',
-            variant: 'destructive',
-          })
-        } else if (createError.message?.includes('rate limit') ||
-          createError.message?.includes('too many requests') ||
-          createError.status === 429) {
-          toast({
-            title: 'Rate limit exceeded',
-            description: 'Please wait a moment before adding another employee.',
-            variant: 'destructive',
-          })
-        } else if (createError.message?.includes('constraint') ||
-          createError.message?.includes('unique')) {
-          toast({
-            title: 'Database constraint error',
-            description: 'There was a conflict with existing data. Please try again.',
-            variant: 'destructive',
-          })
-        } else {
-          toast({
-            title: 'Failed to create employee',
-            description: createError.message || 'An unexpected error occurred. Please try again.',
-            variant: 'destructive',
-          })
-        }
         return
       }
 
-      // Refresh list to ensure full consistency with delay
-      console.log('🔄 [EmployeesPage] Refreshing employee list...')
-
-      // Add delay to ensure database consistency
-      await new Promise(resolve => setTimeout(resolve, 2000))
-
-      try {
-        await loadEmployees()
-        console.log('✅ [EmployeesPage] Employee list refreshed successfully')
-
-        // Verify the new employee is in the list
-        const { data: updatedList } = await supabase
-          .from('staff')
-          .select('*')
-          .order('created_at', { ascending: false })
-
-        const newEmployeeInList = updatedList?.find(emp => emp.email === values.email)
-
-        if (newEmployeeInList) {
-          console.log('✅ [EmployeesPage] New employee confirmed in database:', newEmployeeInList)
-        } else {
-          console.warn('⚠️ [EmployeesPage] New employee not found in refreshed list')
-        }
-      } catch (refreshError) {
-        console.error('❌ [EmployeesPage] Error refreshing list:', refreshError)
-        // Don't fail the entire operation if refresh fails
+      if (!fnResponse.ok || !result.success) {
+        setEmployees((prev) => prev.filter(e => e.id !== staffId))
+        throw new Error(result.error || 'Failed to create employee account')
       }
 
-      toast({
-        title: 'Employee added successfully',
-        description: `${values.name} has been added to the system.`
-      })
+      if (result.staffError || !result.staffRecord) {
+        // Auth user created but staff record failed — remove optimistic entry
+        setEmployees((prev) => prev.filter(e => e.id !== staffId))
+        throw new Error(result.staffError || 'Staff record was not created. Please try again.')
+      }
+
+      console.log('✅ [EmployeesPage] Employee and staff record created:', result.staffRecord.id)
+
+      // Replace optimistic entry by fetching fresh from DB to guarantee schema alignment
+      await loadEmployees()
+
+      // Send welcome email
+      try {
+        const emailResult = await sendStaffWelcomeEmail({
+          name: values.name,
+          email: values.email,
+          tempPassword: defaultPassword,
+          role: getRoleDisplay(values.role as StaffRole),
+          loginUrl: `${window.location.origin}/staff/login`
+        })
+        if (emailResult.success) {
+          toast({ title: 'Welcome email sent!', description: `Login credentials sent to ${values.email}` })
+        } else {
+          toast({ title: 'Employee created, but email failed', description: 'Share credentials manually from the dialog below', variant: 'destructive' })
+        }
+      } catch {
+        toast({ title: 'Email send failed', description: 'Please share credentials manually with the employee', variant: 'destructive' })
+      }
+
+      // Show credentials dialog
+      setGeneratedPassword(defaultPassword)
+      setCreatedEmployeeEmail(values.email)
+      setCreatedEmployeeName(values.name)
+      setPasswordDialogOpen(true)
+
+      toast({ title: 'Employee created!', description: `${values.name} has been added successfully.` })
 
     } catch (err: any) {
       console.error('❌ Employee creation error:', err)

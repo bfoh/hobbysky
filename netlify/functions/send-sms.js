@@ -21,7 +21,7 @@ export const handler = async (event) => {
         }
 
         const apiKey = process.env.ARKESEL_API_KEY ? process.env.ARKESEL_API_KEY.trim() : null;
-        const senderId = process.env.ARKESEL_SENDER_ID || 'AMPLodge';
+        const senderId = process.env.ARKESEL_SENDER_ID || 'HobbySky';
 
         if (!apiKey) {
             console.error('[SMS Function] Arkesel API Key not configured');

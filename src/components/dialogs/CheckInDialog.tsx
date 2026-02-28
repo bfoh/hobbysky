@@ -159,20 +159,20 @@ export function CheckInDialog({
 
                     {/* Prior Payment Info */}
                     {priorAmountPaid > 0 && (
-                        <div className="rounded-lg border border-green-200 bg-green-50 p-4 space-y-2">
+                        <div className="rounded-lg border border-emerald-500/25 bg-emerald-500/8 p-4 space-y-2">
                             <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium text-green-800">💰 Prior Payment Received</span>
-                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${priorPaymentStatus === 'full' ? 'bg-green-200 text-green-800' :
-                                    priorPaymentStatus === 'part' ? 'bg-amber-200 text-amber-800' :
-                                        'bg-red-200 text-red-800'
+                                <span className="text-sm font-medium text-emerald-400">💰 Prior Payment Received</span>
+                                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${priorPaymentStatus === 'full' ? 'bg-emerald-500/15 text-emerald-400' :
+                                    priorPaymentStatus === 'part' ? 'bg-amber-500/15 text-amber-400' :
+                                        'bg-red-500/15 text-red-400'
                                     }`}>
                                     {priorPaymentStatus === 'full' ? 'Paid in Full' :
                                         priorPaymentStatus === 'part' ? 'Part Payment' : 'Pending'}
                                 </span>
                             </div>
                             <div className="flex justify-between text-sm">
-                                <span className="text-green-700">Amount Already Paid:</span>
-                                <span className="font-bold text-green-700">{formatCurrencySync(priorAmountPaid, currency)}</span>
+                                <span className="text-emerald-400/80">Amount Already Paid:</span>
+                                <span className="font-bold text-emerald-400">{formatCurrencySync(priorAmountPaid, currency)}</span>
                             </div>
                         </div>
                     )}

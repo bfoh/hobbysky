@@ -275,20 +275,18 @@ export async function sendCheckInNotification(
           ${paymentHtml}
         </div>
 
-        <div style="background-color: #F5F5F5; border-radius: 4px; padding: 20px; margin-top: 20px;">
-          <h3 style="margin: 0 0 15px 0; font-size: 18px; color: #8B4513;">Guest Information</h3>
-          <ul style="margin: 0; padding-left: 20px;">
-            <li><strong>WiFi:</strong> Password available at front desk</li>
-            <li><strong>Breakfast:</strong> 7:00 AM - 10:00 AM</li>
-            <li><strong>Check-out:</strong> 11:00 AM</li>
-            <li><strong>Reception:</strong> Dial +233555009697</li>
+        <div style="background-color:#162019;border-left:3px solid #C9963C;border-radius:0 6px 6px 0;padding:20px 22px;margin-top:24px;">
+          <p style="margin:0 0 12px;color:#DEB96A;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;font-family:Arial,sans-serif;">During Your Stay</p>
+          <ul style="margin:0;padding-left:18px;color:#8CA48E;font-family:Arial,sans-serif;font-size:14px;line-height:1.9;">
+            <li><span style="color:#EDE9E0;font-weight:600;">WiFi:</span> Password available at front desk</li>
+            <li><span style="color:#EDE9E0;font-weight:600;">Breakfast:</span> 7:00 AM – 10:00 AM</li>
+            <li><span style="color:#EDE9E0;font-weight:600;">Check-out:</span> 11:00 AM</li>
+            <li><span style="color:#EDE9E0;font-weight:600;">Reception:</span> +233 240 204 029</li>
           </ul>
         </div>
-        
-        <p style="margin-top: 30px;">
-          Best regards,<br>
-          <strong>The hobbysky guest house Team</strong>
-        </p>
+
+        <p style="margin-top:32px;color:#EDE9E0;font-family:Arial,sans-serif;">We hope you enjoy your stay.</p>
+        <p style="margin:4px 0 0;color:#8CA48E;font-family:Arial,sans-serif;font-size:14px;">The Hobbysky Guest House Team</p>
       `
     })
 
@@ -316,7 +314,7 @@ Important Information:
 - WiFi password available at the front desk
 - Breakfast served daily 7:00 AM - 10:00 AM
 - Check-out time is 11:00 AM
-- For assistance, dial +233555009697 from your room phone
+- For assistance, dial +233240204029 from your room phone
 
 Best regards,
 The hobbysky guest house Team
@@ -377,12 +375,12 @@ export async function sendCheckOutNotification(
 
     if (invoiceData) {
       invoiceHtml = `
-        <div style="background-color: #F8F9FA; border: 1px solid #E9ECEF; border-radius: 8px; padding: 20px; margin: 30px 0; text-align: center;">
-          <h3 style="margin: 0 0 15px 0; color: #8B4513;">Your Invoice is Ready</h3>
-          <p style="font-size: 24px; font-weight: bold; margin: 0 0 10px 0; color: #2C2416;">
+        <div style="background-color:#162019;border:1px solid #C9963C;border-radius:6px;padding:24px;margin:28px 0;text-align:center;">
+          <p style="margin:0 0 8px;color:#DEB96A;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;font-family:Arial,sans-serif;">Invoice Ready</p>
+          <p style="font-size:28px;font-weight:700;margin:0 0 8px;color:#C9963C;font-family:Georgia,serif;">
             ${formatCurrencySync(invoiceData.totalAmount, currency)}
           </p>
-          <p style="margin: 0; color: #666; font-size: 14px;">Invoice #: ${invoiceData.invoiceNumber}</p>
+          <p style="margin:0;color:#8CA48E;font-size:13px;font-family:Arial,sans-serif;">Invoice #${invoiceData.invoiceNumber}</p>
         </div>
       `
 
@@ -413,9 +411,9 @@ export async function sendCheckOutNotification(
         
         <p style="margin-top: 20px;">We hope you had a wonderful stay!</p>
         
-        <div style="background-color: #fdf2f8; border: 1px solid #fce7f3; border-radius: 8px; padding: 15px; margin-top: 20px; text-align: center;">
-          <p style="margin: 0 0 10px 0;"><strong>How was your experience?</strong></p>
-          <a href="https://hobbysky.com/review?bookingId=${booking.id}" style="display: inline-block; background-color: #BE185D; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Rate Your Stay</a>
+        <div style="background-color:#162019;border:1px solid #2B3E2E;border-radius:6px;padding:20px;margin-top:24px;text-align:center;">
+          <p style="margin:0 0 14px;color:#EDE9E0;font-weight:600;font-family:Arial,sans-serif;">How was your experience?</p>
+          <a href="https://hobbyskyguesthouse.com/review?bookingId=${booking.id}" style="display:inline-block;background-color:#C9963C;color:#0F1A11;padding:12px 32px;text-decoration:none;border-radius:4px;font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;font-family:Arial,sans-serif;">Rate Your Stay</a>
         </div>
         
         <p style="margin-top: 20px;">We look forward to welcoming you back soon!</p>
@@ -722,7 +720,7 @@ export async function sendOnlineBookingAlert(
     const nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24))
 
     const sourceLabel = source === 'voice_agent' ? '🎤 Voice Agent' : '🌐 Online Website'
-    const hotelEmail = 'hobbysky0555009697@gmail.com'
+    const hotelEmail = 'hobbyskyguesthouse@gmail.com'
 
     const htmlContent = generateEmailHtml({
       title: 'New Booking Alert!',

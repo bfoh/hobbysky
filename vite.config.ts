@@ -78,14 +78,13 @@ export default defineConfig(({ mode }) => ({
     host: true,
     allowedHosts: true,
     proxy: {
-      // Proxy API calls to Netlify Functions (expects netlify dev to be running on port 8888)
       '/api': {
-        target: 'http://localhost:8888',
+        target: 'http://127.0.0.1:9999',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '/.netlify/functions'),
       },
       '/.netlify/functions': {
-        target: 'http://localhost:8888',
+        target: 'http://127.0.0.1:9999',
         changeOrigin: true,
       },
     },

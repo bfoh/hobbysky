@@ -95,28 +95,50 @@ export function useCheckIn() {
                 : totalPrice
 
             // 4. Update Booking with the resolved ID
-            console.log('[useCheckIn] Attempting to update booking:', bookingId, 'with discount:', discountAmount)
+            // Primary update — only status/timestamp/payment (always supported columns)
+            console.log('[useCheckIn] Attempting to update booking:', bookingId)
             try {
-                const updateData: any = {
+                const primaryUpdate: any = {
                     status: 'checked-in',
                     actualCheckIn: new Date().toISOString(),
                     paymentMethod: paymentMethod
                 }
 
-                // Add discount fields if discount is applied
+                // Embed discount metadata into specialRequests so it persists without new DB columns
                 if (discountAmount && discountAmount > 0) {
-                    updateData.discountAmount = discountAmount
-                    updateData.finalAmount = finalAmount
-                    if (discountReason) {
-                        updateData.discountReason = discountReason
-                    }
-                    if (user?.id) {
-                        updateData.discountedBy = user.id
+                    const existingSr = actualBooking?.specialRequests || actualBooking?.special_requests || ''
+                    const discountMeta = `<!-- DISCOUNT_DATA:${JSON.stringify({ discountAmount, discountReason: discountReason || null, finalAmount })} -->`
+                    primaryUpdate.specialRequests = (existingSr ? existingSr + ' ' : '') + discountMeta
+                }
+
+                try {
+                    await db.bookings.update(bookingId, primaryUpdate)
+                } catch (statusErr: any) {
+                    // DB constraint may use underscores ('checked_in') — retry with legacy form
+                    if (statusErr.message?.includes('bookings_status_check') || statusErr.message?.includes('violates check constraint')) {
+                        console.warn('[useCheckIn] Status constraint hit, retrying with underscore form')
+                        await db.bookings.update(bookingId, { ...primaryUpdate, status: 'checked_in' })
+                    } else {
+                        throw statusErr
                     }
                 }
 
-                await db.bookings.update(bookingId, updateData)
-                console.log('[useCheckIn] Booking updated successfully with discount:', discountAmount || 0)
+                // Secondary update — discount fields (non-blocking; columns may not exist yet)
+                if (discountAmount && discountAmount > 0) {
+                    try {
+                        await db.bookings.update(bookingId, {
+                            discountAmount: discountAmount,
+                            finalAmount: finalAmount,
+                            ...(discountReason ? { discountReason } : {}),
+                            ...(user?.id ? { discountedBy: user.id } : {})
+                        })
+                    } catch (discountErr: any) {
+                        console.warn('[useCheckIn] Discount fields could not be saved (migration needed):', discountErr.message)
+                        // Non-fatal — check-in succeeded, discount just won't be persisted
+                    }
+                }
+
+                console.log('[useCheckIn] Booking updated successfully')
             } catch (bookingUpdateError) {
                 console.error('[useCheckIn] Booking update failed:', bookingUpdateError)
                 throw bookingUpdateError

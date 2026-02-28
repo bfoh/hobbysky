@@ -448,7 +448,7 @@ export function GuestsPage() {
                 <Label htmlFor="notes">Notes</Label>
                 <textarea
                   id="notes"
-                  className="w-full px-3 py-2 border rounded-md min-h-[80px]"
+                  className="w-full px-3 py-2 border border-input rounded-md min-h-[80px] bg-background text-foreground"
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 />
@@ -474,7 +474,7 @@ export function GuestsPage() {
         />
       </div>
 
-      <div className="rounded-md border bg-white">
+      <div className="rounded-md border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -538,11 +538,11 @@ export function GuestsPage() {
                   </TableCell>
                   <TableCell>
                     {(!guest.lastBooking?.source || guest.lastBooking?.source === 'online') ? (
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-sky-500/15 text-sky-300 border border-sky-500/25">
                         Online
                       </span>
                     ) : guest.lastBooking?.source === 'voice_agent' ? (
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-purple-500/15 text-purple-300 border border-purple-500/25">
                         Voice Agent
                       </span>
                     ) : (

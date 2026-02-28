@@ -31,7 +31,7 @@ const DEFAULT_SETTINGS: HotelSettings = {
   currency: 'GHS',
   // Manager defaults - can be configured in settings
   managerEmail: 'manager@hobbysky.com',
-  managerPhone: '+233555009697',
+  managerPhone: '+233240204029',
   managerNotificationsEnabled: true,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString()

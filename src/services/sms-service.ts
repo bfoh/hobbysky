@@ -173,7 +173,7 @@ Checkout: ${new Date(checkOutDate).toLocaleDateString()} @ 11AM
 ${totalAmount && paymentMethod ? `Paid: ${totalAmount} (${paymentMethod})` : ''}
 WiFi password at front desk.
 BFast: 7-10AM
-Dial +233555009697 for help.
+Dial +233240204029 for help.
 
 Enjoy your stay @ Hobbysky Guest House!
 www.hobbysky.com`
@@ -314,7 +314,7 @@ export async function sendOnlineBookingAlertSMS(params: {
 }): Promise<SMSResult> {
     const { guestName, roomNumber, roomType, checkIn, nights, totalAmount, source } = params
 
-    const hotelPhone = '+233555009697'
+    const hotelPhone = '+233240204029'
     const sourceLabel = source === 'voice_agent' ? 'Voice Agent' : 'Online'
 
     const message = `🔔 NEW BOOKING

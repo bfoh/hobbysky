@@ -1,11 +1,20 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Supabase client
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
-
 export const handler = async (event, context) => {
+    // Initialize Supabase client inside handler so env vars are always fresh
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+        console.error('[RoomsAvailability] Missing Supabase env vars', { supabaseUrl: !!supabaseUrl, supabaseKey: !!supabaseKey });
+        return {
+            statusCode: 500,
+            headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ error: 'Server configuration error. Please contact support.' })
+        };
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
     // CORS Headers
     const headers = {
         'Access-Control-Allow-Origin': '*', // Allow any origin for testing, restrict to app/agent domain in prod if needed
@@ -31,14 +40,20 @@ export const handler = async (event, context) => {
     }
 
     try {
-        const { checkIn, checkOut, guests } = event.queryStringParameters;
-        console.log('[RoomsAvailability] Request:', { checkIn, checkOut, guests });
+        const queryParams = event.queryStringParameters || {};
+        const { checkIn, checkOut, guests } = queryParams;
+
+        console.log('[RoomsAvailability] Request params:', { checkIn, checkOut, guests });
 
         if (!checkIn || !checkOut) {
+            console.warn('[RoomsAvailability] Validation failed: Missing check-in or check-out date');
             return {
                 statusCode: 400,
                 headers,
-                body: JSON.stringify({ error: 'Missing checkIn or checkOut parameters' })
+                body: JSON.stringify({
+                    error: 'Missing check-in or check-out date.',
+                    details: 'Both checkIn and checkOut query parameters are required.'
+                })
             };
         }
 
@@ -72,17 +87,11 @@ export const handler = async (event, context) => {
             };
         });
 
-        // 1. Get all rooms with their types (clean/available only)
+        // 1. Get all active rooms (exclude maintenance, rely on bookings for availability overlap)
         const { data: allRooms, error: roomsError } = await supabase
             .from('rooms')
-            .select(`
-                id,
-                room_number,
-                status,
-                image_urls,
-                room_types (id)
-            `)
-            .in('status', ['clean', 'available']);
+            .select('id, room_number, room_type_id, status')
+            .neq('status', 'maintenance');
 
         if (roomsError) throw roomsError;
 
@@ -100,10 +109,10 @@ export const handler = async (event, context) => {
 
         // 3. Filter available rooms and update counts
         allRooms.forEach(room => {
-            if (!room.room_types) return;
-            const typeId = room.room_types.id;
+            const typeId = room.room_type_id;
+            if (!typeId || !availabilityByType[typeId]) return;
 
-            // Check occupancy (using pre-fetched type data for max_occupancy)
+            // Check occupancy
             if (availabilityByType[typeId].maxOccupancy < guestCount) return;
 
             // Check if busy
@@ -112,11 +121,6 @@ export const handler = async (event, context) => {
             // Valid room found
             availabilityByType[typeId].availableCount++;
             availabilityByType[typeId].roomIds.push(room.id);
-
-            // Update images if specific room has them
-            if (room.image_urls && room.image_urls.length > 0) {
-                availabilityByType[typeId].images = room.image_urls;
-            }
         });
 
         console.log(`[RoomsAvailability] Response built with ${Object.keys(availabilityByType).length} types`);

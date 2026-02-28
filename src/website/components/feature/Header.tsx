@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -56,14 +57,18 @@ export default function Header() {
                 link.path.startsWith('/#') ? (
                   <a
                     key={link.path}
-                    href={location.pathname === '/' ? link.path.substring(1) : `/${link.path}`}
+                    href={link.path}
                     onClick={(e) => {
+                      e.preventDefault();
                       if (location.pathname === '/') {
-                        e.preventDefault();
+                        // Already on home page — smooth scroll to the section
                         const element = document.getElementById(link.path.replace('/#', ''));
                         if (element) {
                           element.scrollIntoView({ behavior: 'smooth' });
                         }
+                      } else {
+                        // Navigate via router so HomePage's useEffect catches the hash
+                        navigate(link.path);
                       }
                     }}
                     className={`text-sm font-medium transition-colors duration-300 whitespace-nowrap cursor-pointer ${location.pathname === link.path
@@ -91,6 +96,7 @@ export default function Header() {
             {/* Book Now Button */}
             <Link
               to="/book-now"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })}
               className="hidden lg:inline-flex items-center justify-center whitespace-nowrap bg-gradient-to-r from-resort-gold-500 to-resort-gold-600 hover:from-resort-gold-600 hover:to-resort-gold-700 text-white px-6 py-2.5 rounded-md font-semibold transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer text-sm"
             >
               BOOK NOW
@@ -148,15 +154,17 @@ export default function Header() {
               link.path.startsWith('/#') ? (
                 <a
                   key={link.path}
-                  href={location.pathname === '/' ? link.path.substring(1) : `/${link.path}`}
+                  href={link.path}
                   onClick={(e) => {
+                    e.preventDefault();
                     setIsMobileMenuOpen(false);
                     if (location.pathname === '/') {
-                      e.preventDefault();
                       const element = document.getElementById(link.path.replace('/#', ''));
                       if (element) {
                         element.scrollIntoView({ behavior: 'smooth' });
                       }
+                    } else {
+                      navigate(link.path);
                     }
                   }}
                   className={`text-base font-medium py-2 transition-colors cursor-pointer ${location.pathname === link.path
@@ -182,7 +190,7 @@ export default function Header() {
             ))}
             <Link
               to="/book-now"
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={() => { setIsMobileMenuOpen(false); window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); }}
               className="inline-flex items-center justify-center w-full whitespace-nowrap bg-gradient-to-r from-resort-gold-500 to-resort-gold-600 hover:from-resort-gold-600 hover:to-resort-gold-700 text-white px-6 py-3 rounded-md font-semibold transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer text-base mt-4"
             >
               BOOK NOW

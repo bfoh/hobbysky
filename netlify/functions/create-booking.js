@@ -1,52 +1,82 @@
-// --- Helper: Standard Email Template (Ported from src/services/email-template.ts) ---
+// --- Helper: Dark-mode Email Template ---
+const C = {
+    outerBg:   '#141F16',
+    cardBg:    '#0F1A11',
+    headerBg:  '#09110A',
+    infoBg:    '#162019',
+    borderGold:'#C9963C',
+    borderSub: '#2B3E2E',
+    gold:      '#C9963C',
+    goldLight: '#DEB96A',
+    text:      '#EDE9E0',
+    textMuted: '#8CA48E',
+    textDark:  '#0F1A11',
+};
+
 const EMAIL_STYLES = {
-    body: 'margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #2C2416; background-color: #f4f4f4;',
-    container: 'max-width: 600px; margin: 0 auto; background-color: #ffffff;',
-    header: 'background-color: #8B4513; padding: 40px 20px; text-align: center;',
-    logo: 'height: 60px; width: auto; max-width: 200px; margin-bottom: 20px;',
-    headerTitle: 'color: #ffffff; font-size: 28px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 1px; font-family: Arial, sans-serif;',
-    headerSubtitle: 'color: rgba(255,255,255,0.9); font-size: 16px; margin: 10px 0 0 0; font-weight: 400;',
-    content: 'padding: 40px 30px;',
-    contentTitle: 'color: #2C2416; font-size: 24px; margin-bottom: 25px; text-align: center; border-bottom: 2px solid #F5F1E8; padding-bottom: 15px;',
-    footer: 'background-color: #F5F1E8; padding: 30px 20px; text-align: center; font-size: 12px; color: #666666; border-top: 1px solid #E5E1D8;',
-    infoBox: 'background-color: #F5F1E8; border-left: 4px solid #8B4513; padding: 20px; margin: 20px 0; border-radius: 4px;',
-    infoRow: 'margin-bottom: 8px;',
-    infoLabel: 'font-weight: 600; color: #2C2416; display: inline-block; width: 120px;'
+    body:      `margin:0;padding:0;background-color:${C.outerBg};`,
+    container: `max-width:600px;margin:0 auto;background-color:${C.cardBg};`,
+    header:    `background-color:${C.headerBg};padding:36px 32px 28px;text-align:center;`,
+    logo:      `display:block;margin:0 auto 16px;height:auto;width:110px;max-width:110px;`,
+    headerTitle:    `color:${C.text};font-size:22px;font-weight:700;margin:0;letter-spacing:1px;font-family:Georgia,serif;`,
+    headerSubtitle: `color:${C.gold};font-size:10px;margin:8px 0 0;font-weight:700;letter-spacing:4px;text-transform:uppercase;font-family:Arial,sans-serif;`,
+    content:   `padding:36px 32px;background-color:${C.cardBg};`,
+    contentTitle: `color:${C.goldLight};font-size:20px;margin:0 0 28px;text-align:center;font-family:Georgia,serif;font-weight:700;`,
+    footer:    `background-color:${C.headerBg};border-top:1px solid ${C.borderSub};padding:28px 32px;text-align:center;`,
+    infoBox:   `background-color:${C.infoBg};border-left:3px solid ${C.borderGold};padding:20px 22px;margin:20px 0;border-radius:0 6px 6px 0;`,
+    infoRow:   `margin-bottom:10px;font-size:15px;color:${C.text};font-family:Arial,sans-serif;`,
+    infoLabel: `font-weight:600;color:${C.textMuted};display:inline-block;min-width:120px;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;`,
 };
 
 function generateEmailHtml({ title, preheader, content }) {
     const year = new Date().getFullYear();
-    return `
-<!DOCTYPE html>
-<html>
+    return `<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
   <title>${title}</title>
 </head>
-<body style="${EMAIL_STYLES.body}">
-  <div style="${EMAIL_STYLES.container}">
-    <!-- Header -->
-    <div style="${EMAIL_STYLES.header}">
-      <img src="https://amplodge.org/amp.png" alt="AMP Lodge" style="${EMAIL_STYLES.logo}" />
-      <h1 style="${EMAIL_STYLES.headerTitle}">AMP Lodge</h1>
-      <p style="${EMAIL_STYLES.headerSubtitle}">Premium Hospitality Experience</p>
-    </div>
-
-    <!-- Main Content -->
-    <div style="${EMAIL_STYLES.content}">
-      <h2 style="${EMAIL_STYLES.contentTitle}">${title}</h2>
-      <div style="font-size: 16px; line-height: 1.6; color: #2C2416;">
-        ${content}
-      </div>
-    </div>
-
-    <!-- Footer -->
-    <div style="${EMAIL_STYLES.footer}">
-      <p style="margin: 0 0 10px 0;">&copy; ${year} AMP Lodge Hotel Management System. All rights reserved.</p>
-      <p style="margin: 0;">Automated notification. Please do not reply directly to this email.</p>
-    </div>
-  </div>
+<body style="margin:0;padding:0;background-color:${C.outerBg};">
+  ${preheader ? `<div style="display:none;font-size:1px;color:${C.outerBg};line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">${preheader}</div>` : ''}
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${C.outerBg};padding:32px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:${C.cardBg};border-radius:8px;overflow:hidden;border:1px solid ${C.borderSub};">
+        <!-- Gold top bar -->
+        <tr><td style="height:3px;background-color:${C.borderGold};font-size:0;line-height:0;">&nbsp;</td></tr>
+        <!-- Header -->
+        <tr>
+          <td style="background-color:${C.headerBg};padding:36px 32px 28px;text-align:center;">
+            <img src="https://hobbyskyguesthouse.com/logohobbyskydarkmode.png" alt="Hobbysky Guest House" width="110" height="auto" style="display:block;margin:0 auto 16px;width:110px;height:auto;" />
+            <h1 style="margin:0;color:${C.text};font-size:22px;font-weight:700;font-family:Georgia,serif;letter-spacing:1px;">Hobbysky Guest House</h1>
+            <p style="margin:8px 0 0;color:${C.gold};font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;font-family:Arial,sans-serif;">Premium Hospitality</p>
+          </td>
+        </tr>
+        <!-- Gold divider -->
+        <tr><td style="height:2px;background-color:${C.borderGold};font-size:0;line-height:0;">&nbsp;</td></tr>
+        <!-- Title -->
+        <tr>
+          <td style="background-color:${C.infoBg};padding:22px 32px;text-align:center;">
+            <h2 style="margin:0;color:${C.goldLight};font-size:20px;font-weight:700;font-family:Georgia,serif;">${title}</h2>
+          </td>
+        </tr>
+        <!-- Body -->
+        <tr>
+          <td style="background-color:${C.cardBg};padding:36px 32px;color:${C.text};font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.7;">
+            ${content}
+          </td>
+        </tr>
+        <!-- Footer -->
+        <tr>
+          <td style="background-color:${C.headerBg};border-top:1px solid ${C.borderSub};padding:28px 32px;text-align:center;">
+            <p style="margin:0 0 6px;color:${C.textMuted};font-size:12px;font-family:Arial,sans-serif;">&copy; ${year} Hobbysky Guest House &middot; DKC Abuakwa, Kumasi, Ghana</p>
+            <p style="margin:0;color:#2B3E2E;font-size:11px;font-family:Arial,sans-serif;">This is an automated notification &mdash; please do not reply to this email.</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
 </body>
 </html>`;
 }
@@ -59,89 +89,15 @@ import { createClient } from '@supabase/supabase-js';
 import PDFDocument from 'pdfkit';
 import { Buffer } from 'node:buffer';
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // --- Helper: Generate PDF Buffer ---
 async function generatePreInvoicePdfBuffer(bookingContext) {
-    return new Promise((resolve, reject) => {
-        try {
-            const doc = new PDFDocument({ margin: 50 });
-            const buffers = [];
-
-            doc.on('data', buffers.push.bind(buffers));
-            doc.on('end', () => {
-                const pdfData = Buffer.concat(buffers);
-                resolve(pdfData.toString('base64'));
-            });
-            doc.on('error', reject);
-
-            // Hotel Info
-            doc.fontSize(20).font('Helvetica-Bold').fillColor('#8B4513').text('AMP Lodge', { align: 'left' });
-            doc.fontSize(10).font('Helvetica').fillColor('#666666').text('Abuakwa DKC junction, Kumasi-Sunyani Rd', { align: 'left' });
-            doc.text('Kumasi, Ghana', { align: 'left' });
-            doc.text('Phone: +233 55 500 9697', { align: 'left' });
-            doc.text('Email: info@amplodge.org', { align: 'left' });
-            doc.moveDown();
-
-            // Invoice Title
-            doc.fontSize(24).font('Helvetica-Bold').fillColor('#f59e0b').text('PRE-INVOICE', { align: 'right', valign: 'top' });
-            doc.fontSize(10).font('Helvetica').fillColor('#666666').text(`Date: ${new Date().toLocaleDateString()}`, { align: 'right' });
-            doc.text('Status: UNPAID', { align: 'right' });
-            doc.moveDown(2);
-
-            // Divider
-            doc.moveTo(50, doc.y).lineTo(550, doc.y).strokeColor('#8B4513').lineWidth(1).stroke();
-            doc.moveDown();
-
-            // Bill To
-            doc.fontSize(12).font('Helvetica-Bold').fillColor('#8B4513').text('Bill To:', { align: 'left' });
-            doc.fontSize(10).font('Helvetica').fillColor('#333333');
-            doc.text(bookingContext.guestName);
-            if (bookingContext.guestPhone) doc.text(bookingContext.guestPhone);
-            if (bookingContext.guestEmail) doc.text(bookingContext.guestEmail);
-            doc.moveDown();
-
-            // Booking Details
-            doc.fontSize(12).font('Helvetica-Bold').fillColor('#8B4513').text('Booking Details:', { align: 'left' });
-            doc.fontSize(10).font('Helvetica').fillColor('#333333');
-            doc.text(`Room: ${bookingContext.roomNumber}`);
-            doc.text(`Check-in: ${bookingContext.checkIn}`);
-            doc.text(`Check-out: ${bookingContext.checkOut}`);
-            doc.text(`Nights: ${bookingContext.nights}`);
-            doc.moveDown(2);
-
-            // Table Header
-            const tableTop = doc.y;
-            doc.rect(50, tableTop, 500, 20).fillColor('#8B4513').fill();
-            doc.fillColor('white').font('Helvetica-Bold').text('Description', 60, tableTop + 5);
-            doc.text('Amount', 450, tableTop + 5, { align: 'right', width: 90 });
-            doc.moveDown();
-
-            // Table Row
-            const rowTop = tableTop + 25;
-            doc.fillColor('black').font('Helvetica').text(`Room Charges (${bookingContext.nights} nights)`, 60, rowTop);
-            doc.text(`GHS ${bookingContext.totalPrice}`, 450, rowTop, { align: 'right', width: 90 });
-
-            // Totals
-            const totalTop = rowTop + 40;
-            doc.moveTo(350, totalTop).lineTo(550, totalTop).strokeColor('#e5e7eb').stroke();
-            doc.fontSize(12).font('Helvetica-Bold').fillColor('#8B4513').text('Total Due:', 350, totalTop + 10);
-            doc.text(`GHS ${bookingContext.totalPrice}`, 450, totalTop + 10, { align: 'right', width: 90 });
-
-            // Payment Notice
-            doc.moveDown(4);
-            doc.rect(50, doc.y, 500, 60).fillColor('#fef3c7').strokeColor('#f59e0b').fillAndStroke();
-            doc.fillColor('#92400e').font('Helvetica-Bold').text('Payment Information', 60, doc.y - 45);
-            doc.font('Helvetica').text('Full payment is due upon check-in. We accept Cash, Mobile Money, and Bank Transfers.', 60, doc.y + 5, { width: 480 });
-
-            doc.end();
-
-        } catch (error) {
-            reject(error);
-        }
-    });
+    // PDF generation via PDFKit is not available in this environment.
+    // Return null so the caller skips the attachment gracefully.
+    return null;
 }
 // --- Helper End ---
 
@@ -164,7 +120,8 @@ export const handler = async (event, context) => {
 
     try {
         const body = JSON.parse(event.body);
-        const { checkIn, checkOut, roomTypeId, guestName, guestEmail, guestPhone } = body;
+        const { checkIn, checkOut, roomTypeId, guestName, guestEmail, guestPhone,
+            numGuests = 1, specialRequests = '', source = 'online' } = body;
 
         // Validation
         if (!checkIn || !checkOut || !roomTypeId || !guestName || !guestEmail) {
@@ -270,7 +227,7 @@ export const handler = async (event, context) => {
             .from('rooms')
             .select('id, room_number, price, room_types(base_price)')
             .eq('room_type_id', validRoomTypeId) // Use validated ID
-            .in('status', ['clean', 'available']);
+            .neq('status', 'maintenance');
 
         if (roomsError) {
             console.error('[CreateBooking] Rooms Fetch Error:', roomsError);
@@ -367,15 +324,29 @@ export const handler = async (event, context) => {
                 check_out: checkOut,
                 status: 'confirmed',
                 total_price: totalPrice,
-                num_guests: 1,
-                special_requests: '[Voice Agent Booking]',
-                source: 'voice_agent',
+                num_guests: numGuests,
+                special_requests: `[${source === 'online' ? 'Online Booking' : 'Voice Agent Booking'}]${specialRequests ? '\n' + specialRequests : ''}`,
+                source: source,
                 created_at: new Date().toISOString()
             })
             .select()
             .single();
 
-        if (bookingError) throw bookingError;
+        if (bookingError) {
+            console.error('[CreateBooking] Booking Insert Error:', bookingError);
+
+            // Catch PostgreSQL `EXCLUDE USING gist` double-booking constraint violation
+            if (bookingError.code === '23P01') {
+                console.log(`[CreateBooking] Conflict constraint triggered for Room ${availableRoom.room_number}.`);
+                return {
+                    statusCode: 409,
+                    headers,
+                    body: JSON.stringify({ error: "We're sorry, this room was just booked moments ago by another guest! Please search again to see updated availability." })
+                };
+            }
+
+            throw bookingError;
+        }
 
         console.log('[CreateBooking] Success:', booking.id);
 
@@ -383,12 +354,12 @@ export const handler = async (event, context) => {
         // We use Promise.all to run these concurrently (faster) and await them
         // so the function doesn't freeze before sending.
         try {
-            const baseUrl = process.env.URL || 'https://amplodge.org';
+            const baseUrl = process.env.URL || 'https://hobbyskyguesthouse.com';
             const notificationPromises = [];
 
             // 1. Send SMS
             if (guestPhone) {
-                const smsMessage = `Dear ${guestName}, your booking at AMP Lodge (Room ${availableRoom.room_number}) from ${checkIn} to ${checkOut} is confirmed. Check email for details.`;
+                const smsMessage = `Dear ${guestName}, your booking at Hobbysky Guest House (Room ${availableRoom.room_number}) from ${checkIn} to ${checkOut} is confirmed. Check email for details.`;
                 console.log('[CreateBooking] Queueing SMS...');
                 notificationPromises.push(
                     fetch(`${baseUrl}/.netlify/functions/send-sms`, {
@@ -407,59 +378,53 @@ export const handler = async (event, context) => {
                     title: 'Booking Confirmed!',
                     preheader: `Reservation for Room ${availableRoom.room_number}`,
                     content: `
-                    <p>Dear <strong>${guestName}</strong>,</p>
-                    <p>Thank you for booking with AMP Lodge via our Voice Concierge. Your reservation is confirmed!</p>
-                    
+                    <p style="color:${C.text};font-family:Arial,sans-serif;">Dear <strong style="color:${C.goldLight};">${guestName}</strong>,</p>
+                    <p style="color:${C.text};font-family:Arial,sans-serif;">Thank you for booking with <strong>Hobbysky Guest House</strong>${source === 'online' ? ' via our website' : ' via our Voice Concierge'}. Your reservation is confirmed!</p>
+
                     <div style="${EMAIL_STYLES.infoBox}">
-                        <div style="${EMAIL_STYLES.infoRow}">
-                            <span style="${EMAIL_STYLES.infoLabel}">Room:</span> ${availableRoom.room_number} (${availableRoom.room_types?.name || 'Standard'})
-                        </div>
-                        <div style="${EMAIL_STYLES.infoRow}">
-                            <span style="${EMAIL_STYLES.infoLabel}">Check-In:</span> ${checkIn}
-                        </div>
-                        <div style="${EMAIL_STYLES.infoRow}">
-                            <span style="${EMAIL_STYLES.infoLabel}">Check-Out:</span> ${checkOut}
-                        </div>
-                        <div style="${EMAIL_STYLES.infoRow}">
-                            <span style="${EMAIL_STYLES.infoLabel}">Total Price:</span> GHS ${totalPrice}
-                        </div>
+                        <div style="${EMAIL_STYLES.infoRow}"><span style="${EMAIL_STYLES.infoLabel}">Room</span><span style="color:${C.text};">${availableRoom.room_number} &mdash; ${availableRoom.room_types?.name || 'Standard'}</span></div>
+                        <div style="${EMAIL_STYLES.infoRow}"><span style="${EMAIL_STYLES.infoLabel}">Check-In</span><span style="color:${C.text};">${checkIn}</span></div>
+                        <div style="${EMAIL_STYLES.infoRow}"><span style="${EMAIL_STYLES.infoLabel}">Check-Out</span><span style="color:${C.text};">${checkOut}</span></div>
+                        <div style="${EMAIL_STYLES.infoRow}"><span style="${EMAIL_STYLES.infoLabel}">Nights</span><span style="color:${C.text};">${nights}</span></div>
+                        <div style="${EMAIL_STYLES.infoRow}"><span style="${EMAIL_STYLES.infoLabel}">Guests</span><span style="color:${C.text};">${numGuests}</span></div>
                     </div>
 
-                    <!-- PRE-INVOICE SECTION -->
-                    <div style="background-color: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px; padding: 20px; margin: 25px 0;">
-                        <h3 style="color: #92400e; font-size: 18px; margin: 0 0 15px 0; display: flex; align-items: center;">
-                            📋 Pre-Invoice / Payment Summary
-                        </h3>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-                            <tr style="border-bottom: 1px solid #fcd34d;">
-                                <td style="padding: 8px 0; color: #78350f;">Room Charge (${nights} night${nights > 1 ? 's' : ''})</td>
-                                <td style="padding: 8px 0; text-align: right; color: #78350f; font-weight: 600;">GHS ${totalPrice}</td>
-                            </tr>
-                            <tr style="background-color: #f59e0b; color: white;">
-                                <td style="padding: 10px; font-weight: bold;">Total Due at Check-in</td>
-                                <td style="padding: 10px; text-align: right; font-weight: bold; font-size: 16px;">GHS ${totalPrice}</td>
-                            </tr>
-                        </table>
-                        <p style="color: #92400e; font-size: 12px; margin: 15px 0 0 0; text-align: center;">
-                            💳 We accept Cash, Mobile Money, and Bank Transfers
-                        </p>
-                    </div>
+                    <!-- PRE-INVOICE -->
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0;background-color:${C.infoBg};border:1px solid ${C.borderGold};border-radius:6px;overflow:hidden;">
+                        <tr><td style="padding:16px 20px;border-bottom:1px solid ${C.borderSub};">
+                            <p style="margin:0;color:${C.goldLight};font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;font-family:Arial,sans-serif;">Payment Summary</p>
+                        </td></tr>
+                        <tr>
+                            <td style="padding:14px 20px;">
+                                <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                    <tr>
+                                        <td style="color:${C.textMuted};font-size:14px;font-family:Arial,sans-serif;padding-bottom:8px;">Room Charge (${nights} night${nights > 1 ? 's' : ''})</td>
+                                        <td style="color:${C.text};font-size:14px;font-family:Arial,sans-serif;text-align:right;padding-bottom:8px;">GHS ${totalPrice}</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2" style="height:1px;background-color:${C.borderSub};font-size:0;padding:0;">&nbsp;</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="color:${C.gold};font-size:15px;font-weight:700;font-family:Arial,sans-serif;padding-top:10px;">Total Due at Check-in</td>
+                                        <td style="color:${C.gold};font-size:18px;font-weight:700;font-family:Arial,sans-serif;text-align:right;padding-top:10px;">GHS ${totalPrice}</td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr><td style="padding:12px 20px;background-color:#162019;border-top:1px solid ${C.borderSub};text-align:center;">
+                            <p style="margin:0;color:${C.textMuted};font-size:12px;font-family:Arial,sans-serif;letter-spacing:0.5px;">We accept Cash &middot; Mobile Money &middot; Bank Transfer</p>
+                        </td></tr>
+                    </table>
 
-                    <h3 style="margin-top: 30px; font-size: 18px; color: #8B4513;">Check-in Information</h3>
-                    <ul>
+                    <p style="margin:28px 0 10px;color:${C.goldLight};font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;font-family:Arial,sans-serif;">Check-in Information</p>
+                    <ul style="margin:0;padding-left:20px;color:${C.textMuted};font-family:Arial,sans-serif;font-size:14px;line-height:1.8;">
                         <li>Check-in time is from 2:00 PM</li>
-                        <li>Please present valid ID upon arrival</li>
+                        <li>Please present a valid ID upon arrival</li>
                         <li>Full payment is due upon check-in</li>
                     </ul>
-                    
-                    <p style="margin-top: 30px;">
-                        We look forward to hosting you!
-                    </p>
-                    
-                    <p>
-                        Best regards,<br>
-                        <strong>The AMP LODGE Team</strong>
-                    </p>
+
+                    <p style="margin:32px 0 8px;color:${C.text};font-family:Arial,sans-serif;">We look forward to welcoming you.</p>
+                    <p style="margin:0;color:${C.textMuted};font-family:Arial,sans-serif;font-size:14px;">The Hobbysky Guest House Team</p>
                 `
                 });
 
@@ -477,14 +442,17 @@ export const handler = async (event, context) => {
 
                 let pdfAttachment = null;
                 try {
-                    console.log('[CreateBooking] Generating PDF attachment...');
                     const pdfBase64 = await generatePreInvoicePdfBuffer(bookingContext);
-                    pdfAttachment = {
-                        filename: `Pre-Invoice-${booking.id.substring(0, 8)}.pdf`,
-                        content: pdfBase64,
-                        contentType: 'application/pdf'
-                    };
-                    console.log('[CreateBooking] PDF attachment generated.');
+                    if (pdfBase64) {
+                        pdfAttachment = {
+                            filename: `Pre-Invoice-${booking.id.substring(0, 8)}.pdf`,
+                            content: pdfBase64,
+                            contentType: 'application/pdf'
+                        };
+                        console.log('[CreateBooking] PDF attachment generated.');
+                    } else {
+                        console.log('[CreateBooking] Skipping PDF attachment — sending email without it.');
+                    }
                 } catch (pdfError) {
                     console.error('[CreateBooking] Failed to generate PDF attachment:', pdfError);
                     // Continue without attachment
@@ -504,11 +472,53 @@ export const handler = async (event, context) => {
                 notificationPromises.push(
                     fetch(`${baseUrl}/.netlify/functions/send-email`, {
                         method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(emailPayload)
-                    }).then(res => {
-                        if (!res.ok) console.error('[CreateBooking] Email Failed:', res.status);
-                        else console.log('[CreateBooking] Email Sent');
+                    }).then(async res => {
+                        const txt = await res.text();
+                        if (!res.ok) console.error('[CreateBooking] Email Failed:', res.status, txt);
+                        else console.log('[CreateBooking] Email Sent:', txt);
                     }).catch(err => console.error('[CreateBooking] Email Error:', err))
+                );
+            }
+
+            // 3. Hotel alert for online bookings
+            if (source === 'online') {
+                const alertHtml = generateEmailHtml({
+                    title: '🌐 New Online Booking',
+                    preheader: `New online booking from ${guestName}`,
+                    content: `
+                    <p>A new booking has been placed via the <strong>Hobbysky Guest House website</strong>.</p>
+                    <div style="${EMAIL_STYLES.infoBox}">
+                        <div style="${EMAIL_STYLES.infoRow}"><span style="${EMAIL_STYLES.infoLabel}">Source:</span> 🌐 Online Website</div>
+                        <div style="${EMAIL_STYLES.infoRow}"><span style="${EMAIL_STYLES.infoLabel}">Guest:</span> ${guestName}</div>
+                        <div style="${EMAIL_STYLES.infoRow}"><span style="${EMAIL_STYLES.infoLabel}">Email:</span> ${guestEmail}</div>
+                        ${guestPhone ? `<div style="${EMAIL_STYLES.infoRow}"><span style="${EMAIL_STYLES.infoLabel}">Phone:</span> ${guestPhone}</div>` : ''}
+                        <div style="${EMAIL_STYLES.infoRow}"><span style="${EMAIL_STYLES.infoLabel}">Room:</span> ${availableRoom.room_number}</div>
+                        <div style="${EMAIL_STYLES.infoRow}"><span style="${EMAIL_STYLES.infoLabel}">Check-In:</span> ${checkIn}</div>
+                        <div style="${EMAIL_STYLES.infoRow}"><span style="${EMAIL_STYLES.infoLabel}">Check-Out:</span> ${checkOut}</div>
+                        <div style="${EMAIL_STYLES.infoRow}"><span style="${EMAIL_STYLES.infoLabel}">Nights:</span> ${nights}</div>
+                        <div style="${EMAIL_STYLES.infoRow}"><span style="${EMAIL_STYLES.infoLabel}">Guests:</span> ${numGuests}</div>
+                        <div style="${EMAIL_STYLES.infoRow}"><span style="${EMAIL_STYLES.infoLabel}">Total:</span> GHS ${totalPrice}</div>
+                        <div style="${EMAIL_STYLES.infoRow}"><span style="${EMAIL_STYLES.infoLabel}">Booking ID:</span> ${booking.id}</div>
+                    </div>
+                    <p>Please ensure the room is prepared for the guest's arrival.</p>
+                    `
+                });
+                notificationPromises.push(
+                    fetch(`${baseUrl}/.netlify/functions/send-email`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            to: 'hobbyskyguesthouse@gmail.com',
+                            subject: `🌐 New Online Booking — ${guestName} | Room ${availableRoom.room_number} | ${checkIn}`,
+                            html: alertHtml
+                        })
+                    }).then(async res => {
+                        const txt = await res.text();
+                        if (!res.ok) console.error('[CreateBooking] Hotel alert Failed:', res.status, txt);
+                        else console.log('[CreateBooking] Hotel alert Sent:', txt);
+                    }).catch(err => console.error('[CreateBooking] Hotel alert Error:', err))
                 );
             }
 

@@ -118,6 +118,7 @@ export default function OurRoomsSection() {
 
                   <Link
                     to="/book-now"
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })}
                     className="mt-auto inline-flex items-center justify-center w-full whitespace-nowrap bg-gradient-to-r from-resort-gold-500 to-resort-gold-600 hover:from-resort-gold-600 hover:to-resort-gold-700 text-white px-6 py-3 rounded-md font-semibold transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer text-sm"
                   >
                     BOOK NOW

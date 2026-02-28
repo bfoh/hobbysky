@@ -42,3 +42,6 @@ replace_vars.js
 test-*.html
 test_resolution.js
 auto-imports.d.ts
+
+# Local Netlify folder
+.netlify

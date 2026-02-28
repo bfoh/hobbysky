@@ -4,6 +4,7 @@ import { BookingCharge } from '@/types'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
 import { sendTransactionalEmail } from '@/services/email-service'
+import { generateEmailHtml, EMAIL_STYLES } from '@/services/email-template'
 import { formatCurrencySync } from '@/lib/utils'
 
 interface InvoiceData {
@@ -131,7 +132,23 @@ export async function createInvoiceData(booking: BookingWithDetails, roomDetails
       }
     }
 
-    // Fallback: Check for direct discountAmount column (used by single booking check-in)
+    // Fallback 1: Check for DISCOUNT_DATA embedded in specialRequests (single booking check-in path)
+    if (discountAmount === 0 && booking.specialRequests) {
+      const dm = booking.specialRequests.match(/<!-- DISCOUNT_DATA:(.*?) -->/)
+      if (dm) {
+        try {
+          const parsed = JSON.parse(dm[1])
+          if (parsed.discountAmount && parsed.discountAmount > 0) {
+            discountAmount = Number(parsed.discountAmount)
+            discount = { type: 'fixed', value: discountAmount, amount: discountAmount }
+          }
+        } catch (e) {
+          console.error('Failed to parse DISCOUNT_DATA from specialRequests:', e)
+        }
+      }
+    }
+
+    // Fallback 2: Check for direct discountAmount column (if migration has been run)
     if (discountAmount === 0 && (booking as any).discountAmount) {
       discountAmount = Number((booking as any).discountAmount) || 0
       if (discountAmount > 0) {
@@ -223,183 +240,83 @@ export async function generateInvoiceHTML(invoiceData: InvoiceData): Promise<str
       total: invoiceData.charges.total
     })
 
-    // Get currency for formatting
     const settings = await hotelSettingsService.getHotelSettings()
     const currency = settings.currency || 'GHS'
 
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <title>Invoice ${invoiceData.invoiceNumber}</title>
-        <style>
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.5; color: #333; background: #fff; font-size: 12px; }
-          .invoice-container { max-width: 800px; margin: 0 auto; padding: 20px 30px; background: #fff; }
-          .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; border-bottom: 3px solid #8B4513; padding-bottom: 10px; }
-          .hotel-info h1 { color: #8B4513; font-size: 28px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.5px; }
-          .hotel-info p { color: #555; font-size: 11px; margin: 2px 0; }
-          .hotel-info .tin { color: #333; font-size: 11px; font-weight: 600; margin-top: 5px; }
-          .invoice-meta { text-align: right; }
-          .invoice-meta h2 { color: #8B4513; font-size: 20px; font-weight: 700; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
-          .invoice-meta p { color: #555; font-size: 11px; margin: 3px 0; }
-          .invoice-meta p strong { color: #333; }
-          .invoice-details { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-          .bill-to, .invoice-info { background: linear-gradient(135deg, #F5F1E8 0%, #EDE7DA 100%); padding: 18px; border-radius: 8px; border-left: 4px solid #8B4513; }
-          .bill-to h3, .invoice-info h3 { color: #8B4513; font-size: 13px; margin-bottom: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-          .bill-to p, .invoice-info p { color: #555; font-size: 11px; margin: 3px 0; }
-          .charges-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 11px; }
-          .charges-table th { background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%); color: white; padding: 10px 8px; text-align: left; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 10px; }
-          .charges-table td { padding: 10px 8px; border-bottom: 1px solid #e5e7eb; }
-          .charges-table tr:nth-child(even) { background: #f9fafb; }
-          .charges-table tr:hover { background-color: #faf8f5; }
-          .charges-table .text-right { text-align: right; }
-          .charges-table .text-center { text-align: center; }
-          .totals { display: flex; justify-content: flex-end; margin-bottom: 15px; margin-top: 10px; }
-          .totals-table { width: 280px; font-size: 11px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
-          .totals-table td { padding: 8px 12px; border-bottom: 1px solid #e5e7eb; }
-          .totals-table tr:last-child td { border-bottom: none; }
-          .totals-table .total-row { background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%); color: white; font-weight: 700; font-size: 13px; }
-          .totals-table .total-row td { padding: 12px; }
-          .footer { margin-top: 15px; padding-top: 10px; border-top: 2px solid #e5e7eb; text-align: center; color: #888; font-size: 10px; }
-          .footer p { margin: 3px 0; }
-          .thank-you { background: linear-gradient(135deg, #F5F1E8 0%, #EDE7DA 100%); padding: 18px; border-radius: 8px; text-align: center; margin-top: 20px; }
-          .thank-you h3 { color: #8B4513; font-size: 14px; margin-bottom: 5px; font-weight: 700; }
-          .thank-you p { color: #555; font-size: 11px; }
-          @media print { 
-            .invoice-container { padding: 10px 20px; } 
-            body { -webkit-print-color-adjust: exact; }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="invoice-container">
-          <!-- Header -->
-          <div class="header">
-            <div class="hotel-info">
-              <h1>${invoiceData.hotel.name}</h1>
-              <p>${invoiceData.hotel.address}</p>
-              <p>Phone: ${invoiceData.hotel.phone}</p>
-              <p>Email: ${invoiceData.hotel.email}</p>
-              <p>Website: ${invoiceData.hotel.website}</p>
-              <p class="tin">TIN: 71786161-3</p>
-            </div>
-            <div class="invoice-meta">
-              <h2>${invoiceData.invoiceNumber.startsWith('PRE-') ? 'Pre-Invoice' : 'Invoice'}</h2>
-              <p><strong>Invoice #:</strong> ${invoiceData.invoiceNumber}</p>
-              <p><strong>Date:</strong> ${new Date(invoiceData.invoiceDate).toLocaleDateString()}</p>
-              <p><strong>Due Date:</strong> ${new Date(invoiceData.dueDate).toLocaleDateString()}</p>
-            </div>
-          </div>
+    const sharedCss = `*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',system-ui,-apple-system,sans-serif;line-height:1.6;color:#1E293B;background:#fff;font-size:11px}.w{max-width:794px;margin:0 auto;background:#fff;padding:40px}h1{font-size:24px;font-weight:300;color:#1E3D22;margin-bottom:6px;letter-spacing:-0.5px}h3{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#C9963C;margin-bottom:12px}p{font-size:11px;color:#475569;margin:3px 0}strong{color:#1E3D22;font-weight:600}em{font-style:normal;color:#64748B}.lbl{font-size:10px;font-weight:500;color:#C9963C;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}.hd{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:28px;border-bottom:1px solid #E2E8F0;margin-bottom:36px;position:relative}.im{text-align:right}.im .dt{font-size:20px;font-weight:300;color:#1E3D22;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}.im .dn{font-size:12px;font-weight:500;color:#64748B;margin-bottom:14px;letter-spacing:0.5px}.ic p{font-size:11px}.ig{display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-bottom:48px}table.ct{width:100%;border-collapse:collapse;margin-bottom:40px}table.ct th{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#94A3B8;text-align:left;padding:14px 4px;border-bottom:1px solid #E2E8F0}table.ct td{padding:14px 4px;color:#1E293B;border-bottom:1px solid #F1F5F9}table.ct th.r,table.ct td.r{text-align:right}table.ct th.c,table.ct td.c{text-align:center}.tw{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:48px}.sp{flex:1;padding-right:48px}table.tt{width:300px;border-collapse:collapse}table.tt td{padding:10px 4px;font-size:11px;color:#475569}table.tt tr.sub td{border-top:1px dashed #E2E8F0;font-weight:500;color:#1E3D22;padding-top:14px}table.tt tr.gt td{border-top:2px solid #1E3D22;padding-top:16px;padding-bottom:16px;font-size:15px;font-weight:600;color:#1E3D22}.ft{padding-top:28px;border-top:1px solid #E2E8F0;text-align:center}.ft .ty{font-size:12px;font-weight:500;color:#1E3D22;margin-bottom:10px}.ft .fr{font-size:9px;color:#64748B;display:flex;justify-content:space-between}.sb{text-align:center;padding:10px;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:36px;border:1px solid currentColor;border-radius:2px}.bdg{display:inline-block;margin-top:10px;padding:5px 14px;border:1px solid currentColor;border-radius:2px;font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase}.sh td{font-size:9px;font-weight:600;color:#C9963C;text-transform:uppercase;letter-spacing:1px;padding:12px 4px 6px!important}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}`
 
-          <!-- Invoice Details -->
-          <div class="invoice-details">
-            <div class="bill-to">
-              <h3>Bill To:</h3>
-              <p><strong>${invoiceData.guest.name}</strong></p>
-              ${invoiceData.guest.email ? `<p>${invoiceData.guest.email}</p>` : ''}
-              ${invoiceData.guest.phone ? `<p>Phone: ${invoiceData.guest.phone}</p>` : ''}
-              ${invoiceData.guest.address ? `<p>${invoiceData.guest.address}</p>` : ''}
-            </div>
-            <div class="invoice-info">
-              <h3>Booking Details:</h3>
-              <p><strong>Booking ID:</strong> ${invoiceData.booking.id}</p>
-              <p><strong>Room:</strong> ${invoiceData.booking.roomNumber} (${invoiceData.booking.roomType})</p>
-              <p><strong>Check-in:</strong> ${new Date(invoiceData.booking.checkIn).toLocaleDateString()}</p>
-              <p><strong>Check-out:</strong> ${new Date(invoiceData.booking.checkOut).toLocaleDateString()}</p>
-              <p><strong>Nights:</strong> ${invoiceData.booking.nights}</p>
-              <p><strong>Guests:</strong> ${invoiceData.booking.numGuests}</p>
-            </div>
-          </div>
-
-          <!-- Charges Table -->
-          <table class="charges-table">
-            <thead>
-              <tr>
-                <th>Description</th>
-                <th class="text-center">Qty</th>
-                <th class="text-right">Rate</th>
-                <th class="text-right">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Room ${invoiceData.booking.roomNumber} - ${invoiceData.booking.roomType}</td>
-                <td class="text-center">${invoiceData.charges.nights} nights</td>
-                <td class="text-right">${formatCurrencySync(invoiceData.charges.roomRate, currency)}/night</td>
-                <td class="text-right">${formatCurrencySync(invoiceData.charges.roomRate * invoiceData.charges.nights, currency)}</td>
-              </tr>
-              ${invoiceData.charges.additionalCharges.map(charge => `
-              <tr>
-                <td>Additional Charge (${charge.description})</td>
-                <td class="text-center">${charge.quantity}</td>
-                <td class="text-right">${formatCurrencySync(charge.unitPrice, currency)}</td>
-                <td class="text-right">${formatCurrencySync(charge.amount, currency)}</td>
-              </tr>
-              `).join('')}
-            </tbody>
-          </table>
-
-          <!-- Totals -->
-          <div class="totals">
-            <table class="totals-table">
-              ${invoiceData.charges.discountTotal > 0 ? `
-              <tr style="color: #dc2626;">
-                <td>Discount ${invoiceData.charges.discount?.type === 'percentage' ? `(${invoiceData.charges.discount.value}%)` : ''}</td>
-                <td class="text-right">- ${formatCurrencySync(invoiceData.charges.discountTotal, currency)}</td>
-              </tr>
-              ` : ''}
-              <tr style="border-top: 2px solid #8B4513; background: #faf8f5;">
-                <td colspan="2" style="padding: 8px 12px; font-size: 10px; color: #666; text-transform: uppercase;">Tax Breakdown</td>
-              </tr>
-              <tr>
-                <td>Sales Total</td>
-                <td class="text-right">${formatCurrencySync(invoiceData.charges.salesTotal, currency)}</td>
-              </tr>
-              <tr>
-                <td>GF/NHIL (5%)</td>
-                <td class="text-right">${formatCurrencySync(invoiceData.charges.gfNhil, currency)}</td>
-              </tr>
-              <tr style="border-bottom: 1px solid #ddd;">
-                <td><strong>Sub Total</strong></td>
-                <td class="text-right"><strong>${formatCurrencySync(invoiceData.charges.taxSubTotal, currency)}</strong></td>
-              </tr>
-              <tr>
-                <td>VAT (15%)</td>
-                <td class="text-right">${formatCurrencySync(invoiceData.charges.vat, currency)}</td>
-              </tr>
-              <tr>
-                <td>Tourism Levy (1%)</td>
-                <td class="text-right">${formatCurrencySync(invoiceData.charges.tourismLevy, currency)}</td>
-              </tr>
-              <tr class="total-row">
-                <td>Grand Total</td>
-                <td class="text-right">${formatCurrencySync(invoiceData.charges.total, currency)}</td>
-              </tr>
-            </table>
-          </div>
-
-          <!-- Footer -->
-          <div class="footer" style="margin-top: 10px;">
-            <div style="background: #F5F1E8; padding: 6px 15px; border-radius: 6px; text-align: center; margin-bottom: 8px;">
-              <p style="font-size: 12px; color: #8B4513; font-weight: 600; margin: 0;">Thank you for choosing ${invoiceData.hotel.name}!</p>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-size: 9px; color: #888;">
-              <div>
-                <p style="margin: 2px 0;"><strong>Payment Terms:</strong> Due upon receipt</p>
-                <p style="margin: 2px 0;"><strong>Payment Methods:</strong> Cash, Mobile Money, Bank Transfer</p>
-              </div>
-              <div style="text-align: right;">
-                <p style="margin: 2px 0;">${invoiceData.hotel.phone} | ${invoiceData.hotel.email}</p>
-                <p style="margin: 2px 0;">TIN: 71786161-3</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </body>
-      </html>
-    `
+    const htmlContent = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Invoice ${invoiceData.invoiceNumber}</title><style>${sharedCss}</style></head>
+<body><div class="w">
+<div class="ab"></div>
+<div class="hd">
+  <div class="hi">
+    <div class="lbl">Guest House</div>
+    <h1>${invoiceData.hotel.name}</h1>
+    <p>${invoiceData.hotel.address}</p>
+    <p>Tel: ${invoiceData.hotel.phone} &nbsp;|&nbsp; ${invoiceData.hotel.email}</p>
+    <p class="tin">TIN: 71786161-3</p>
+  </div>
+  <div class="im">
+    <div class="dt">Invoice</div>
+    <div class="dn">${invoiceData.invoiceNumber}</div>
+    <p><strong>Date:</strong> ${new Date(invoiceData.invoiceDate).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</p>
+    <p><strong>Due:</strong> Upon Receipt</p>
+    <span class="bdg" style="border:1px solid #86EFAC;color:#15803D">PAID</span>
+  </div>
+</div>
+<div class="ig">
+  <div class="ic">
+    <h3>Bill To</h3>
+    <p class="nm">${invoiceData.guest.name}</p>
+    ${invoiceData.guest.email ? `<p>${invoiceData.guest.email}</p>` : ''}
+    ${invoiceData.guest.phone ? `<p><em>Tel: </em>${invoiceData.guest.phone}</p>` : ''}
+    ${invoiceData.guest.address ? `<p>${invoiceData.guest.address}</p>` : ''}
+  </div>
+  <div class="ic">
+    <h3>Booking Details</h3>
+    <p><em>Room: </em><strong>${invoiceData.booking.roomNumber}</strong> <em>(${invoiceData.booking.roomType})</em></p>
+    <p><em>Check-in: </em><strong>${new Date(invoiceData.booking.checkIn).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</strong></p>
+    <p><em>Check-out: </em><strong>${new Date(invoiceData.booking.checkOut).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</strong></p>
+    <p><em>Duration: </em><strong>${invoiceData.booking.nights} night${invoiceData.booking.nights!==1?'s':''}</strong> <em>&nbsp;·&nbsp; ${invoiceData.booking.numGuests} guest${invoiceData.booking.numGuests!==1?'s':''}</em></p>
+    <p><em>Booking ID: </em><strong style="font-family:monospace;font-size:10px">${invoiceData.booking.id.substring(0,20)}…</strong></p>
+  </div>
+</div>
+<div class="bd">
+  <table class="ct">
+    <thead><tr><th>Description</th><th class="c">Qty</th><th class="r">Rate</th><th class="r">Amount</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Room ${invoiceData.booking.roomNumber} — ${invoiceData.booking.roomType}</td>
+        <td class="c">${invoiceData.charges.nights} night${invoiceData.charges.nights!==1?'s':''}</td>
+        <td class="r">${formatCurrencySync(invoiceData.charges.roomRate,currency)}/night</td>
+        <td class="r" style="font-weight:700">${formatCurrencySync(invoiceData.charges.roomRate*invoiceData.charges.nights,currency)}</td>
+      </tr>
+      ${invoiceData.charges.additionalCharges.map(ch=>`<tr><td>${ch.description}</td><td class="c">${ch.quantity}×</td><td class="r">${formatCurrencySync(ch.unitPrice,currency)}</td><td class="r" style="font-weight:600">${formatCurrencySync(ch.amount,currency)}</td></tr>`).join('')}
+    </tbody>
+  </table>
+</div>
+<div class="tw">
+  <div class="sp"></div>
+  <table class="tt">
+    ${invoiceData.charges.discountTotal>0?`<tr><td style="color:#DC2626">Discount${invoiceData.charges.discount?.type==='percentage'?` (${invoiceData.charges.discount.value}%)`:''}:</td><td style="text-align:right;color:#DC2626;font-weight:700">−${formatCurrencySync(invoiceData.charges.discountTotal,currency)}</td></tr>`:''}
+    <tr class="sh"><td colspan="2">Ghana Tax Breakdown</td></tr>
+    <tr><td>Sales Total</td><td style="text-align:right">${formatCurrencySync(invoiceData.charges.salesTotal,currency)}</td></tr>
+    <tr><td>GF/NHIL (5%)</td><td style="text-align:right">${formatCurrencySync(invoiceData.charges.gfNhil,currency)}</td></tr>
+    <tr class="sub"><td>Sub Total</td><td style="text-align:right">${formatCurrencySync(invoiceData.charges.taxSubTotal,currency)}</td></tr>
+    <tr><td>VAT (15%)</td><td style="text-align:right">${formatCurrencySync(invoiceData.charges.vat,currency)}</td></tr>
+    <tr><td>Tourism Levy (1%)</td><td style="text-align:right">${formatCurrencySync(invoiceData.charges.tourismLevy,currency)}</td></tr>
+    <tr class="gt"><td>Grand Total</td><td style="text-align:right">${formatCurrencySync(invoiceData.charges.total,currency)}</td></tr>
+  </table>
+</div>
+<div class="ft">
+  <div class="ty">Thank you for choosing ${invoiceData.hotel.name}!</div>
+  <div class="fr">
+    <div><p><strong>Payment Methods:</strong> Cash &nbsp;·&nbsp; Mobile Money &nbsp;·&nbsp; Bank Transfer</p></div>
+    <div style="text-align:right"><p>${invoiceData.hotel.phone} &nbsp;|&nbsp; ${invoiceData.hotel.email}</p><p>TIN: 71786161-3</p></div>
+  </div>
+</div>
+</div></body></html>`
 
     console.log('✅ [InvoiceHTML] HTML content generated successfully')
     return htmlContent
@@ -495,97 +412,56 @@ export async function sendInvoiceEmail(invoiceData: InvoiceData, pdfBlob: Blob):
     const pdfBase64 = await blobToBase64(pdfBlob)
     const downloadUrl = `${window.location.origin}/invoice/${invoiceData.invoiceNumber}`
 
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Your Invoice - Hobbysky Guest House</title>
-        <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
-          .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-          .header { background: linear-gradient(135deg, #8B4513 0%, #7a3d11 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; margin: -20px -20px 30px -20px; }
-          .header h1 { margin: 0; font-size: 28px; font-weight: bold; }
-          .header p { margin: 10px 0 0 0; opacity: 0.9; font-size: 16px; }
-          .invoice-summary { background: #F5F1E8; border: 2px solid #E5E1D8; border-radius: 8px; padding: 20px; margin: 20px 0; }
-          .invoice-summary h2 { color: #8B4513; font-size: 20px; margin-bottom: 15px; }
-          .summary-row { display: flex; justify-content: space-between; margin: 8px 0; padding: 5px 0; border-bottom: 1px solid #E5E1D8; }
-          .summary-row:last-child { border-bottom: none; font-weight: bold; color: #8B4513; }
-          .summary-label { color: #555; }
-          .summary-value { color: #333; font-weight: 500; }
-          .download-section { background: #F5F1E8; border: 1px solid #8B4513; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center; }
-          .download-section h3 { color: #5c3616; margin: 0 0 15px 0; font-size: 18px; }
-          .download-btn { background: #8B4513; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-block; margin: 10px; }
-          .download-btn:hover { background: #7a3d11; }
-          .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef; color: #6c757d; font-size: 14px; }
-          .footer p { margin: 5px 0; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
-              <img src="/logohobbyskydarkmode.png" alt="hobbysky guest house" style="height: 30px; width: auto; max-width: 100px; margin-right: 10px;" />
-              <h1 style="margin: 0;">Invoice Ready</h1>
-            </div>
-            <p>${invoiceData.hotel.name} Hotel Management System</p>
+    const htmlContent = generateEmailHtml({
+      title: 'Your Invoice is Ready',
+      preheader: `Invoice ${invoiceData.invoiceNumber} — ${formatCurrencySync(invoiceData.charges.total, currency)} — ${invoiceData.hotel.name}`,
+      content: `
+        <p style="margin:0 0 18px;color:#EDE9E0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.7;">
+          Dear <strong>${invoiceData.guest.name}</strong>,
+        </p>
+        <p style="margin:0 0 18px;color:#EDE9E0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.7;">
+          Thank you for staying with us. Your invoice for your recent stay is attached to this email as a PDF. A summary is included below for your reference.
+        </p>
+
+        <div style="${EMAIL_STYLES.infoBox}">
+          <div style="${EMAIL_STYLES.infoRow}">
+            <span style="${EMAIL_STYLES.infoLabel}">Invoice No.</span>
+            <span style="font-family:monospace;font-size:13px;">${invoiceData.invoiceNumber}</span>
           </div>
-          
-          <p>Dear ${invoiceData.guest.name},</p>
-          
-          <p>Thank you for staying with ${invoiceData.hotel.name}! Your invoice for your recent stay is ready.</p>
-          
-          <div class="invoice-summary">
-            <h2>Invoice Summary</h2>
-            <div class="summary-row">
-              <span class="summary-label">Invoice Number:</span>
-              <span class="summary-value">${invoiceData.invoiceNumber}</span>
-            </div>
-            <div class="summary-row">
-              <span class="summary-label">Room:</span>
-              <span class="summary-value">${invoiceData.booking.roomNumber} (${invoiceData.booking.roomType})</span>
-            </div>
-            <div class="summary-row">
-              <span class="summary-label">Check-in:</span>
-              <span class="summary-value">${new Date(invoiceData.booking.checkIn).toLocaleDateString()}</span>
-            </div>
-            <div class="summary-row">
-              <span class="summary-label">Check-out:</span>
-              <span class="summary-value">${new Date(invoiceData.booking.checkOut).toLocaleDateString()}</span>
-            </div>
-            <div class="summary-row">
-              <span class="summary-label">Nights:</span>
-              <span class="summary-value">${invoiceData.booking.nights}</span>
-            </div>
-            <div class="summary-row">
-              <span class="summary-label">Total Amount:</span>
-              <span class="summary-value">${formatCurrencySync(invoiceData.charges.total, currency)}</span>
-            </div>
+          <div style="${EMAIL_STYLES.infoRow}">
+            <span style="${EMAIL_STYLES.infoLabel}">Room</span>
+            ${invoiceData.booking.roomNumber} &nbsp;<span style="color:#8CA48E">(${invoiceData.booking.roomType})</span>
           </div>
-          
-          <div class="download-section">
-            <h3>📄 Download Your Invoice</h3>
-            <p>Your detailed invoice is available for download:</p>
-            <a href="${downloadUrl}" class="download-btn">View & Download Invoice</a>
-            <p style="margin-top: 15px; font-size: 14px; color: #666;">
-              You can also print this invoice for your records.
-            </p>
+          <div style="${EMAIL_STYLES.infoRow}">
+            <span style="${EMAIL_STYLES.infoLabel}">Check-in</span>
+            ${new Date(invoiceData.booking.checkIn).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}
           </div>
-          
-          <p>If you have any questions about this invoice or need assistance, please don't hesitate to contact us.</p>
-          
-          <p>We hope you enjoyed your stay and look forward to welcoming you back to ${invoiceData.hotel.name} soon!</p>
-          
-          <div class="footer">
-            <p><strong>${invoiceData.hotel.name} Hotel Management System</strong></p>
-            <p>Phone: ${invoiceData.hotel.phone} | Email: ${invoiceData.hotel.email}</p>
-            <p>Website: ${invoiceData.hotel.website}</p>
+          <div style="${EMAIL_STYLES.infoRow}">
+            <span style="${EMAIL_STYLES.infoLabel}">Check-out</span>
+            ${new Date(invoiceData.booking.checkOut).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}
+          </div>
+          <div style="${EMAIL_STYLES.infoRow}">
+            <span style="${EMAIL_STYLES.infoLabel}">Duration</span>
+            ${invoiceData.booking.nights} night${invoiceData.booking.nights !== 1 ? 's' : ''}
+          </div>
+          <div style="margin-top:14px;padding-top:12px;border-top:1px solid #2B3E2E;font-size:15px;color:#EDE9E0;font-family:Arial,Helvetica,sans-serif;">
+            <span style="${EMAIL_STYLES.infoLabel}">Total Amount</span>
+            <strong style="color:#C9963C;font-size:18px;">${formatCurrencySync(invoiceData.charges.total, currency)}</strong>
           </div>
         </div>
-      </body>
-      </html>
-    `
+
+        <p style="margin:20px 0 8px;color:#EDE9E0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.7;">
+          Your full invoice is attached as a PDF. You can also view and download it at any time using the button below.
+        </p>
+        <p style="margin:0 0 18px;color:#8CA48E;font-family:Arial,Helvetica,sans-serif;font-size:13px;">
+          If you have any questions about this invoice, please contact us at ${invoiceData.hotel.phone} or ${invoiceData.hotel.email}.
+        </p>
+      `,
+      callToAction: {
+        text: 'View Invoice',
+        url: downloadUrl
+      }
+    })
 
     const textContent = `
 INVOICE READY - ${invoiceData.hotel.name} Hotel Management System
@@ -805,143 +681,123 @@ export async function generatePreInvoiceHTML(preInvoiceData: PreInvoiceData): Pr
     const settings = await hotelSettingsService.getHotelSettings()
     const currency = settings.currency || 'GHS'
 
-    const bannerBg = preInvoiceData.paymentStatus === 'full' ? '#16a34a,#15803d' : preInvoiceData.paymentStatus === 'part' ? '#d97706,#b45309' : '#f59e0b,#d97706'
-    const accentColor = preInvoiceData.paymentStatus === 'full' ? '#16a34a' : preInvoiceData.paymentStatus === 'part' ? '#d97706' : '#f59e0b'
-    const bannerText = preInvoiceData.paymentStatus === 'full' ? '✅ PRE-INVOICE — FULLY PAID' : preInvoiceData.paymentStatus === 'part' ? '💰 PART PAYMENT RECEIVED — BALANCE DUE AT CHECK-IN' : '⏳ PRE-INVOICE — PAYMENT DUE AT CHECK-IN'
-    const badgeBg = preInvoiceData.paymentStatus === 'full' ? '#dcfce7; color: #166534; border: 1px solid #86efac' : '#fef3c7; color: #92400e; border: 1px solid #fcd34d'
-    const badgeText = preInvoiceData.paymentStatus === 'full' ? '✅ PAID' : preInvoiceData.paymentStatus === 'part' ? '💰 PART PAID' : '⏳ UNPAID'
-    const noticeBg = preInvoiceData.paymentStatus === 'full' ? '#f0fdf4; border-color: #16a34a' : preInvoiceData.paymentStatus === 'part' ? '#fffbeb; border-color: #d97706' : '#fffbeb; border-color: #f59e0b'
-    const noticeHeadColor = preInvoiceData.paymentStatus === 'full' ? '#166534' : '#92400e'
+    const ps = preInvoiceData.paymentStatus
+    const isPaid = ps === 'full'
+    const isPart = ps === 'part'
+    const remaining = Math.max(0, preInvoiceData.charges.total - (preInvoiceData.amountPaid || 0))
 
-    let paymentContent = ''
-    if (preInvoiceData.paymentStatus === 'full') {
-      paymentContent = `<p style="color:#166534;">Payment of <strong>${formatCurrencySync(preInvoiceData.charges.total, currency)}</strong> received in full. Thank you!</p>`
-    } else if (preInvoiceData.paymentStatus === 'part') {
-      const remaining = Math.max(0, preInvoiceData.charges.total - (preInvoiceData.amountPaid || 0))
-      paymentContent = `
-        <table style="width:100%;margin-top:5px;font-size:11px;">
-          <tr><td style="color:#166534;">✅ Amount Paid</td><td style="text-align:right;font-weight:700;color:#166534;font-size:12px;">${formatCurrencySync(preInvoiceData.amountPaid || 0, currency)}</td></tr>
-          <tr style="border-top:1px dashed #d97706;"><td style="color:#92400e;font-weight:700;">⏳ Remaining</td><td style="text-align:right;font-weight:800;color:#dc2626;font-size:14px;">${formatCurrencySync(remaining, currency)}</td></tr>
+    // Status strip (print-friendly — thin coloured text bar, not a full gradient band)
+    const stripColor = isPaid ? '#15803D' : isPart ? '#B45309' : '#C9963C'
+    const stripText = isPaid ? 'PRE-INVOICE — FULLY PAID'
+      : isPart ? 'PRE-INVOICE — PART PAYMENT RECEIVED — BALANCE DUE AT CHECK-IN'
+      : 'PRE-INVOICE — PAYMENT DUE AT CHECK-IN'
+    const badgeBorder = isPaid ? '#86EFAC' : isPart ? '#FCD34D' : '#C9963C'
+    const badgeColor = isPaid ? '#15803D' : isPart ? '#92400E' : '#92400E'
+    const badgeText = isPaid ? 'PAID' : isPart ? 'PART PAID' : 'UNPAID'
+
+    // Payment card — white background + coloured left border (print-friendly)
+    let paymentCard = ''
+    if (isPaid) {
+      paymentCard = `<div style="border:1px solid #E2E8F0;border-left:2px solid #15803D;padding:24px;border-radius:2px;margin-bottom:24px;">
+        <p style="font-size:9px;font-weight:600;color:#15803D;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;border-bottom:1px solid #F1F5F9;padding-bottom:12px">Payment Status</p>
+        <p style="color:#1E3D22;font-size:12px;font-weight:700">Payment received in full</p>
+        <p style="color:#5A7060;font-size:11px;margin-top:3px">${formatCurrencySync(preInvoiceData.charges.total, currency)}</p>
+        <p style="color:#15803D;font-size:9px;margin-top:5px">No balance outstanding.</p>
+      </div>`
+    } else if (isPart) {
+      paymentCard = `<div style="border:1px solid #E2E8F0;border-left:2px solid #B45309;padding:24px;border-radius:2px;margin-bottom:24px;">
+        <p style="font-size:9px;font-weight:600;color:#B45309;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;border-bottom:1px solid #F1F5F9;padding-bottom:12px">Payment Summary</p>
+        <table style="width:100%;border-collapse:collapse;font-size:11px">
+          <tr><td style="color:#5A7060;padding:3px 0">Total Amount:</td><td style="text-align:right;font-weight:600;color:#1A2B1B">${formatCurrencySync(preInvoiceData.charges.total, currency)}</td></tr>
+          <tr><td style="color:#15803D;padding:3px 0;border-top:1px dashed #D8E4D9">Amount Paid:</td><td style="text-align:right;font-weight:700;color:#15803D;border-top:1px dashed #D8E4D9">${formatCurrencySync(preInvoiceData.amountPaid || 0, currency)}</td></tr>
+          <tr style="border-top:2px solid #D8E4D9"><td style="color:#B45309;font-weight:700;padding:5px 0 2px">Balance Due:</td><td style="text-align:right;font-weight:800;color:#DC2626;font-size:14px;padding:5px 0 2px">${formatCurrencySync(remaining, currency)}</td></tr>
         </table>
-        <p style="margin-top:5px;color:#78350f;font-size:9px;">Balance due at check-in. We accept <strong>Cash</strong>, <strong>Mobile Money</strong>, <strong>Bank Transfer</strong>.</p>`
+        <p style="color:#5A7060;font-size:9px;margin-top:6px">Balance due at check-in &nbsp;·&nbsp; Cash &nbsp;·&nbsp; Mobile Money &nbsp;·&nbsp; Bank Transfer</p>
+      </div>`
     } else {
-      paymentContent = `<p style="color:#78350f;">Full payment of <strong>${formatCurrencySync(preInvoiceData.charges.total, currency)}</strong> due upon check-in.</p><p style="color:#78350f;margin-top:2px;font-size:9px;">We accept <strong>Cash</strong>, <strong>Mobile Money</strong>, <strong>Bank Transfer</strong>.</p>`
+      paymentCard = `<div style="border:1px solid #E2E8F0;border-left:2px solid #C9963C;padding:24px;border-radius:2px;margin-bottom:24px;">
+        <p style="font-size:9px;font-weight:600;color:#C9963C;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;border-bottom:1px solid #F1F5F9;padding-bottom:12px">Payment Due</p>
+        <table style="width:100%;border-collapse:collapse;font-size:11px">
+          <tr><td style="color:#5A7060;padding:3px 0">Total Amount:</td><td style="text-align:right;font-weight:600;color:#1A2B1B">${formatCurrencySync(preInvoiceData.charges.total, currency)}</td></tr>
+          <tr style="border-top:2px solid #D8E4D9"><td style="color:#C9963C;font-weight:700;padding:5px 0 2px">Due at Check-in:</td><td style="text-align:right;font-weight:800;color:#1E3D22;font-size:14px;padding:5px 0 2px">${formatCurrencySync(preInvoiceData.charges.total, currency)}</td></tr>
+        </table>
+        <p style="color:#5A7060;font-size:9px;margin-top:6px">We accept: Cash &nbsp;·&nbsp; Mobile Money &nbsp;·&nbsp; Bank Transfer</p>
+      </div>`
     }
 
-    const discountRow = preInvoiceData.charges.discountTotal > 0 ? `<tr style="color:#dc2626;"><td>Discount ${preInvoiceData.charges.discount?.type === 'percentage' ? `(${preInvoiceData.charges.discount.value}%)` : ''}</td><td style="text-align:right;">-${formatCurrencySync(preInvoiceData.charges.discountTotal, currency)}</td></tr>` : ''
-
-    const additionalRows = preInvoiceData.charges.additionalCharges.map(ch => `<tr><td>${ch.description}</td><td style="text-align:center;">${ch.quantity}</td><td style="text-align:right;">${formatCurrencySync(ch.unitPrice, currency)}</td><td style="text-align:right;">${formatCurrencySync(ch.amount, currency)}</td></tr>`).join('')
+    const sharedCss = `*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',system-ui,-apple-system,sans-serif;line-height:1.6;color:#1E293B;background:#fff;font-size:11px}.w{max-width:794px;margin:0 auto;background:#fff;padding:40px}h1{font-size:24px;font-weight:300;color:#1E3D22;margin-bottom:6px;letter-spacing:-0.5px}h3{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#C9963C;margin-bottom:12px}p{font-size:11px;color:#475569;margin:3px 0}strong{color:#1E3D22;font-weight:600}em{font-style:normal;color:#64748B}.lbl{font-size:10px;font-weight:500;color:#C9963C;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}.hd{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:28px;border-bottom:1px solid #E2E8F0;margin-bottom:36px;position:relative}.im{text-align:right}.im .dt{font-size:20px;font-weight:300;color:#1E3D22;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}.im .dn{font-size:12px;font-weight:500;color:#64748B;margin-bottom:14px;letter-spacing:0.5px}.ic p{font-size:11px}.ig{display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-bottom:48px}table.ct{width:100%;border-collapse:collapse;margin-bottom:40px}table.ct th{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#94A3B8;text-align:left;padding:14px 4px;border-bottom:1px solid #E2E8F0}table.ct td{padding:14px 4px;color:#1E293B;border-bottom:1px solid #F1F5F9}table.ct th.r,table.ct td.r{text-align:right}table.ct th.c,table.ct td.c{text-align:center}.tw{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:48px}.sp{flex:1;padding-right:48px}table.tt{width:300px;border-collapse:collapse}table.tt td{padding:10px 4px;font-size:11px;color:#475569}table.tt tr.sub td{border-top:1px dashed #E2E8F0;font-weight:500;color:#1E3D22;padding-top:14px}table.tt tr.gt td{border-top:2px solid #1E3D22;padding-top:16px;padding-bottom:16px;font-size:15px;font-weight:600;color:#1E3D22}.ft{padding-top:28px;border-top:1px solid #E2E8F0;text-align:center}.ft .ty{font-size:12px;font-weight:500;color:#1E3D22;margin-bottom:10px}.ft .fr{font-size:9px;color:#64748B;display:flex;justify-content:space-between}.sb{text-align:center;padding:10px;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:36px;border:1px solid currentColor;border-radius:2px}.bdg{display:inline-block;margin-top:10px;padding:5px 14px;border:1px solid currentColor;border-radius:2px;font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase}.sh td{font-size:9px;font-weight:600;color:#C9963C;text-transform:uppercase;letter-spacing:1px;padding:12px 4px 6px!important}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}`
 
     const htmlContent = `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>Pre-Invoice ${preInvoiceData.invoiceNumber}</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,Arial,sans-serif;line-height:1.3;color:#1a1a1a;background:#fff;font-size:11px}
-.ic{max-width:800px;margin:0 auto;padding:0;background:#fff}
-.banner{padding:8px 20px;text-align:center;font-weight:700;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#fff}
-.header{display:flex;justify-content:space-between;align-items:flex-start;padding:14px 24px 10px;border-bottom:2px solid #8B4513}
-.hi h1{color:#8B4513;font-size:22px;font-weight:800;letter-spacing:-0.5px;margin-bottom:2px}
-.hi p{color:#555;font-size:10px;margin:1px 0;line-height:1.3}
-.hi .tin{font-weight:700;color:#333;margin-top:2px}
-.im{text-align:right;min-width:220px}
-.im .dt{font-size:18px;font-weight:800;letter-spacing:1px;margin-bottom:4px;text-transform:uppercase}
-.im .mr{font-size:10px;color:#555;margin:2px 0}
-.im .mr strong{color:#333}
-.sb{display:inline-block;padding:3px 12px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:0.5px;margin-top:5px}
-.ct{padding:0 24px 10px}
-.dg{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:12px 0}
-.dc{background:linear-gradient(135deg,#faf8f5,#f5f1e8);padding:10px 12px;border-radius:6px;border-left:3px solid #8B4513}
-.dc h3{color:#8B4513;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;padding-bottom:3px;border-bottom:1px solid rgba(139,69,19,0.15)}
-.dc p{color:#444;font-size:10.5px;margin:2px 0}
-.dc p strong{color:#222}
-.dc .gn{font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:1px}
-.cht{width:100%;border-collapse:collapse;margin:12px 0 10px;font-size:11px}
-.cht thead th{background:linear-gradient(135deg,#8B4513,#a0522d);color:#fff;padding:6px 10px;text-align:left;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.5px}
-.cht thead th:last-child,.cht thead th:nth-child(3){text-align:right}
-.cht thead th:nth-child(2){text-align:center}
-.cht tbody td{padding:6px 10px;border-bottom:1px solid #eee}
-.bs{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:0 0 10px;align-items:start}
-.pn{border-radius:8px;padding:10px 12px;border:2px solid}
-.pn h3{font-size:11px;margin-bottom:5px;font-weight:700}
-.pn p{font-size:10px;line-height:1.4}
-.tt{width:100%;font-size:11px;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden}
-.tt td{padding:4px 10px}
-.tt tr{border-bottom:1px solid #f0f0f0}
-.tt tr:last-child{border-bottom:none}
-.tt .sh td{background:#faf8f5;font-size:9px;font-weight:600;color:#8B4513;text-transform:uppercase;letter-spacing:0.5px;padding:3px 10px}
-.tt .sr td{font-weight:700;border-top:1px solid #ddd;border-bottom:1px solid #ddd}
-.tt .gt td{font-weight:800;font-size:13px;padding:7px 10px}
-.ft{background:linear-gradient(135deg,#faf8f5,#f5f1e8);padding:8px 24px;border-top:2px solid #8B4513}
-.ft .ty{text-align:center;font-size:11px;font-weight:700;color:#8B4513;margin-bottom:5px;padding-bottom:5px;border-bottom:1px solid rgba(139,69,19,0.15)}
-.ft .fr{display:flex;justify-content:space-between;font-size:9px;color:#888}
-.ft .fr p{margin:1px 0}
-@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
-</style></head>
-<body><div class="ic">
-<div class="banner" style="background:linear-gradient(135deg,${bannerBg})">${bannerText}</div>
-<div class="header">
-<div class="hi">
-<h1>${preInvoiceData.hotel.name}</h1>
-<p>${preInvoiceData.hotel.address}</p>
-<p>${preInvoiceData.hotel.phone} | ${preInvoiceData.hotel.email}</p>
-<p class="tin">TIN: 71786161-3</p>
+<html><head><meta charset="utf-8"><title>Pre-Invoice ${preInvoiceData.invoiceNumber}</title><style>${sharedCss}</style></head>
+<body><div class="w">
+<div class="ab"></div>
+<div class="sb" style="color:${stripColor}">${stripText}</div>
+<div class="hd">
+  <div class="hi">
+    <div class="lbl">Guest House</div>
+    <h1>${preInvoiceData.hotel.name}</h1>
+    <p>${preInvoiceData.hotel.address}</p>
+    <p>Tel: ${preInvoiceData.hotel.phone} &nbsp;|&nbsp; ${preInvoiceData.hotel.email}</p>
+    <p class="tin">TIN: 71786161-3</p>
+  </div>
+  <div class="im">
+    <div class="dt">Pre-Invoice</div>
+    <div class="dn">${preInvoiceData.invoiceNumber}</div>
+    <p><strong>Date:</strong> ${new Date(preInvoiceData.invoiceDate).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</p>
+    <p><strong>Due:</strong> At Check-in</p>
+    <span class="bdg" style="border:1px solid ${badgeBorder};color:${badgeColor}">${badgeText}</span>
+  </div>
 </div>
-<div class="im">
-<div class="dt" style="color:${accentColor}">PRE-INVOICE</div>
-<p class="mr"><strong>Invoice #:</strong> ${preInvoiceData.invoiceNumber}</p>
-<p class="mr"><strong>Date:</strong> ${new Date(preInvoiceData.invoiceDate).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</p>
-<p class="mr"><strong>Due Date:</strong> At Check-in</p>
-<span class="sb" style="background:${badgeBg}">${badgeText}</span>
+<div class="ig">
+  <div class="ic">
+    <h3>Bill To</h3>
+    <p class="nm">${preInvoiceData.guest.name}</p>
+    ${preInvoiceData.guest.email ? `<p>${preInvoiceData.guest.email}</p>` : ''}
+    ${preInvoiceData.guest.phone ? `<p><em>Tel: </em>${preInvoiceData.guest.phone}</p>` : ''}
+    ${preInvoiceData.guest.address ? `<p>${preInvoiceData.guest.address}</p>` : ''}
+  </div>
+  <div class="ic">
+    <h3>Booking Details</h3>
+    <p><em>Room: </em><strong>${preInvoiceData.booking.roomNumber}</strong> <em>(${preInvoiceData.booking.roomType})</em></p>
+    <p><em>Check-in: </em><strong>${new Date(preInvoiceData.booking.checkIn).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</strong></p>
+    <p><em>Check-out: </em><strong>${new Date(preInvoiceData.booking.checkOut).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</strong></p>
+    <p><em>Duration: </em><strong>${preInvoiceData.booking.nights} night${preInvoiceData.booking.nights!==1?'s':''}</strong> <em>&nbsp;·&nbsp; ${preInvoiceData.booking.numGuests} guest${preInvoiceData.booking.numGuests!==1?'s':''}</em></p>
+    <p><em>Booking ID: </em><strong style="font-family:monospace;font-size:10px">${preInvoiceData.booking.id.substring(0,20)}…</strong></p>
+  </div>
 </div>
+<div class="bd">
+  <table class="ct">
+    <thead><tr><th>Description</th><th class="c">Qty</th><th class="r">Rate</th><th class="r">Amount</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Room ${preInvoiceData.booking.roomNumber} — ${preInvoiceData.booking.roomType}</td>
+        <td class="c">${preInvoiceData.charges.nights} night${preInvoiceData.charges.nights!==1?'s':''}</td>
+        <td class="r">${formatCurrencySync(preInvoiceData.charges.roomRate,currency)}/night</td>
+        <td class="r" style="font-weight:700">${formatCurrencySync(preInvoiceData.charges.subtotal,currency)}</td>
+      </tr>
+      ${preInvoiceData.charges.additionalCharges.map(ch=>`<tr><td>${ch.description}</td><td class="c">${ch.quantity}×</td><td class="r">${formatCurrencySync(ch.unitPrice,currency)}</td><td class="r" style="font-weight:600">${formatCurrencySync(ch.amount,currency)}</td></tr>`).join('')}
+    </tbody>
+  </table>
 </div>
-<div class="ct">
-<div class="dg">
-<div class="dc">
-<h3>Bill To</h3>
-<p class="gn">${preInvoiceData.guest.name}</p>
-${preInvoiceData.guest.email ? `<p>${preInvoiceData.guest.email}</p>` : ''}
-${preInvoiceData.guest.phone ? `<p>📞 ${preInvoiceData.guest.phone}</p>` : ''}
-${preInvoiceData.guest.address ? `<p>📍 ${preInvoiceData.guest.address}</p>` : ''}
-</div>
-<div class="dc">
-<h3>Booking Details</h3>
-<p><strong>Booking ID:</strong> ${preInvoiceData.booking.id}</p>
-<p><strong>Room:</strong> ${preInvoiceData.booking.roomNumber} (${preInvoiceData.booking.roomType})</p>
-<p><strong>Check-in:</strong> ${new Date(preInvoiceData.booking.checkIn).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
-<p><strong>Check-out:</strong> ${new Date(preInvoiceData.booking.checkOut).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
-<p><strong>Duration:</strong> ${preInvoiceData.booking.nights} night${preInvoiceData.booking.nights !== 1 ? 's' : ''} · ${preInvoiceData.booking.numGuests} guest${preInvoiceData.booking.numGuests !== 1 ? 's' : ''}</p>
-</div>
-</div>
-<table class="cht">
-<thead><tr><th>Description</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead>
-<tbody>
-<tr><td>Room ${preInvoiceData.booking.roomNumber} — ${preInvoiceData.booking.roomType}</td><td style="text-align:center">${preInvoiceData.charges.nights} night${preInvoiceData.charges.nights !== 1 ? 's' : ''}</td><td style="text-align:right">${formatCurrencySync(preInvoiceData.charges.roomRate, currency)}/night</td><td style="text-align:right"><strong>${formatCurrencySync(preInvoiceData.charges.subtotal, currency)}</strong></td></tr>
-${additionalRows}
-</tbody>
-</table>
-<div class="bs">
-<div class="pn" style="background:${noticeBg}">
-<h3 style="color:${noticeHeadColor}">💳 Payment Information</h3>
-${paymentContent}
-</div>
-<table class="tt">
-${discountRow}
-<tr class="sh"><td colspan="2">Tax Breakdown</td></tr>
-<tr><td>Sales Total</td><td style="text-align:right">${formatCurrencySync(preInvoiceData.charges.salesTotal, currency)}</td></tr>
-<tr><td>GF/NHIL (5%)</td><td style="text-align:right">${formatCurrencySync(preInvoiceData.charges.gfNhil, currency)}</td></tr>
-<tr class="sr"><td>Sub Total</td><td style="text-align:right">${formatCurrencySync(preInvoiceData.charges.taxSubTotal, currency)}</td></tr>
-<tr><td>VAT (15%)</td><td style="text-align:right">${formatCurrencySync(preInvoiceData.charges.vat, currency)}</td></tr>
-<tr><td>Tourism Levy (1%)</td><td style="text-align:right">${formatCurrencySync(preInvoiceData.charges.tourismLevy, currency)}</td></tr>
-<tr class="gt" style="background:linear-gradient(135deg,${bannerBg});color:#fff"><td>Grand Total</td><td style="text-align:right">${formatCurrencySync(preInvoiceData.charges.total, currency)}</td></tr>
-</table>
-</div>
+<div class="tw">
+  <div style="flex:1">${paymentCard}</div>
+  <table class="tt">
+    ${preInvoiceData.charges.discountTotal>0?`<tr><td style="color:#DC2626">Discount${preInvoiceData.charges.discount?.type==='percentage'?` (${preInvoiceData.charges.discount.value}%)`:''}:</td><td style="text-align:right;color:#DC2626;font-weight:700">−${formatCurrencySync(preInvoiceData.charges.discountTotal,currency)}</td></tr>`:''}
+    <tr class="sh"><td colspan="2">Ghana Tax Breakdown</td></tr>
+    <tr><td>Sales Total</td><td style="text-align:right">${formatCurrencySync(preInvoiceData.charges.salesTotal,currency)}</td></tr>
+    <tr><td>GF/NHIL (5%)</td><td style="text-align:right">${formatCurrencySync(preInvoiceData.charges.gfNhil,currency)}</td></tr>
+    <tr class="sub"><td>Sub Total</td><td style="text-align:right">${formatCurrencySync(preInvoiceData.charges.taxSubTotal,currency)}</td></tr>
+    <tr><td>VAT (15%)</td><td style="text-align:right">${formatCurrencySync(preInvoiceData.charges.vat,currency)}</td></tr>
+    <tr><td>Tourism Levy (1%)</td><td style="text-align:right">${formatCurrencySync(preInvoiceData.charges.tourismLevy,currency)}</td></tr>
+    <tr class="gt"><td>Grand Total</td><td style="text-align:right">${formatCurrencySync(preInvoiceData.charges.total,currency)}</td></tr>
+  </table>
 </div>
 <div class="ft">
-<div class="ty">Thank you for choosing ${preInvoiceData.hotel.name}!</div>
-<div class="fr">
-<div><p><strong>Payment Terms:</strong> Due upon receipt</p><p><strong>Payment Methods:</strong> Cash, Mobile Money, Bank Transfer</p></div>
-<div style="text-align:right"><p>${preInvoiceData.hotel.phone} | ${preInvoiceData.hotel.email}</p><p>TIN: 71786161-3</p></div>
-</div>
+  <div class="ty">Thank you for choosing ${preInvoiceData.hotel.name}!</div>
+  <div class="fr">
+    <div><p><strong>Payment Methods:</strong> Cash &nbsp;·&nbsp; Mobile Money &nbsp;·&nbsp; Bank Transfer</p></div>
+    <div style="text-align:right"><p>${preInvoiceData.hotel.phone} &nbsp;|&nbsp; ${preInvoiceData.hotel.email}</p><p>TIN: 71786161-3</p></div>
+  </div>
 </div>
 </div></body></html>`
 
@@ -1278,173 +1134,88 @@ export async function generateGroupInvoiceHTML(data: GroupInvoiceData): Promise<
   const settings = await hotelSettingsService.getHotelSettings()
   const currency = settings.currency || 'GHS'
 
-  return `
-  <!DOCTYPE html>
-  <html>
-  <head>
-    <meta charset="utf-8">
-    <title>Group Invoice ${data.invoiceNumber}</title>
-    <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.3; color: #333; background: #fff; font-size: 11px; }
-      .invoice-container { max-width: 800px; margin: 0 auto; padding: 20px 30px; background: #fff; }
-      .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; border-bottom: 2px solid #8B4513; padding-bottom: 10px; }
-      .hotel-info h1 { color: #8B4513; font-size: 24px; font-weight: 700; margin-bottom: 4px; letter-spacing: -0.5px; }
-      .hotel-info p { color: #555; font-size: 10px; margin: 1px 0; }
-      .hotel-info .tin { color: #333; font-size: 10px; font-weight: 600; margin-top: 3px; }
-      .invoice-meta { text-align: right; }
-      .invoice-meta h2 { color: #8B4513; font-size: 18px; font-weight: 700; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
-      .invoice-meta p { font-size: 10px; margin: 2px 0; color: #555; }
-      .invoice-meta p strong { color: #333; }
-      .invoice-details { display: flex; justify-content: space-between; margin-bottom: 15px; background: linear-gradient(135deg, #F5F1E8 0%, #EDE7DA 100%); padding: 12px; border-radius: 6px; border-left: 4px solid #8B4513; }
-      .bill-to h3 { color: #8B4513; font-size: 12px; margin-bottom: 4px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-      .bill-to p { margin: 1px 0; }
-      .summary-stats { text-align: right; }
-      .summary-stats p { margin: 1px 0; }
-      .charges-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 10px; }
-      .charges-table th { background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%); color: white; padding: 6px 8px; text-align: left; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 9px; }
-      .charges-table td { padding: 6px 8px; border-bottom: 1px solid #e5e7eb; }
-      .charges-table tr:hover { background-color: #faf8f5; }
-      .sub-row td { background-color: #f9fafb; color: #666; font-style: italic; padding-left: 20px; font-size: 9px; }
-      .text-right { text-align: right; }
-      .text-center { text-align: center; }
-      .totals { display: flex; justify-content: flex-end; margin-top: 10px; }
-      .totals-table { width: 250px; border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden; }
-      .totals-table td { padding: 4px 10px; border-bottom: 1px solid #eee; font-size: 10px; }
-      .totals-table tr:last-child td { border-bottom: none; }
-      .total-row { background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%); color: white; font-weight: 700; font-size: 12px!important; }
-      .total-row td { padding: 8px!important; }
-      .footer { margin-top: 15px; text-align: center; font-size: 9px; color: #888; border-top: 1px solid #eee; padding-top: 10px; }
-      .footer p { margin: 2px 0; }
-    </style>
-  </head>
-  <body>
-    <div class="invoice-container">
-      <div class="header">
-        <div class="hotel-info">
-          <h1>${data.hotel.name}</h1>
-          <p>${data.hotel.address}</p>
-          <p>${data.hotel.phone} | ${data.hotel.email}</p>
-          <p class="tin">TIN: 71786161-3</p>
-        </div>
-        <div class="invoice-meta">
-          <h2>Group Invoice</h2>
-          <p><strong>Invoice #:</strong> ${data.invoiceNumber}</p>
-          <p><strong>Date:</strong> ${new Date(data.invoiceDate).toLocaleDateString()}</p>
-          <p><strong>Due Date:</strong> ${new Date(data.dueDate).toLocaleDateString()}</p>
-          <p><strong>Reference:</strong> ${data.groupReference}</p>
-        </div>
-      </div>
+  const sharedCss = `*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',system-ui,-apple-system,sans-serif;line-height:1.6;color:#1E293B;background:#fff;font-size:11px}.w{max-width:794px;margin:0 auto;background:#fff;padding:40px}h1{font-size:24px;font-weight:300;color:#1E3D22;margin-bottom:6px;letter-spacing:-0.5px}h3{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#C9963C;margin-bottom:12px}p{font-size:11px;color:#475569;margin:3px 0}strong{color:#1E3D22;font-weight:600}em{font-style:normal;color:#64748B}.lbl{font-size:10px;font-weight:500;color:#C9963C;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}.hd{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:28px;border-bottom:1px solid #E2E8F0;margin-bottom:36px;position:relative}.im{text-align:right}.im .dt{font-size:20px;font-weight:300;color:#1E3D22;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}.im .dn{font-size:12px;font-weight:500;color:#64748B;margin-bottom:14px;letter-spacing:0.5px}.ic p{font-size:11px}.ig{display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-bottom:48px}table.ct{width:100%;border-collapse:collapse;margin-bottom:40px}table.ct th{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#94A3B8;text-align:left;padding:14px 4px;border-bottom:1px solid #E2E8F0}table.ct td{padding:14px 4px;color:#1E293B;border-bottom:1px solid #F1F5F9}table.ct th.r,table.ct td.r{text-align:right}table.ct th.c,table.ct td.c{text-align:center}.tw{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:48px}.sp{flex:1;padding-right:48px}table.tt{width:300px;border-collapse:collapse}table.tt td{padding:10px 4px;font-size:11px;color:#475569}table.tt tr.sub td{border-top:1px dashed #E2E8F0;font-weight:500;color:#1E3D22;padding-top:14px}table.tt tr.gt td{border-top:2px solid #1E3D22;padding-top:16px;padding-bottom:16px;font-size:15px;font-weight:600;color:#1E3D22}.ft{padding-top:28px;border-top:1px solid #E2E8F0;text-align:center}.ft .ty{font-size:12px;font-weight:500;color:#1E3D22;margin-bottom:10px}.ft .fr{font-size:9px;color:#64748B;display:flex;justify-content:space-between}.sb{text-align:center;padding:10px;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:36px;border:1px solid currentColor;border-radius:2px}.bdg{display:inline-block;margin-top:10px;padding:5px 14px;border:1px solid currentColor;border-radius:2px;font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase}.sh td{font-size:9px;font-weight:600;color:#C9963C;text-transform:uppercase;letter-spacing:1px;padding:12px 4px 6px!important}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}`
 
-      <div class="invoice-details">
-        <div class="bill-to">
-          <h3>Bill To (Group Contact):</h3>
-          <p><strong>${data.billingContact.name}</strong></p>
-          <p>${data.billingContact.email}</p>
-          ${data.billingContact.phone ? `<p>${data.billingContact.phone}</p>` : ''}
-        </div>
-        <div class="summary-stats">
-          <p><strong>Total Rooms:</strong> ${data.summary.totalRooms}</p>
-          <p><strong>Total Nights:</strong> ${data.summary.totalNights}</p>
-        </div>
-      </div>
-
-      <table class="charges-table">
-        <thead>
-          <tr>
-            <th>Room / Guest</th>
-            <th class="text-center">Dates</th>
-            <th class="text-right">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${data.bookings.map(b => `
-            <tr>
-              <td>
-                <strong>Room ${b.roomNumber} (${b.roomType})</strong><br/>
-                Guest: ${b.guestName}
-              </td>
-              <td class="text-center">
-                ${new Date(b.checkIn).toLocaleDateString()} - ${new Date(b.checkOut).toLocaleDateString()}<br/>
-                (${b.nights} nights)
-              </td>
-              <td class="text-right">
-                <strong>${formatCurrencySync(b.subtotal, currency)}</strong>
-              </td>
-            </tr>
-            ${b.additionalCharges.length > 0 ? b.additionalCharges.map(ch => `
-              <tr class="sub-row">
-                <td colspan="2">↳ Additional Charge (${ch.description}) (x${ch.quantity})</td>
-                <td class="text-right">${formatCurrencySync(ch.amount, currency)}</td>
-              </tr>
-            `).join('') : ''}
-          `).join('')}
-        </tbody>
-      </table>
-
-      <div class="totals">
-        <table class="totals-table">
-          ${data.summary.discountTotal > 0 ? `
-            <tr style="color: #dc2626;">
-              <td>Discount ${data.summary.discount?.type === 'percentage' ? `(${data.summary.discount.value}%)` : ''}</td>
-              <td class="text-right">- ${formatCurrencySync(data.summary.discountTotal, currency)}</td>
-            </tr>
-          ` : ''}
-          ${data.summary.additionalCharges && data.summary.additionalCharges.length > 0 ? data.summary.additionalCharges.map(charge => `
-            <tr>
-              <td>Additional Charge (${charge.description})</td>
-              <td class="text-right">+ ${formatCurrencySync(charge.amount, currency)}</td>
-            </tr>
-          `).join('') : ''}
-          <tr style="border-top: 2px solid #8B4513; background: #faf8f5;">
-            <td colspan="2" style="padding: 8px 12px; font-size: 10px; color: #666; text-transform: uppercase;">Tax Breakdown</td>
-          </tr>
-          <tr>
-            <td>Sales Total</td>
-            <td class="text-right">${formatCurrencySync(data.summary.salesTotal, currency)}</td>
-          </tr>
-          <tr>
-            <td>GF / NHIL (5%)</td>
-            <td class="text-right">${formatCurrencySync(data.summary.gfNhil, currency)}</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #ddd;">
-            <td><strong>Sub Total</strong></td>
-            <td class="text-right"><strong>${formatCurrencySync(data.summary.taxSubTotal, currency)}</strong></td>
-          </tr>
-          <tr>
-            <td>VAT (15%)</td>
-            <td class="text-right">${formatCurrencySync(data.summary.vat, currency)}</td>
-          </tr>
-          <tr>
-            <td>Tourism Levy (1%)</td>
-            <td class="text-right">${formatCurrencySync(data.summary.tourismLevy, currency)}</td>
-          </tr>
-          <tr class="total-row">
-            <td>Grand Total</td>
-            <td class="text-right">${formatCurrencySync(data.summary.total, currency)}</td>
-          </tr>
-        </table>
-      </div>
-
-      <div class="footer">
-        <div style="background: #F5F1E8; padding: 6px 12px; border-radius: 6px; text-align: center; margin-bottom: 8px;">
-          <p style="font-size: 11px; color: #8B4513; font-weight: 600; margin: 0;">Thank you for choosing ${data.hotel.name}!</p>
-        </div>
-        <div style="display: flex; justify-content: space-between; font-size: 9px; color: #888;">
-          <div>
-            <p style="margin: 1px 0;"><strong>Payment Terms:</strong> Due upon receipt</p>
-            <p style="margin: 1px 0;"><strong>Payment Methods:</strong> Cash, Mobile Money, Bank Transfer</p>
-          </div>
-          <div style="text-align: right;">
-            <p style="margin: 1px 0;">${data.hotel.phone} | ${data.hotel.email}</p>
-            <p style="margin: 1px 0;">TIN: 71786161-3</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </body>
-  </html>
-  `
+  return `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Group Invoice ${data.invoiceNumber}</title><style>${sharedCss}</style></head>
+<body><div class="w">
+<div class="ab"></div>
+<div class="hd">
+  <div class="hi">
+    <div class="lbl">Guest House</div>
+    <h1>${data.hotel.name}</h1>
+    <p>${data.hotel.address}</p>
+    <p>Tel: ${data.hotel.phone} &nbsp;|&nbsp; ${data.hotel.email}</p>
+    <p class="tin">TIN: 71786161-3</p>
+  </div>
+  <div class="im">
+    <div class="dt">Group Invoice</div>
+    <div class="dn">${data.invoiceNumber}</div>
+    <p><strong>Date:</strong> ${new Date(data.invoiceDate).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</p>
+    <p><strong>Due:</strong> Upon Receipt</p>
+    <p><strong>Reference:</strong> ${data.groupReference}</p>
+    <span class="bdg" style="border:1px solid #86EFAC;color:#15803D">PAID</span>
+  </div>
+</div>
+<div class="ig">
+  <div class="ic">
+    <h3>Bill To (Group Contact)</h3>
+    <p class="nm">${data.billingContact.name}</p>
+    <p>${data.billingContact.email}</p>
+    ${data.billingContact.phone ? `<p><em>Tel: </em>${data.billingContact.phone}</p>` : ''}
+    ${data.billingContact.address ? `<p>${data.billingContact.address}</p>` : ''}
+  </div>
+  <div class="ic">
+    <h3>Group Summary</h3>
+    <p><em>Total Rooms: </em><strong>${data.summary.totalRooms}</strong></p>
+    <p><em>Total Nights: </em><strong>${data.summary.totalNights}</strong></p>
+    <p><em>Room Subtotal: </em><strong>${formatCurrencySync(data.summary.roomSubtotal, currency)}</strong></p>
+    ${data.summary.discountTotal > 0 ? `<p><em>Discount Applied: </em><strong style="color:#DC2626">−${formatCurrencySync(data.summary.discountTotal, currency)}</strong></p>` : ''}
+  </div>
+</div>
+<div class="bd">
+  <table class="ct">
+    <thead><tr><th>Room &amp; Guest</th><th class="c">Dates</th><th class="c">Nights</th><th class="r">Room Total</th></tr></thead>
+    <tbody>
+      ${data.bookings.map(b => `
+        <tr>
+          <td><strong>Room ${b.roomNumber}</strong> <em style="color:#5A7060">(${b.roomType})</em><br/><span style="font-size:10px;color:#5A7060">${b.guestName}</span></td>
+          <td class="c" style="font-size:10px">${new Date(b.checkIn).toLocaleDateString('en-GB',{day:'2-digit',month:'short'})}&nbsp;–&nbsp;${new Date(b.checkOut).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</td>
+          <td class="c">${b.nights}</td>
+          <td class="r" style="font-weight:700">${formatCurrencySync(b.subtotal, currency)}</td>
+        </tr>
+        ${b.additionalCharges.length>0 ? b.additionalCharges.map(ch=>`<tr class="sr"><td colspan="3">↳ ${ch.description} (×${ch.quantity})</td><td class="r">${formatCurrencySync(ch.amount,currency)}</td></tr>`).join('') : ''}
+      `).join('')}
+    </tbody>
+  </table>
+</div>
+<div class="tw">
+  <div class="sp">
+    ${data.summary.additionalCharges && data.summary.additionalCharges.length > 0 ? `
+    <div style="border:1px solid #E2E8F0;border-left:2px solid #C9963C;padding:24px;border-radius:2px;margin-bottom:24px;">
+      <p style="font-size:9px;font-weight:600;color:#C9963C;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;border-bottom:1px solid #F1F5F9;padding-bottom:12px">Group-Level Charges</p>
+      ${data.summary.additionalCharges.map(ch=>`<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid #EBF2EB"><span>${ch.description}</span><span style="font-weight:600">+${formatCurrencySync(ch.amount,currency)}</span></div>`).join('')}
+    </div>` : ''}
+  </div>
+  <table class="tt">
+    ${data.summary.discountTotal>0?`<tr><td style="color:#DC2626">Discount${data.summary.discount?.type==='percentage'?` (${data.summary.discount.value}%)`:''}:</td><td style="text-align:right;color:#DC2626;font-weight:700">−${formatCurrencySync(data.summary.discountTotal,currency)}</td></tr>`:''}
+    <tr class="sh"><td colspan="2">Ghana Tax Breakdown</td></tr>
+    <tr><td>Sales Total</td><td style="text-align:right">${formatCurrencySync(data.summary.salesTotal,currency)}</td></tr>
+    <tr><td>GF/NHIL (5%)</td><td style="text-align:right">${formatCurrencySync(data.summary.gfNhil,currency)}</td></tr>
+    <tr class="sub"><td>Sub Total</td><td style="text-align:right">${formatCurrencySync(data.summary.taxSubTotal,currency)}</td></tr>
+    <tr><td>VAT (15%)</td><td style="text-align:right">${formatCurrencySync(data.summary.vat,currency)}</td></tr>
+    <tr><td>Tourism Levy (1%)</td><td style="text-align:right">${formatCurrencySync(data.summary.tourismLevy,currency)}</td></tr>
+    <tr class="gt"><td>Grand Total</td><td style="text-align:right">${formatCurrencySync(data.summary.total,currency)}</td></tr>
+  </table>
+</div>
+<div class="ft">
+  <div class="ty">Thank you for choosing ${data.hotel.name}!</div>
+  <div class="fr">
+    <div><p><strong>Payment Methods:</strong> Cash &nbsp;·&nbsp; Mobile Money &nbsp;·&nbsp; Bank Transfer</p></div>
+    <div style="text-align:right"><p>${data.hotel.phone} &nbsp;|&nbsp; ${data.hotel.email}</p><p>TIN: 71786161-3</p></div>
+  </div>
+</div>
+</div></body></html>`
 }
 
 export async function generateGroupInvoicePDF(data: GroupInvoiceData): Promise<Blob> {
@@ -1509,6 +1280,255 @@ export async function downloadGroupInvoicePDF(data: GroupInvoiceData): Promise<v
     URL.revokeObjectURL(url)
   } catch (e: any) {
     console.error('Failed to download group invoice', e)
+    throw e
+  }
+}
+
+// ===================== GROUP PRE-INVOICE FUNCTIONS =====================
+
+export interface GroupPreInvoiceData extends GroupInvoiceData {
+  amountPaid: number
+  paymentStatus: 'full' | 'part' | 'pending'
+  isPreInvoice: true
+}
+
+export async function createGroupPreInvoiceData(
+  bookings: BookingWithDetails[],
+  billingContact: any
+): Promise<GroupPreInvoiceData> {
+  const base = await createGroupInvoiceData(bookings, billingContact)
+
+  // Read amountPaid / paymentStatus from the primary booking
+  const primaryBooking = bookings.find(b => {
+    const sr = (b as any).specialRequests || (b as any).special_requests || ''
+    const m = sr.match?.(/<!-- GROUP_DATA:(.*?) -->/)
+    if (!m) return false
+    try { return JSON.parse(m[1]).isPrimaryBooking === true } catch { return false }
+  }) || bookings[0]
+
+  let amountPaid = 0
+  let paymentStatus: 'full' | 'part' | 'pending' = 'pending'
+
+  // Try direct fields first (set at check-in via useCheckIn)
+  if ((primaryBooking as any).amountPaid != null) {
+    amountPaid = Number((primaryBooking as any).amountPaid)
+  }
+  if ((primaryBooking as any).paymentStatus) {
+    paymentStatus = (primaryBooking as any).paymentStatus as 'full' | 'part' | 'pending'
+  }
+
+  // Fall back to PAYMENT_DATA embedded in specialRequests
+  const sr = (primaryBooking as any).specialRequests || (primaryBooking as any).special_requests || ''
+  const pm = sr.match?.(/<!-- PAYMENT_DATA:(.*?) -->/)
+  if (pm) {
+    try {
+      const pd = JSON.parse(pm[1])
+      if (amountPaid === 0 && pd.amountPaid) amountPaid = Number(pd.amountPaid)
+      if (paymentStatus === 'pending' && pd.paymentStatus) paymentStatus = pd.paymentStatus
+    } catch { /* ignore */ }
+  }
+
+  return { ...base, amountPaid, paymentStatus, isPreInvoice: true }
+}
+
+export async function generateGroupPreInvoiceHTML(data: GroupPreInvoiceData): Promise<string> {
+  const { formatCurrencySync } = await import('@/lib/utils')
+  const settings = await hotelSettingsService.getHotelSettings()
+  const currency = settings.currency || 'GHS'
+
+  const grandTotal = data.summary.total
+  const amountPaid = data.amountPaid || 0
+  const remaining = Math.max(0, grandTotal - amountPaid)
+  const isPaid = data.paymentStatus === 'full' || remaining === 0
+  const isPart = !isPaid && amountPaid > 0
+
+  // Status strip (print-friendly — thin coloured text bar, not a full gradient band)
+  const stripColor = isPaid ? '#15803D' : isPart ? '#B45309' : '#C9963C'
+  const stripText = isPaid ? 'GROUP PRE-INVOICE — FULLY PAID'
+    : isPart ? 'GROUP PRE-INVOICE — PART PAYMENT RECEIVED — BALANCE DUE AT CHECK-IN'
+    : 'GROUP PRE-INVOICE — PAYMENT DUE AT CHECK-IN'
+  const badgeBorder = isPaid ? '#86EFAC' : isPart ? '#FCD34D' : '#C9963C'
+  const badgeColor = isPaid ? '#15803D' : isPart ? '#92400E' : '#92400E'
+  const badgeText = isPaid ? 'PAID' : isPart ? 'PART PAID' : 'UNPAID'
+
+  // Payment summary card — white background + coloured left border (print-friendly)
+  let paymentCard = ''
+  if (isPaid) {
+    paymentCard = `<div style="border:1px solid #E2E8F0;border-left:2px solid #15803D;padding:24px;border-radius:2px;margin-bottom:24px;">
+        <p style="font-size:9px;font-weight:600;color:#15803D;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;border-bottom:1px solid #F1F5F9;padding-bottom:12px">Payment Status</p>
+  <p style="color:#1E3D22;font-size:12px;font-weight:700">Group payment received in full</p>
+  <p style="color:#5A7060;font-size:11px;margin-top:3px">${formatCurrencySync(grandTotal, currency)}</p>
+  <p style="color:#15803D;font-size:9px;margin-top:5px">No balance outstanding.</p>
+</div>`
+  } else if (isPart) {
+    paymentCard = `<div style="border:1px solid #E2E8F0;border-left:2px solid #B45309;padding:24px;border-radius:2px;margin-bottom:24px;">
+        <p style="font-size:9px;font-weight:600;color:#B45309;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;border-bottom:1px solid #F1F5F9;padding-bottom:12px">Group Payment Summary</p>
+  <table style="width:100%;border-collapse:collapse;font-size:11px">
+    <tr><td style="color:#5A7060;padding:3px 0">Group Total:</td><td style="text-align:right;font-weight:600;color:#1A2B1B">${formatCurrencySync(grandTotal, currency)}</td></tr>
+    <tr><td style="color:#15803D;padding:3px 0;border-top:1px dashed #D8E4D9">Amount Paid:</td><td style="text-align:right;font-weight:700;color:#15803D;border-top:1px dashed #D8E4D9">${formatCurrencySync(amountPaid, currency)}</td></tr>
+    <tr style="border-top:2px solid #D8E4D9"><td style="color:#B45309;font-weight:700;padding:5px 0 2px">Balance Due:</td><td style="text-align:right;font-weight:800;color:#DC2626;font-size:14px;padding:5px 0 2px">${formatCurrencySync(remaining, currency)}</td></tr>
+  </table>
+  <p style="color:#5A7060;font-size:9px;margin-top:6px">Balance due at check-in &nbsp;·&nbsp; Cash &nbsp;·&nbsp; Mobile Money &nbsp;·&nbsp; Bank Transfer</p>
+</div>`
+  } else {
+    paymentCard = `<div style="border:1px solid #E2E8F0;border-left:2px solid #C9963C;padding:24px;border-radius:2px;margin-bottom:24px;">
+        <p style="font-size:9px;font-weight:600;color:#C9963C;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;border-bottom:1px solid #F1F5F9;padding-bottom:12px">Group Payment Due</p>
+  <table style="width:100%;border-collapse:collapse;font-size:11px">
+    <tr><td style="color:#5A7060;padding:3px 0">Group Total:</td><td style="text-align:right;font-weight:600;color:#1A2B1B">${formatCurrencySync(grandTotal, currency)}</td></tr>
+    <tr style="border-top:2px solid #D8E4D9"><td style="color:#C9963C;font-weight:700;padding:5px 0 2px">Due at Check-in:</td><td style="text-align:right;font-weight:800;color:#1E3D22;font-size:14px;padding:5px 0 2px">${formatCurrencySync(grandTotal, currency)}</td></tr>
+  </table>
+  <p style="color:#5A7060;font-size:9px;margin-top:6px">We accept: Cash &nbsp;·&nbsp; Mobile Money &nbsp;·&nbsp; Bank Transfer</p>
+</div>`
+  }
+
+  const sharedCss = `*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',system-ui,-apple-system,sans-serif;line-height:1.6;color:#1E293B;background:#fff;font-size:11px}.w{max-width:794px;margin:0 auto;background:#fff;padding:40px}h1{font-size:24px;font-weight:300;color:#1E3D22;margin-bottom:6px;letter-spacing:-0.5px}h3{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#C9963C;margin-bottom:12px}p{font-size:11px;color:#475569;margin:3px 0}strong{color:#1E3D22;font-weight:600}em{font-style:normal;color:#64748B}.lbl{font-size:10px;font-weight:500;color:#C9963C;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}.hd{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:28px;border-bottom:1px solid #E2E8F0;margin-bottom:36px;position:relative}.im{text-align:right}.im .dt{font-size:20px;font-weight:300;color:#1E3D22;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}.im .dn{font-size:12px;font-weight:500;color:#64748B;margin-bottom:14px;letter-spacing:0.5px}.ic p{font-size:11px}.ig{display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-bottom:48px}table.ct{width:100%;border-collapse:collapse;margin-bottom:40px}table.ct th{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#94A3B8;text-align:left;padding:14px 4px;border-bottom:1px solid #E2E8F0}table.ct td{padding:14px 4px;color:#1E293B;border-bottom:1px solid #F1F5F9}table.ct th.r,table.ct td.r{text-align:right}table.ct th.c,table.ct td.c{text-align:center}.tw{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:48px}.sp{flex:1;padding-right:48px}table.tt{width:300px;border-collapse:collapse}table.tt td{padding:10px 4px;font-size:11px;color:#475569}table.tt tr.sub td{border-top:1px dashed #E2E8F0;font-weight:500;color:#1E3D22;padding-top:14px}table.tt tr.gt td{border-top:2px solid #1E3D22;padding-top:16px;padding-bottom:16px;font-size:15px;font-weight:600;color:#1E3D22}.ft{padding-top:28px;border-top:1px solid #E2E8F0;text-align:center}.ft .ty{font-size:12px;font-weight:500;color:#1E3D22;margin-bottom:10px}.ft .fr{font-size:9px;color:#64748B;display:flex;justify-content:space-between}.sb{text-align:center;padding:10px;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:36px;border:1px solid currentColor;border-radius:2px}.bdg{display:inline-block;margin-top:10px;padding:5px 14px;border:1px solid currentColor;border-radius:2px;font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase}.sh td{font-size:9px;font-weight:600;color:#C9963C;text-transform:uppercase;letter-spacing:1px;padding:12px 4px 6px!important}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}`
+
+  return `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Group Pre-Invoice ${data.invoiceNumber}</title><style>${sharedCss}</style></head>
+<body><div class="w">
+<div class="ab"></div>
+<div class="sb" style="color:${stripColor}">${stripText}</div>
+<div class="hd">
+  <div class="hi">
+    <div class="lbl">Guest House</div>
+    <h1>${data.hotel.name}</h1>
+    <p>${data.hotel.address}</p>
+    <p>Tel: ${data.hotel.phone} &nbsp;|&nbsp; ${data.hotel.email}</p>
+    <p class="tin">TIN: 71786161-3</p>
+  </div>
+  <div class="im">
+    <div class="dt">Group Pre-Invoice</div>
+    <div class="dn">${data.invoiceNumber}</div>
+    <p><strong>Date:</strong> ${new Date(data.invoiceDate).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</p>
+    <p><strong>Due:</strong> At Check-in</p>
+    <p><strong>Ref:</strong> ${data.groupReference}</p>
+    <span class="bdg" style="border:1px solid ${badgeBorder};color:${badgeColor}">${badgeText}</span>
+  </div>
+</div>
+<div class="ig">
+  <div class="ic">
+    <h3>Bill To (Group Contact)</h3>
+    <p class="nm">${data.billingContact.name}</p>
+    <p>${data.billingContact.email}</p>
+    ${data.billingContact.phone ? `<p><em>Tel: </em>${data.billingContact.phone}</p>` : ''}
+    ${data.billingContact.address ? `<p>${data.billingContact.address}</p>` : ''}
+  </div>
+  <div class="ic">
+    <h3>Group Summary</h3>
+    <p><em>Total Rooms: </em><strong>${data.summary.totalRooms}</strong></p>
+    <p><em>Total Nights: </em><strong>${data.summary.totalNights}</strong></p>
+    <p><em>Room Subtotal: </em><strong>${formatCurrencySync(data.summary.roomSubtotal, currency)}</strong></p>
+    ${data.summary.discountTotal > 0 ? `<p><em>Discount Applied: </em><strong style="color:#DC2626">−${formatCurrencySync(data.summary.discountTotal, currency)}</strong></p>` : ''}
+    ${isPart ? `<p><em>Amount Paid: </em><strong style="color:#15803D">${formatCurrencySync(amountPaid, currency)}</strong></p>` : ''}
+    ${isPart ? `<p><em>Balance Due: </em><strong style="color:#DC2626">${formatCurrencySync(remaining, currency)}</strong></p>` : ''}
+  </div>
+</div>
+<div class="bd">
+  <table class="ct">
+    <thead><tr><th>Room &amp; Guest</th><th class="c">Dates</th><th class="c">Nights</th><th class="r">Room Total</th></tr></thead>
+    <tbody>
+      ${data.bookings.map(b => `
+        <tr>
+          <td><strong>Room ${b.roomNumber}</strong> <em style="color:#5A7060">(${b.roomType})</em><br/><span style="font-size:10px;color:#5A7060">${b.guestName}</span></td>
+          <td class="c" style="font-size:10px">${new Date(b.checkIn).toLocaleDateString('en-GB',{day:'2-digit',month:'short'})}&nbsp;–&nbsp;${new Date(b.checkOut).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</td>
+          <td class="c">${b.nights}</td>
+          <td class="r" style="font-weight:700">${formatCurrencySync(b.subtotal, currency)}</td>
+        </tr>
+        ${b.additionalCharges.length > 0 ? b.additionalCharges.map(ch => `<tr class="sr"><td colspan="3">↳ ${ch.description} (×${ch.quantity})</td><td class="r">${formatCurrencySync(ch.amount, currency)}</td></tr>`).join('') : ''}
+      `).join('')}
+    </tbody>
+  </table>
+</div>
+<div class="tw">
+  <div class="sp">
+    ${paymentCard}
+    ${data.summary.additionalCharges && data.summary.additionalCharges.length > 0 ? `
+    <div style="border:1px solid #E2E8F0;border-left:2px solid #C9963C;padding:24px;border-radius:2px;margin-top:24px;">
+      <p style="font-size:9px;font-weight:600;color:#C9963C;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;border-bottom:1px solid #F1F5F9;padding-bottom:12px">Group-Level Charges</p>
+      ${data.summary.additionalCharges.map(ch => `<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid #EBF2EB"><span>${ch.description}</span><span style="font-weight:600">+${formatCurrencySync(ch.amount, currency)}</span></div>`).join('')}
+    </div>` : ''}
+  </div>
+  <table class="tt">
+    ${data.summary.discountTotal > 0 ? `<tr><td style="color:#DC2626">Discount${data.summary.discount?.type === 'percentage' ? ` (${data.summary.discount.value}%)` : ''}:</td><td style="text-align:right;color:#DC2626;font-weight:700">−${formatCurrencySync(data.summary.discountTotal, currency)}</td></tr>` : ''}
+    <tr class="sh"><td colspan="2">Ghana Tax Breakdown</td></tr>
+    <tr><td>Sales Total</td><td style="text-align:right">${formatCurrencySync(data.summary.salesTotal, currency)}</td></tr>
+    <tr><td>GF/NHIL (5%)</td><td style="text-align:right">${formatCurrencySync(data.summary.gfNhil, currency)}</td></tr>
+    <tr class="sub"><td>Sub Total</td><td style="text-align:right">${formatCurrencySync(data.summary.taxSubTotal, currency)}</td></tr>
+    <tr><td>VAT (15%)</td><td style="text-align:right">${formatCurrencySync(data.summary.vat, currency)}</td></tr>
+    <tr><td>Tourism Levy (1%)</td><td style="text-align:right">${formatCurrencySync(data.summary.tourismLevy, currency)}</td></tr>
+    <tr class="gt"><td>Grand Total</td><td style="text-align:right">${formatCurrencySync(grandTotal, currency)}</td></tr>
+    ${isPart ? `<tr style="border-top:2px solid #86EFAC"><td style="color:#15803D;font-weight:700">Amount Paid</td><td style="text-align:right;color:#15803D;font-weight:700">−${formatCurrencySync(amountPaid, currency)}</td></tr><tr><td style="color:#DC2626;font-weight:800;font-size:12px">Balance Due</td><td style="text-align:right;color:#DC2626;font-weight:800;font-size:13px">${formatCurrencySync(remaining, currency)}</td></tr>` : ''}
+    ${isPaid ? `<tr><td style="color:#15803D;font-weight:700;font-size:11px" colspan="2">Fully Settled — No Balance</td></tr>` : ''}
+  </table>
+</div>
+<div class="ft">
+  <div class="ty">Thank you for choosing ${data.hotel.name}!</div>
+  <div class="fr">
+    <div><p><strong>Payment Methods:</strong> Cash &nbsp;·&nbsp; Mobile Money &nbsp;·&nbsp; Bank Transfer</p></div>
+    <div style="text-align:right"><p>${data.hotel.phone} &nbsp;|&nbsp; ${data.hotel.email}</p><p>TIN: 71786161-3</p></div>
+  </div>
+</div>
+</div></body></html>`
+}
+
+export async function generateGroupPreInvoicePDF(data: GroupPreInvoiceData): Promise<Blob> {
+  console.log('📄 [GroupPreInvoicePDF] Generating PDF with', data.bookings.length, 'bookings...')
+  const htmlContent = await generateGroupPreInvoiceHTML(data)
+
+  const element = document.createElement('div')
+  element.innerHTML = htmlContent
+  element.style.position = 'absolute'
+  element.style.left = '-9999px'
+  element.style.top = '0'
+  element.style.width = '800px'
+  document.body.appendChild(element)
+
+  const canvas = await html2canvas(element, {
+    scale: 2,
+    useCORS: true,
+    allowTaint: true,
+    backgroundColor: '#ffffff',
+    windowHeight: element.scrollHeight,
+    height: element.scrollHeight
+  })
+  document.body.removeChild(element)
+
+  const imgData = canvas.toDataURL('image/jpeg', 0.95)
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+
+  const imgWidth = 210
+  const pageHeight = 297
+  const imgHeight = (canvas.height * imgWidth) / canvas.width
+  let heightLeft = imgHeight
+  let position = 0
+
+  pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight)
+  heightLeft -= pageHeight
+
+  while (heightLeft > 0) {
+    position = heightLeft - imgHeight
+    pdf.addPage()
+    pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight)
+    heightLeft -= pageHeight
+  }
+
+  console.log('✅ [GroupPreInvoicePDF] PDF generated with', pdf.getNumberOfPages(), 'page(s)')
+  return pdf.output('blob')
+}
+
+export async function downloadGroupPreInvoicePDF(data: GroupPreInvoiceData): Promise<void> {
+  try {
+    const pdfBlob = await generateGroupPreInvoicePDF(data)
+    const url = URL.createObjectURL(pdfBlob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `group-pre-invoice-${data.invoiceNumber}.pdf`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  } catch (e: any) {
+    console.error('Failed to download group pre-invoice', e)
     throw e
   }
 }

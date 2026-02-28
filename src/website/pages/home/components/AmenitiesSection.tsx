@@ -10,7 +10,7 @@ export default function AmenitiesSection() {
     const displayedAmenities = showAll ? safeAmenities : safeAmenities.slice(0, 8);
 
     return (
-        <section className="py-20 px-4 bg-resort-green-50">
+        <section className="py-24 px-4 bg-[#f3faf6]">
             <div className="max-w-7xl mx-auto">
                 <div className="text-center mb-14">
                     <span className="inline-block text-resort-gold-600 text-xs font-semibold tracking-widest uppercase mb-3">
@@ -25,12 +25,12 @@ export default function AmenitiesSection() {
                     {displayedAmenities.map((amenity) => (
                         <div
                             key={amenity.name}
-                            className="bg-white p-6 rounded-xl border border-resort-green-100 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4"
+                            className="bg-white px-6 py-5 rounded-[14px] shadow-[0_2px_10px_rgb(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:-translate-y-1 border border-resort-green-50 flex items-center gap-4 transition-all duration-300"
                         >
-                            <div className="w-12 h-12 rounded-full bg-resort-green-100 flex items-center justify-center flex-shrink-0">
-                                <amenity.icon className="text-resort-green-700 w-6 h-6" />
+                            <div className="w-12 h-12 rounded-full bg-[#e8f5ed] flex items-center justify-center flex-shrink-0">
+                                <amenity.icon className="text-[#88c5a2] w-6 h-6" />
                             </div>
-                            <span className="text-base font-medium text-resort-green-900">{amenity.name}</span>
+                            <span className="text-[15px] font-semibold text-gray-800">{amenity.name}</span>
                         </div>
                     ))}
                 </div>

@@ -444,7 +444,7 @@ export function OnsiteBookingPage() {
 
         const onsiteEmailPayload = {
           to: guestInfo.email,
-          from: 'Hobbysky Guest House Bookings <bookings@updates.hobbysky.com>',
+          from: 'Hobbysky Guest House <noreply@updates.hobbyskyguesthouse.com>',
           subject: 'Group Booking Confirmation - Hobbysky Guest House',
           html: `
               <div style="font-family: sans-serif; padding: 20px;">
@@ -522,7 +522,7 @@ export function OnsiteBookingPage() {
           {[1, 2, 3, 4, 5].map((s) => (
             <div key={s} className="flex items-center">
               <div
-                className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-bold text-base transition-all duration-300 ${step >= s ? 'bg-gradient-to-br from-primary to-accent text-white shadow-lg' : 'bg-white border-2 border-secondary text-muted-foreground'
+                className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-bold text-base transition-all duration-300 ${step >= s ? 'bg-gradient-to-br from-primary to-accent text-white shadow-lg' : 'bg-secondary/80 border-2 border-border text-muted-foreground'
                   }`}
               >
                 {step > s ? <Check className="w-6 h-6" /> : s}
@@ -536,7 +536,7 @@ export function OnsiteBookingPage() {
           ))}
         </div>
 
-        <Card className="border-primary/10 shadow-xl bg-white">
+        <Card className="border-primary/10 shadow-xl bg-card">
           <CardHeader className="pb-6">
             <CardTitle className="text-3xl font-serif mb-2">
               {step === 1 && 'Search & Add Rooms'}
@@ -644,7 +644,7 @@ export function OnsiteBookingPage() {
                             return (
                               <div
                                 key={property.id}
-                                className={`p-4 border rounded-lg transition-all hover:border-primary/50 relative overflow-hidden ${!available || alreadyInCart ? 'opacity-50' : 'bg-white'}`}
+                                className={`p-4 border rounded-lg transition-all hover:border-primary/50 relative overflow-hidden ${!available || alreadyInCart ? 'opacity-50' : 'bg-card/80'}`}
                               >
                                 <div className="flex justify-between items-center">
                                   <div className="flex-1">
@@ -702,7 +702,7 @@ export function OnsiteBookingPage() {
                     ) : (
                       <div className="space-y-3">
                         {cart.map((item, idx) => (
-                          <div key={item.id} className="bg-white p-3 rounded border shadow-sm flex justify-between group flex-col">
+                          <div key={item.id} className="bg-card p-3 rounded border border-border shadow-sm flex justify-between group flex-col">
                             <div className="flex justify-between items-start w-full">
                               <div>
                                 <p className="font-medium">{item.roomTypeName}</p>
@@ -1012,12 +1012,12 @@ export function OnsiteBookingPage() {
 
                   {/* Totals Breakdown */}
                   <div className="border-t pt-4 space-y-2">
-                    <div className="flex justify-between text-sm text-gray-500">
+                    <div className="flex justify-between text-sm text-muted-foreground">
                       <span>Room Subtotal:</span>
                       <span>{formatCurrencySync(totalPrice, currency)}</span>
                     </div>
                     {chargesTotal > 0 && (
-                      <div className="flex justify-between text-sm text-gray-500">
+                      <div className="flex justify-between text-sm text-muted-foreground">
                         <span>Additional Charges:</span>
                         <span>+ {formatCurrencySync(chargesTotal, currency)}</span>
                       </div>
@@ -1118,7 +1118,7 @@ export function OnsiteBookingPage() {
                   )}
 
                   {/* Payment Summary */}
-                  <div className="bg-white rounded-lg p-4 border space-y-2">
+                  <div className="bg-card rounded-lg p-4 border border-border space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Grand Total:</span>
                       <span className="font-semibold">{formatCurrencySync(grandTotal, currency)}</span>

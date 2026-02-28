@@ -59,6 +59,25 @@ export function CheckOutDialog({
 
     if (!booking) return null
 
+    // Extract discount applied at check-in (persisted in specialRequests or direct field)
+    const discountAtCheckIn = (() => {
+        if (booking.discountAmount && booking.discountAmount > 0) return booking.discountAmount
+        const sr = booking.special_requests || booking.specialRequests || ''
+        const dm = sr.match?.(/<!-- DISCOUNT_DATA:(.*?) -->/)
+        if (dm) {
+            try { return JSON.parse(dm[1]).discountAmount || 0 } catch { return 0 }
+        }
+        return 0
+    })()
+    const discountReasonAtCheckIn = (() => {
+        const sr = booking.special_requests || booking.specialRequests || ''
+        const dm = sr.match?.(/<!-- DISCOUNT_DATA:(.*?) -->/)
+        if (dm) {
+            try { return JSON.parse(dm[1]).discountReason || null } catch { return null }
+        }
+        return null
+    })()
+
     // Calculate totals
     const roomCost = booking.totalPrice || 0
     const chargesTotal = charges.reduce((sum, c) => sum + (c.amount || 0), 0)
@@ -80,7 +99,7 @@ export function CheckOutDialog({
         }
         return 'pending'
     })()
-    const totalBeforePayment = roomCost + chargesTotal
+    const totalBeforePayment = Math.max(0, roomCost - discountAtCheckIn) + chargesTotal
     const remainingBalance = Math.max(0, totalBeforePayment - priorAmountPaid)
 
     // Get values from booking (handle different data shapes)
@@ -127,22 +146,40 @@ export function CheckOutDialog({
                         </div>
                     </div>
 
+                    {/* Discount Applied at Check-In */}
+                    {discountAtCheckIn > 0 && (
+                        <div className="rounded-lg border border-violet-500/25 bg-violet-500/8 p-3 space-y-1">
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium text-violet-400">🏷 Discount Applied at Check-In</span>
+                                {discountReasonAtCheckIn && (
+                                    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-violet-500/15 text-violet-400 capitalize">
+                                        {discountReasonAtCheckIn}
+                                    </span>
+                                )}
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-violet-400/80">Discount Amount:</span>
+                                <span className="font-bold text-violet-400">-{formatCurrencySync(discountAtCheckIn, currency)}</span>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Prior Payment Info */}
                     {priorAmountPaid > 0 && (
-                        <div className="rounded-lg border border-green-200 bg-green-50 p-3 space-y-1">
+                        <div className="rounded-lg border border-emerald-500/25 bg-emerald-500/8 p-3 space-y-1">
                             <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-green-800">💰 Prior Payment</span>
-                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${priorPaymentStatus === 'full' ? 'bg-green-200 text-green-800' :
-                                    priorPaymentStatus === 'part' ? 'bg-amber-200 text-amber-800' :
-                                        'bg-red-200 text-red-800'
+                                <span className="text-sm font-medium text-emerald-400">💰 Prior Payment</span>
+                                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${priorPaymentStatus === 'full' ? 'bg-emerald-500/15 text-emerald-400' :
+                                    priorPaymentStatus === 'part' ? 'bg-amber-500/15 text-amber-400' :
+                                        'bg-red-500/15 text-red-400'
                                     }`}>
                                     {priorPaymentStatus === 'full' ? 'Paid in Full' :
                                         priorPaymentStatus === 'part' ? 'Part Payment' : 'Pending'}
                                 </span>
                             </div>
                             <div className="flex justify-between text-sm">
-                                <span className="text-green-700">Amount Already Paid:</span>
-                                <span className="font-bold text-green-700">{formatCurrencySync(priorAmountPaid, currency)}</span>
+                                <span className="text-emerald-400/80">Amount Already Paid:</span>
+                                <span className="font-bold text-emerald-400">{formatCurrencySync(priorAmountPaid, currency)}</span>
                             </div>
                         </div>
                     )}
@@ -180,6 +217,12 @@ export function CheckOutDialog({
                                 <span className="text-muted-foreground">Room Cost:</span>
                                 <span>{formatCurrencySync(roomCost, currency)}</span>
                             </div>
+                            {discountAtCheckIn > 0 && (
+                                <div className="flex justify-between text-sm text-violet-400">
+                                    <span>Discount Applied:</span>
+                                    <span>-{formatCurrencySync(discountAtCheckIn, currency)}</span>
+                                </div>
+                            )}
                             {chargesTotal > 0 && (
                                 <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground">Additional Charges:</span>
@@ -187,7 +230,7 @@ export function CheckOutDialog({
                                 </div>
                             )}
                             {priorAmountPaid > 0 && (
-                                <div className="flex justify-between text-sm text-green-600">
+                                <div className="flex justify-between text-sm text-emerald-400">
                                     <span>Already Paid:</span>
                                     <span>-{formatCurrencySync(priorAmountPaid, currency)}</span>
                                 </div>
@@ -196,20 +239,20 @@ export function CheckOutDialog({
                                 <span className="font-medium">
                                     {priorAmountPaid > 0 ? 'Remaining Balance' : 'Grand Total'}
                                 </span>
-                                <span className={`text-xl font-bold ${remainingBalance > 0 ? 'text-amber-600' : 'text-green-600'}`}>
+                                <span className={`text-xl font-bold ${remainingBalance > 0 ? 'text-amber-500' : 'text-emerald-400'}`}>
                                     {formatCurrencySync(remainingBalance, currency)}
                                 </span>
                             </div>
-                            {remainingBalance === 0 && priorAmountPaid > 0 && (
-                                <p className="text-xs text-green-600 font-medium">✓ Fully paid — no balance to collect</p>
+                            {remainingBalance === 0 && (priorAmountPaid > 0 || discountAtCheckIn > 0) && (
+                                <p className="text-xs text-emerald-400 font-medium">✓ Fully settled — no balance to collect</p>
                             )}
                         </div>
                     )}
 
                     {/* What happens next */}
-                    <div className="rounded-lg bg-blue-50 p-4 border border-blue-200">
-                        <p className="text-sm font-medium text-blue-900">What happens next?</p>
-                        <ul className="mt-2 text-sm text-blue-700 space-y-1">
+                    <div className="rounded-lg bg-sky-500/8 p-4 border border-sky-500/25">
+                        <p className="text-sm font-medium text-sky-300">What happens next?</p>
+                        <ul className="mt-2 text-sm text-sky-400/80 space-y-1">
                             <li>✓ Booking status updated to "Checked-Out"</li>
                             <li>✓ Room status set to "Cleaning"</li>
                             <li>✓ Housekeeping task automatically created</li>

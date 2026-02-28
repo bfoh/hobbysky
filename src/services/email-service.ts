@@ -146,7 +146,7 @@ export async function sendStaffWelcomeEmail(params: StaffWelcomeEmailParams): Pr
 
   const payload: EmailPayload = {
     to: email,
-    from: 'Hobbysky Guest House <noreply@updates.hobbysky.com>',
+    from: 'Hobbysky Guest House <noreply@updates.hobbyskyguesthouse.com>',
     subject: 'Welcome to Hobbysky Guest House Staff Portal',
     html: htmlContent,
     text: `
@@ -177,5 +177,5 @@ If you have any questions, please contact your system administrator.
 }
 
 // Export default sender email for backwards compatibility
-export const DEFAULT_FROM_EMAIL = 'Hobbysky Guest House <noreply@updates.hobbysky.com>'
+export const DEFAULT_FROM_EMAIL = 'Hobbysky Guest House <noreply@updates.hobbyskyguesthouse.com>'
 

@@ -131,11 +131,11 @@ export function ServiceRequestsPage() {
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'pending': return 'bg-orange-100 text-orange-800 border-orange-200'
-            case 'in_progress': return 'bg-blue-100 text-blue-800 border-blue-200'
-            case 'completed': return 'bg-green-100 text-green-800 border-green-200'
-            case 'cancelled': return 'bg-gray-100 text-gray-800 border-gray-200'
-            default: return 'bg-gray-100 text-gray-800'
+            case 'pending': return 'bg-orange-500/15 text-orange-400 border-orange-500/25'
+            case 'in_progress': return 'bg-sky-500/15 text-sky-300 border-sky-500/25'
+            case 'completed': return 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25'
+            case 'cancelled': return 'bg-white/8 text-muted-foreground border-white/10'
+            default: return 'bg-white/8 text-muted-foreground border-white/10'
         }
     }
 

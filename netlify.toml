@@ -16,7 +16,7 @@
 [dev]
   command = "npm run dev"
   targetPort = 3000
-  port = 8888
+  port = 9000
   publish = "dist"
   autoLaunch = false
 

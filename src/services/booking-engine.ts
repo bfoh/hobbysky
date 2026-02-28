@@ -412,10 +412,12 @@ class BookingEngine {
       checkIn: bookingData.dates.checkIn,
       checkOut: bookingData.dates.checkOut,
       status: bookingData.status,
-      source: bookingData.source,
+      source: bookingData.source || 'reception',
       totalPrice: bookingData.amount ?? 0,
       numGuests: bookingData.numGuests ?? 1,
-      payment_method: bookingData.payment_method,
+      paymentMethod: bookingData.payment_method,
+      createdBy: bookingData.createdBy || currentUser?.id || null,
+      createdByName: bookingData.createdByName || currentUser?.email || null,
       specialRequests: specialRequests
     }
 
@@ -1454,7 +1456,20 @@ class BookingEngine {
       }
 
       console.log('[BookingEngine] Updating booking with:', { remoteId, updates: JSON.stringify(updates) })
-      await db.bookings.update(remoteId, updates)
+      try {
+        await db.bookings.update(remoteId, updates)
+      } catch (statusErr: any) {
+        // DB constraint may use underscores ('checked_in', 'checked_out') — retry with legacy forms
+        if (statusErr.message?.includes('bookings_status_check') || statusErr.message?.includes('violates check constraint')) {
+          console.warn('[BookingEngine] Status constraint hit, retrying with underscore form')
+          const legacyStatus = updates.status === 'checked-in' ? 'checked_in'
+            : updates.status === 'checked-out' ? 'checked_out'
+            : updates.status
+          await db.bookings.update(remoteId, { ...updates, status: legacyStatus })
+        } else {
+          throw statusErr
+        }
+      }
 
       // Log appropriate activity based on status
       if (status === 'checked-in') {

@@ -72,6 +72,15 @@ export type Tables = {
         total_price: number | null
         num_guests: number
         special_requests: string | null
+        payment_method: string | null
+        invoice_number: string | null
+        source: string | null
+        created_by: string | null
+        created_by_name: string | null
+        check_in_by: string | null
+        check_in_by_name: string | null
+        check_out_by: string | null
+        check_out_by_name: string | null
         created_at: string
         updated_at: string
     }

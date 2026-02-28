@@ -389,15 +389,19 @@ export function BookingsPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'confirmed':
-        return 'bg-green-100 text-green-700 border-green-200'
+        return 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25'
       case 'pending':
-        return 'bg-yellow-100 text-yellow-700 border-yellow-200'
+        return 'bg-amber-500/15 text-amber-400 border-amber-500/25'
       case 'cancelled':
-        return 'bg-red-100 text-red-700 border-red-200'
+        return 'bg-red-500/15 text-red-400 border-red-500/25'
       case 'completed':
-        return 'bg-blue-100 text-blue-700 border-blue-200'
+        return 'bg-sky-500/15 text-sky-400 border-sky-500/25'
+      case 'checked-in':
+        return 'bg-primary/15 text-primary border-primary/25'
+      case 'checked-out':
+        return 'bg-slate-500/15 text-slate-400 border-slate-500/25'
       default:
-        return 'bg-gray-100 text-gray-700 border-gray-200'
+        return 'bg-white/8 text-muted-foreground border-white/10'
     }
   }
 
@@ -709,12 +713,12 @@ export function BookingsPage() {
                             {booking.status}
                           </Badge>
                           {booking.source === 'voice_agent' && (
-                            <Badge className="bg-purple-100 text-purple-800 border-purple-200">
+                            <Badge className="bg-purple-500/15 text-purple-300 border-purple-500/25">
                               Voice Agent
                             </Badge>
                           )}
                           {booking.source === 'online' && (
-                            <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+                            <Badge className="bg-sky-500/15 text-sky-300 border-sky-500/25">
                               Online
                             </Badge>
                           )}

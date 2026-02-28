@@ -1,8 +1,20 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function HeroSection() {
   const [checkInDate, setCheckInDate] = useState('');
   const [checkOutDate, setCheckOutDate] = useState('');
+  const navigate = useNavigate();
+
+  const handleCheckAvailability = () => {
+    const params = new URLSearchParams();
+    if (checkInDate) params.append('checkIn', checkInDate);
+    if (checkOutDate) params.append('checkOut', checkOutDate);
+
+    navigate(`/book-now${params.toString() ? '?' + params.toString() : ''}`);
+  };
+
+  const today = new Date().toISOString().split('T')[0];
 
   return (
     <>
@@ -42,8 +54,12 @@ export default function HeroSection() {
             <input
               type="date"
               value={checkInDate}
+              min={today}
+              onClick={(e) => {
+                try { (e.target as HTMLInputElement).showPicker(); } catch (err) { }
+              }}
               onChange={(e) => setCheckInDate(e.target.value)}
-              className="w-full px-5 py-3 border border-resort-green-200 rounded-md focus:ring-2 focus:ring-resort-green-500 focus:border-transparent text-base md:text-lg appearance-none bg-transparent relative z-10"
+              className="w-full px-4 py-3.5 border border-[#446554] rounded-lg focus:ring-2 focus:ring-resort-green-500 focus:border-transparent text-gray-800 font-semibold text-sm bg-white relative z-10 cursor-pointer transition-colors hover:border-[#2a4034]"
             />
           </div>
           <div className="flex-1 w-full relative">
@@ -51,11 +67,17 @@ export default function HeroSection() {
             <input
               type="date"
               value={checkOutDate}
+              min={checkInDate || today}
+              onClick={(e) => {
+                try { (e.target as HTMLInputElement).showPicker(); } catch (err) { }
+              }}
               onChange={(e) => setCheckOutDate(e.target.value)}
-              className="w-full px-5 py-3 border border-resort-green-200 rounded-md focus:ring-2 focus:ring-resort-green-500 focus:border-transparent text-base md:text-lg appearance-none bg-transparent relative z-10"
+              className="w-full px-4 py-3.5 border border-[#446554] rounded-lg focus:ring-2 focus:ring-resort-green-500 focus:border-transparent text-gray-800 font-semibold text-sm bg-white relative z-10 cursor-pointer transition-colors hover:border-[#2a4034]"
             />
           </div>
-          <button className="w-full md:w-auto whitespace-nowrap bg-[#ce8823] hover:bg-[#b8761a] text-white px-8 py-3.5 rounded-md font-semibold transition-colors duration-300 shadow-md cursor-pointer text-base md:text-lg h-auto flex items-center justify-center">
+          <button
+            onClick={handleCheckAvailability}
+            className="w-full md:w-auto whitespace-nowrap bg-[#ce8823] hover:bg-[#b8761a] active:scale-[0.98] text-white px-8 py-3.5 rounded-md font-semibold transition-all duration-300 shadow-md cursor-pointer text-base md:text-lg h-auto flex items-center justify-center">
             CHECK AVAILABILITY
           </button>
         </div>

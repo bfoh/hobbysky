@@ -161,9 +161,9 @@ export function DiagnoseEmailPage() {
                             <p className="font-semibold">Common Setup Issues:</p>
                             <ul className="list-disc pl-4 space-y-1">
                                 <li>
-                                    <strong>Unverified Domain:</strong> You cannot send from <code>noreply@updates.hobbysky.com</code> unless you have verified <code>updates.hobbysky.com</code> in Resend.
+                                    <strong>Sender Domain:</strong> Emails are sent from <code>noreply@updates.hobbyskyguesthouse.com</code>.
                                     <br />
-                                    <em>Fix:</em> Verify the domain in Resend, or use <code>onboarding@resend.dev</code> for testing (only to your own email).
+                                    <em>Status:</em> Domain <code>updates.hobbyskyguesthouse.com</code> is verified ✅
                                 </li>
                                 <li>
                                     <strong>Missing API Key:</strong> Ensure <code>RESEND_API_KEY</code> is set in Netlify Site Settings.

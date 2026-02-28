@@ -38,7 +38,7 @@ export const handler = async (event, context) => {
 
         // Prepare email payload
         const emailPayload = {
-            from: payload.from || 'AMP Lodge <noreply@updates.amplodge.org>',
+            from: payload.from || 'Hobbysky Guest House <noreply@updates.hobbyskyguesthouse.com>',
             to: payload.to,
             subject: payload.subject,
             html: payload.html,

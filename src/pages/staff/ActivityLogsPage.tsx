@@ -146,21 +146,21 @@ export function ActivityLogsPage() {
 
   function getEntityTypeBadgeColor(entityType: EntityType): string {
     const colors: Record<EntityType, string> = {
-      booking: 'bg-blue-100 text-blue-800',
-      guest: 'bg-green-100 text-green-800',
-      invoice: 'bg-purple-100 text-purple-800',
-      staff: 'bg-orange-100 text-orange-800',
-      room: 'bg-cyan-100 text-cyan-800',
-      room_type: 'bg-teal-100 text-teal-800',
-      property: 'bg-indigo-100 text-indigo-800',
-      task: 'bg-yellow-100 text-yellow-800',
-      contact_message: 'bg-pink-100 text-pink-800',
-      payment: 'bg-emerald-100 text-emerald-800',
-      report: 'bg-gray-100 text-gray-800',
-      settings: 'bg-slate-100 text-slate-800',
-      user: 'bg-violet-100 text-violet-800',
+      booking: 'bg-sky-500/15 text-sky-300 border border-sky-500/25',
+      guest: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25',
+      invoice: 'bg-purple-500/15 text-purple-300 border border-purple-500/25',
+      staff: 'bg-orange-500/15 text-orange-400 border border-orange-500/25',
+      room: 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/25',
+      room_type: 'bg-teal-500/15 text-teal-300 border border-teal-500/25',
+      property: 'bg-indigo-500/15 text-indigo-300 border border-indigo-500/25',
+      task: 'bg-amber-500/15 text-amber-400 border border-amber-500/25',
+      contact_message: 'bg-pink-500/15 text-pink-300 border border-pink-500/25',
+      payment: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25',
+      report: 'bg-white/8 text-muted-foreground border border-white/10',
+      settings: 'bg-slate-500/15 text-slate-300 border border-slate-500/25',
+      user: 'bg-violet-500/15 text-violet-300 border border-violet-500/25',
     }
-    return colors[entityType] || 'bg-gray-100 text-gray-800'
+    return colors[entityType] || 'bg-white/8 text-muted-foreground border border-white/10'
   }
 
   function formatDetails(details: Record<string, any>) {

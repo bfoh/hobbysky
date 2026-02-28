@@ -170,6 +170,13 @@ function convertToCamelCase(obj: Record<string, any> | null): Record<string, any
 
     Object.entries(obj).forEach(([key, value]) => {
         const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
+        // Normalize booking status: DB may store underscore variants ('checked_in'),
+        // but the entire UI expects hyphenated forms ('checked-in')
+        if (camelKey === 'status' && typeof value === 'string') {
+            value = value === 'checked_in' ? 'checked-in'
+                : value === 'checked_out' ? 'checked-out'
+                : value
+        }
         result[camelKey] = value
     })
 

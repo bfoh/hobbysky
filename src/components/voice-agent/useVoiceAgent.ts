@@ -126,53 +126,59 @@ IMPORTANT: We ONLY have Standard, Executive, and Deluxe rooms. Do not mention Fa
 - Check-out date must be AFTER the check-in date.
 
 === END ===
-Be helpful, friendly, and make guests feel welcome!`,
-                tools: [
-                    {
-                        type: "function",
-                        function: {
-                            name: "checkRoomAvailability",
-                            description: "Check hotel room availability for specific dates and number of guests. Call this when the user wants to know what rooms are available.",
-                            parameters: {
-                                type: "object",
-                                properties: {
-                                    checkIn: {
-                                        type: "string",
-                                        description: "Check-in date in YYYY-MM-DD format (e.g., 2024-12-21)"
-                                    },
-                                    checkOut: {
-                                        type: "string",
-                                        description: "Check-out date in YYYY-MM-DD format (e.g., 2024-12-24)"
-                                    },
-                                    guests: {
-                                        type: "number",
-                                        description: "Number of guests"
-                                    }
+Be helpful, friendly, and make guests feel welcome!`
+            },
+            tools: [
+                {
+                    type: "function",
+                    function: {
+                        name: "checkRoomAvailability",
+                        description: "Check hotel room availability for specific dates and number of guests. Call this when the user wants to know what rooms are available.",
+                        parameters: {
+                            type: "object",
+                            properties: {
+                                checkIn: {
+                                    type: "string",
+                                    description: "Check-in date in YYYY-MM-DD format (e.g., 2026-03-15)"
                                 },
-                                required: ["checkIn", "checkOut", "guests"]
-                            }
+                                checkOut: {
+                                    type: "string",
+                                    description: "Check-out date in YYYY-MM-DD format (e.g., 2026-03-18)"
+                                },
+                                guests: {
+                                    type: "number",
+                                    description: "Number of guests"
+                                }
+                            },
+                            required: ["checkIn", "checkOut", "guests"]
                         }
                     },
-                    {
-                        type: "function",
-                        function: {
-                            name: "bookRoom",
-                            description: "Book a hotel room for a guest. Call this after confirming room selection with the user.",
-                            parameters: {
-                                type: "object",
-                                properties: {
-                                    checkIn: { type: "string", description: "Check-in date in YYYY-MM-DD format" },
-                                    checkOut: { type: "string", description: "Check-out date in YYYY-MM-DD format" },
-                                    roomTypeId: { type: "string", description: "The UUID of the room type to book" },
-                                    guestName: { type: "string", description: "Full name of the guest" },
-                                    guestEmail: { type: "string", description: "Email address of the guest" }
-                                },
-                                required: ["checkIn", "checkOut", "roomTypeId", "guestName", "guestEmail"]
-                            }
-                        }
+                    server: {
+                        url: "https://www.hobbyskyguesthouse.com/.netlify/functions/vapi-webhook"
                     }
-                ]
-            },
+                },
+                {
+                    type: "function",
+                    function: {
+                        name: "bookRoom",
+                        description: "Book a hotel room for a guest. Call this after confirming room selection with the user.",
+                        parameters: {
+                            type: "object",
+                            properties: {
+                                checkIn: { type: "string", description: "Check-in date in YYYY-MM-DD format" },
+                                checkOut: { type: "string", description: "Check-out date in YYYY-MM-DD format" },
+                                roomTypeId: { type: "string", description: "The UUID of the room type to book" },
+                                guestName: { type: "string", description: "Full name of the guest" },
+                                guestEmail: { type: "string", description: "Email address of the guest" }
+                            },
+                            required: ["checkIn", "checkOut", "roomTypeId", "guestName", "guestEmail"]
+                        }
+                    },
+                    server: {
+                        url: "https://www.hobbyskyguesthouse.com/.netlify/functions/vapi-webhook"
+                    }
+                }
+            ],
             voice: {
                 provider: "11labs",
                 voiceId: "21m00Tcm4TlvDq8ikWAM", // Rachel - warm, natural female voice
@@ -189,19 +195,9 @@ Be helpful, friendly, and make guests feel welcome!`,
         } else {
             setIsConnecting(true);
             try {
-                // Determine base URL dynamically or fallback to Netlify URL
-                // Vapi tool calls require an absolute URL
-                const baseUrl = window.location.origin;
-                const webhookUrl = `${baseUrl}/.netlify/functions/vapi-webhook`;
+                console.log('[VAPI] Starting call...');
 
-                console.log('[VAPI] Starting call with webhook:', webhookUrl);
-
-                await vapi.start(
-                    getAssistantConfig() as any,
-                    {
-                        server: { url: webhookUrl } // Override default server URL to point to our webhook
-                    }
-                );
+                await vapi.start(getAssistantConfig() as any);
             } catch (error) {
                 console.error('[VAPI] Failed to start call:', error);
                 setIsConnecting(false);

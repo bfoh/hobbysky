@@ -5,7 +5,7 @@ import { Mic, MicOff, X, MessageSquare, Loader2, Volume2 } from '@/components/ic
 
 export default function VoiceWidget() {
     const [isOpen, setIsOpen] = useState(false);
-    const { isListening, isProcessing, isSpeaking, messages, toggleListening, handleUserMessage, unlockAudio } = useVoiceAgent();
+    const { isConnecting, isConnected, isSpeaking, messages, toggleCall, handleUserMessage } = useVoiceAgent();
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const [inputText, setInputText] = useState("");
 
@@ -14,16 +14,13 @@ export default function VoiceWidget() {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
-    // Unlock audio when widget opens (user gesture)
     const handleOpen = () => {
         setIsOpen(true);
-        unlockAudio();
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!inputText.trim()) return;
-        unlockAudio(); // Unlock on submit too
         handleUserMessage(inputText);
         setInputText("");
     };
@@ -37,7 +34,7 @@ export default function VoiceWidget() {
                     {/* Header */}
                     <div className="bg-gradient-to-r from-amber-700 to-amber-900 p-4 flex justify-between items-center text-white">
                         <div className="flex items-center gap-2">
-                            <div className={`w-2 h-2 rounded-full ${isProcessing ? 'bg-yellow-400 animate-pulse' : 'bg-green-400'}`}></div>
+                            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400 animate-pulse' : isConnecting ? 'bg-yellow-400 animate-pulse' : 'bg-gray-400'}`}></div>
                             <h3 className="font-medium">Concierge AI</h3>
                         </div>
                         <button
@@ -53,7 +50,7 @@ export default function VoiceWidget() {
                         {messages.length === 0 && (
                             <div className="text-center text-gray-400 mt-10 text-sm">
                                 <p>Hello! I can help you check availability and book rooms.</p>
-                                <p className="mt-2">Try saying: <br />"Do you have rooms for this weekend?"</p>
+                                <p className="mt-2">Connecting to audio is required to speak.</p>
                             </div>
                         )}
 
@@ -69,15 +66,6 @@ export default function VoiceWidget() {
                                 </div>
                             </div>
                         ))}
-
-                        {isProcessing && (
-                            <div className="flex justify-start">
-                                <div className="bg-white border border-gray-200 p-3 rounded-2xl rounded-bl-none shadow-sm flex items-center gap-2">
-                                    <Loader2 size={16} className="animate-spin text-amber-600" />
-                                    <span className="text-xs text-gray-500">Thinking...</span>
-                                </div>
-                            </div>
-                        )}
                         <div ref={messagesEndRef} />
                     </div>
 
@@ -85,8 +73,13 @@ export default function VoiceWidget() {
                     <div className="p-4 bg-white border-t border-gray-100">
                         {/* Status Indicators */}
                         <div className="flex justify-center mb-4 min-h-[24px]">
-                            {isListening && (
-                                <span className="text-xs font-semibold text-red-500 animate-pulse flex items-center gap-1">
+                            {isConnecting && (
+                                <span className="text-xs font-semibold text-amber-500 animate-pulse flex items-center gap-1">
+                                    <Loader2 size={12} className="animate-spin" /> Connecting...
+                                </span>
+                            )}
+                            {isConnected && !isSpeaking && (
+                                <span className="text-xs font-semibold text-green-500 flex items-center gap-1">
                                     <Mic size={12} /> Listening...
                                 </span>
                             )}
@@ -99,13 +92,13 @@ export default function VoiceWidget() {
 
                         <div className="flex items-center gap-2">
                             <button
-                                onClick={toggleListening}
-                                className={`p-3 rounded-full transition-all duration-300 ${isListening
-                                    ? 'bg-red-500 text-white shadow-lg ring-4 ring-red-100 scale-110'
+                                onClick={toggleCall}
+                                className={`p-3 rounded-full transition-all duration-300 ${isConnected
+                                    ? 'bg-red-500 text-white shadow-lg ring-4 ring-red-100'
                                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                     }`}
                             >
-                                {isListening ? <MicOff size={20} /> : <Mic size={20} />}
+                                {isConnected ? <MicOff size={20} /> : <Mic size={20} />}
                             </button>
 
                             <form onSubmit={handleSubmit} className="flex-1 flex gap-2">
@@ -113,12 +106,13 @@ export default function VoiceWidget() {
                                     type="text"
                                     value={inputText}
                                     onChange={(e) => setInputText(e.target.value)}
-                                    placeholder="Type or speak..."
-                                    className="flex-1 px-4 py-2 bg-gray-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all"
+                                    placeholder={isConnected ? "Type or speak..." : "Connect to chat..."}
+                                    disabled={!isConnected}
+                                    className="flex-1 px-4 py-2 bg-gray-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all disabled:opacity-50"
                                 />
                                 <button
                                     type="submit"
-                                    disabled={!inputText.trim()}
+                                    disabled={!inputText.trim() || !isConnected}
                                     className="p-2 bg-amber-600 text-white rounded-full hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                 >
                                     <MessageSquare size={18} />

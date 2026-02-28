@@ -1,230 +1,227 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { sendMessageToGemini, startChatSession } from '../../services/gemini-service';
+import Vapi from '@vapi-ai/web';
 
-// Define AudioContext type for TypeScript
-interface IWindow extends Window {
-    webkitAudioContext: typeof AudioContext;
-}
+// Initialize Vapi instance with the public key
+const vapi = new Vapi(import.meta.env.VITE_VAPI_PUBLIC_KEY || '');
 
 export const useVoiceAgent = () => {
-    const [isListening, setIsListening] = useState(false);
-    const [isProcessing, setIsProcessing] = useState(false);
+    const [isConnecting, setIsConnecting] = useState(false);
+    const [isConnected, setIsConnected] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [messages, setMessages] = useState<{ role: 'user' | 'ai'; text: string }[]>([]);
-    const [audioContextReady, setAudioContextReady] = useState(false);
 
-    const recognitionRef = useRef<any>(null);
-    const audioContextRef = useRef<AudioContext | null>(null);
-    const audioSourceRef = useRef<AudioBufferSourceNode | null>(null);
-
-    // Initialize AudioContext singleton
-    const initAudioContext = useCallback(() => {
-        if (audioContextRef.current) return;
-
-        const AudioContextClass = window.AudioContext || (window as unknown as IWindow).webkitAudioContext;
-        if (AudioContextClass) {
-            const ctx = new AudioContextClass();
-            audioContextRef.current = ctx;
-            console.log('[VoiceAgent] AudioContext initialized. State:', ctx.state);
-        }
-    }, []);
-
-    // Unlock AudioContext - MUST be called from a user gesture (click/touch)
-    const unlockAudio = useCallback(async () => {
-        initAudioContext();
-        const ctx = audioContextRef.current;
-
-        if (!ctx) return;
-
-        if (ctx.state === 'suspended') {
-            try {
-                await ctx.resume();
-                console.log('[VoiceAgent] AudioContext resumed. State:', ctx.state);
-            } catch (err) {
-                console.error('[VoiceAgent] Failed to resume AudioContext:', err);
-            }
-        }
-
-        // Play a tiny silent buffer to ensure the audio engine is really "warmed up"
-        try {
-            const buffer = ctx.createBuffer(1, 1, 22050);
-            const source = ctx.createBufferSource();
-            source.buffer = buffer;
-            source.connect(ctx.destination);
-            source.start(0);
-            setAudioContextReady(true);
-            console.log('[VoiceAgent] Audio engine unlocked');
-        } catch (e) {
-            console.error('[VoiceAgent] Silent buffer unlock failed:', e);
-        }
-    }, [initAudioContext]);
-
-    // Play synthesized speech using Web Audio API
-    const playAudioData = useCallback(async (base64String: string) => {
-        initAudioContext();
-        const ctx = audioContextRef.current;
-        if (!ctx) {
-            console.error('[VoiceAgent] No AudioContext available');
-            setIsSpeaking(false);
-            return;
-        }
-
-        try {
-            // Ensure context is running (try to resume again just in case)
-            if (ctx.state === 'suspended') {
-                await ctx.resume();
-            }
-
-            // Convert Base64 to ArrayBuffer
-            const binaryString = window.atob(base64String);
-            const len = binaryString.length;
-            const bytes = new Uint8Array(len);
-            for (let i = 0; i < len; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-            }
-            const arrayBuffer = bytes.buffer;
-
-            // Decode Audio Data
-            // Note: decodeAudioData signature varies, using Promise wrapper or modern Promise return
-            const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
-
-            // Stop any currently playing audio
-            if (audioSourceRef.current) {
-                try {
-                    audioSourceRef.current.stop();
-                } catch (e) { /* ignore */ }
-            }
-
-            // Create Source and Play
-            const source = ctx.createBufferSource();
-            source.buffer = audioBuffer;
-            source.connect(ctx.destination);
-
-            audioSourceRef.current = source;
-
-            source.onended = () => {
-                setIsSpeaking(false);
-                console.log('[VoiceAgent] Playback ended');
-            };
-
-            source.start(0);
-            setIsSpeaking(true);
-            console.log('[VoiceAgent] Started playback');
-
-        } catch (error) {
-            console.error('[VoiceAgent] Playback error:', error);
-            setIsSpeaking(false);
-        }
-    }, [initAudioContext]);
-
-    // Initialize Recognition
     useEffect(() => {
-        // @ts-ignore
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (SpeechRecognition) {
-            const recognition = new SpeechRecognition();
-            recognition.continuous = false;
-            recognition.lang = 'en-US';
-            recognition.interimResults = false;
+        // Event listeners for Vapi connection states
+        vapi.on('call-start', () => {
+            setIsConnecting(false);
+            setIsConnected(true);
+            setMessages(prev => [...prev, { role: 'ai', text: 'Call started. Hello!' }]);
+        });
 
-            recognition.onstart = () => {
-                setIsListening(true);
-                // Mic interaction is a gesture - unlock audio!
-                unlockAudio();
-            };
+        vapi.on('call-end', () => {
+            setIsConnecting(false);
+            setIsConnected(false);
+            setMessages(prev => [...prev, { role: 'ai', text: 'Call ended. Have a great day!' }]);
+        });
 
-            recognition.onend = () => setIsListening(false);
+        vapi.on('speech-start', () => setIsSpeaking(true));
+        vapi.on('speech-end', () => setIsSpeaking(false));
 
-            recognition.onresult = async (event: any) => {
-                const transcript = event.results[0][0].transcript;
-                await handleUserMessage(transcript);
-            };
-
-            recognitionRef.current = recognition;
-        }
-
-        startChatSession();
-
-        // Try to init context on load (still needs gesture to resume)
-        initAudioContext();
-
-        // Cleanup
-        return () => {
-            if (audioContextRef.current) {
-                audioContextRef.current.close();
+        vapi.on('message', (message) => {
+            if (message.type === 'transcript' && message.transcriptType === 'final') {
+                const role = message.role === 'assistant' ? 'ai' : 'user';
+                setMessages(prev => [...prev, { role, text: message.transcript }]);
             }
+        });
+
+        vapi.on('error', (error) => {
+            console.error('[VAPI Error]', error);
+            setIsConnecting(false);
+        });
+
+        return () => {
+            vapi.stop();
         };
     }, []);
 
-    const speak = useCallback(async (text: string) => {
-        try {
-            console.log('[VoiceAgent] Fetching TTS for:', text);
-            setIsSpeaking(true);
+    // Get current date for system instruction
+    const getCurrentDateInfo = () => {
+        const now = new Date();
+        return {
+            year: now.getFullYear(),
+            month: now.getMonth() + 1,
+            day: now.getDate(),
+            formatted: now.toISOString().split('T')[0]
+        };
+    };
 
-            const response = await fetch('/.netlify/functions/text-to-speech', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text })
-            });
+    const getAssistantConfig = () => {
+        const dateInfo = getCurrentDateInfo();
+        return {
+            name: "Hobbysky Concierge",
+            firstMessage: "Welcome to Hobbysky Guest House. How can I assist you today?",
+            model: {
+                provider: "google",
+                model: "gemini-2.5-flash", // Vapi supports gemini-2.5-flash or gemini-2.0-flash
+                systemPrompt: `You are the AI Concierge for Hobbysky Guest House, a premium luxury hotel in Ghana.
+Your goal is to assist guests with information about the hotel and making room bookings.
 
-            if (!response.ok) throw new Error('TTS API failed');
+CURRENT DATE: ${dateInfo.formatted} (Year: ${dateInfo.year})
 
-            const data = await response.json();
-            if (data.audioContent) {
-                await playAudioData(data.audioContent);
-            } else {
-                throw new Error('No audio content');
+Tone: Professional, warm, welcoming, and helpful. Keep responses concise (2-3 sentences max).
+
+=== ABOUT hobbysky guest house ===
+Hobbysky Guest House is a premium boutique hotel located at Abuakwa DKC Junction along the Kumasi-Sunyani Road in Kumasi, Ghana. We offer a peaceful retreat just minutes from the vibrant heart of Kumasi, combining modern comfort with the charm and hospitality that make Ghana truly special.
+
+Our tagline: "Your Premium Retreat in the Heart of Ghana"
+
+=== AMENITIES & FACILITIES ===
+- Luxury Rooms: Spacious, air-conditioned rooms with contemporary amenities
+- Free WiFi: High-speed internet throughout the property
+- Fine Dining: On-site restaurant serving delicious local and continental dishes
+- Cafe and Bar: Refreshments and beverages available
+- Free Parking: Secure parking for all guests
+- Fitness Center: Stay active during your stay
+- Relaxing lounge and garden area for unwinding after your day
+
+=== ROOM TYPES ===
+We offer several room categories:
+1. Standard Room - Comfortable and affordable, perfect for budget travelers (capacity: 2 guests)
+2. Executive Suite - Premium accommodation with extra space and luxury features (capacity: 2 guests)
+3. Deluxe Room - More spacious with upgraded amenities (capacity: 2 guests)
+4. Family Room - Ideal for families, accommodates more guests (capacity: 4 guests)
+5. Presidential Suite - Our most luxurious accommodation with exclusive amenities and premium services (capacity: 5 guests)
+
+=== CONTACT INFORMATION ===
+- Phone: +233 55 500 9697 (say: plus two three three, five five, five zero zero, nine six nine seven)
+- General Email: info@hobbysky.com
+- Reservations Email: bookings@hobbysky.com
+- Website: hobbysky.com
+
+=== BUSINESS HOURS ===
+- Front Desk: 24 hours (Reception available around the clock)
+- Office Hours: Monday to Friday: 8:00 AM to 8:00 PM
+- Weekend Hours: Saturday and Sunday: 9:00 AM to 6:00 PM
+- Check-in Time: 2:00 PM onwards
+- Check-out Time: 12:00 PM (noon)
+
+=== BOOKING WORKFLOW ===
+1. When a guest wants to book, ask for: check-in date, check-out date, and number of guests.
+2. Once you have all info, call the checkRoomAvailability tool.
+3. Present the available rooms to the guest with prices. Note: Prices are in Ghana Cedis. ALWAYS pronounce GHC as "Ghana Cedis". 
+4. When they choose a room, ask for their full name and email address.
+5. Call the bookRoom tool to complete the booking.
+
+=== DATE RULES ===
+- TODAY is ${dateInfo.formatted}. The current year is ${dateInfo.year}.
+- NEVER accept check-in dates that are in the past.
+- Check-out date must be AFTER the check-in date.
+
+=== END ===
+Be helpful, friendly, and make guests feel welcome!`,
+                tools: [
+                    {
+                        type: "function",
+                        function: {
+                            name: "checkRoomAvailability",
+                            description: "Check hotel room availability for specific dates and number of guests. Call this when the user wants to know what rooms are available.",
+                            parameters: {
+                                type: "object",
+                                properties: {
+                                    checkIn: {
+                                        type: "string",
+                                        description: "Check-in date in YYYY-MM-DD format (e.g., 2024-12-21)"
+                                    },
+                                    checkOut: {
+                                        type: "string",
+                                        description: "Check-out date in YYYY-MM-DD format (e.g., 2024-12-24)"
+                                    },
+                                    guests: {
+                                        type: "number",
+                                        description: "Number of guests"
+                                    }
+                                },
+                                required: ["checkIn", "checkOut", "guests"]
+                            }
+                        }
+                    },
+                    {
+                        type: "function",
+                        function: {
+                            name: "bookRoom",
+                            description: "Book a hotel room for a guest. Call this after confirming room selection with the user.",
+                            parameters: {
+                                type: "object",
+                                properties: {
+                                    checkIn: { type: "string", description: "Check-in date in YYYY-MM-DD format" },
+                                    checkOut: { type: "string", description: "Check-out date in YYYY-MM-DD format" },
+                                    roomTypeId: { type: "string", description: "The UUID of the room type to book" },
+                                    guestName: { type: "string", description: "Full name of the guest" },
+                                    guestEmail: { type: "string", description: "Email address of the guest" }
+                                },
+                                required: ["checkIn", "checkOut", "roomTypeId", "guestName", "guestEmail"]
+                            }
+                        }
+                    }
+                ]
+            },
+            voice: {
+                provider: "11labs", // ElevenLabs for premium voice quality
+                voiceId: "cgSgspJ2msm6clMCkdW9" // Jessica / standard female voice
             }
-        } catch (error) {
-            console.error('[VoiceAgent] TTS Error:', error);
-            setIsSpeaking(false);
-        }
-    }, [playAudioData]);
+        };
+    };
 
-    const handleUserMessage = async (text: string) => {
-        setMessages(prev => [...prev, { role: 'user', text }]);
-        setIsProcessing(true);
+    const toggleCall = async () => {
+        if (isConnected) {
+            vapi.stop();
+        } else {
+            setIsConnecting(true);
+            try {
+                // Determine base URL dynamically or fallback to Netlify URL
+                // Vapi tool calls require an absolute URL
+                const baseUrl = window.location.origin;
+                const webhookUrl = `${baseUrl}/.netlify/functions/vapi-webhook`;
 
-        try {
-            const aiResponse = await sendMessageToGemini(text);
-            setMessages(prev => [...prev, { role: 'ai', text: aiResponse }]);
-            await speak(aiResponse);
-        } catch (error) {
-            console.error('AI Processing Error:', error);
-            const errorMsg = "Sorry, I encountered an error.";
-            await speak(errorMsg);
-            setMessages(prev => [...prev, { role: 'ai', text: errorMsg }]);
-        } finally {
-            setIsProcessing(false);
+                console.log('[VAPI] Starting call with webhook:', webhookUrl);
+
+                await vapi.start(
+                    getAssistantConfig() as any,
+                    {
+                        server: { url: webhookUrl } // Override default server URL to point to our webhook
+                    }
+                );
+            } catch (error) {
+                console.error('[VAPI] Failed to start call:', error);
+                setIsConnecting(false);
+            }
         }
     };
 
-    const toggleListening = () => {
-        // Stop playback if speaking
-        if (isSpeaking && audioSourceRef.current) {
-            try {
-                audioSourceRef.current.stop();
-            } catch (e) { }
-            setIsSpeaking(false);
-        }
-
-        unlockAudio(); // Important: user gesture here
-
-        if (isListening) {
-            recognitionRef.current?.stop();
+    // Keep handleUserMessage for typing support if needed, but Vapi 
+    // is primarily voice-first. You can use Vapi's send method.
+    const handleUserMessage = async (text: string) => {
+        if (isConnected) {
+            vapi.send({
+                type: 'add-message',
+                message: {
+                    role: 'user',
+                    content: text
+                }
+            });
+            // Immediately add to UI for responsiveness
+            setMessages(prev => [...prev, { role: 'user', text }]);
         } else {
-            recognitionRef.current?.start();
+            console.warn('[VAPI] Cannot send message, not connected.');
         }
     };
 
     return {
-        isListening,
-        isProcessing,
+        isConnecting,
+        isConnected,
         isSpeaking,
         messages,
-        toggleListening,
-        handleUserMessage,
-        unlockAudio // Export for widget
+        toggleCall,
+        handleUserMessage
     };
 };

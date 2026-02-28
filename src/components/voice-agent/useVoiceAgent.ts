@@ -119,8 +119,11 @@ IMPORTANT: We ONLY have Standard, Executive, and Deluxe rooms. Do not mention Fa
 1. When a guest wants to book, ask for: check-in date, check-out date, and number of guests.
 2. Once you have all info, call the checkRoomAvailability tool.
 3. Present the available rooms to the guest with prices. Note: Prices are in Ghana Cedis. ALWAYS pronounce GHC as "Ghana Cedis". Only show Standard, Executive, and Deluxe rooms from the results.
-4. When they choose a room, ask for their full name and email address.
-5. IMPORTANT: Because this is a voice interface, names and emails can be misheard. After the guest provides their name, repeat it back and ask them to confirm or spell it out if it sounds unusual. For the email address, ALWAYS ask the guest to spell it out letter by letter to ensure accuracy. Repeat the email back to confirm before proceeding.
+4. When they choose a room, ask for their full name, phone number, and email address.
+5. IMPORTANT: Because this is a voice interface, names and emails can be misheard. 
+   - ALWAYS politely remind the guest: "If it's easier, you can also type your name, phone number and email in the chat box on your screen."
+   - After they provide their name, repeat it back and ask them to confirm.
+   - For the email address, ALWAYS ask the guest to spell it out letter by letter or type it to ensure accuracy.
 6. Call the bookRoom tool to complete the booking.
 
 === DATE RULES ===
@@ -173,9 +176,10 @@ Be helpful, friendly, and make guests feel welcome!`
                                     checkOut: { type: "string", description: "Check-out date in YYYY-MM-DD format" },
                                     roomTypeId: { type: "string", description: "The UUID of the room type to book" },
                                     guestName: { type: "string", description: "Full name of the guest" },
+                                    guestPhone: { type: "string", description: "Phone number of the guest" },
                                     guestEmail: { type: "string", description: "Email address of the guest" }
                                 },
-                                required: ["checkIn", "checkOut", "roomTypeId", "guestName", "guestEmail"]
+                                required: ["checkIn", "checkOut", "roomTypeId", "guestName", "guestPhone", "guestEmail"]
                             }
                         },
                         server: {

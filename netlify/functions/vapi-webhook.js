@@ -218,6 +218,9 @@ async function handleBookRoom(args) {
     const baseUrl = process.env.URL || 'https://www.hobbyskyguesthouse.com';
     const url = `${baseUrl}/.netlify/functions/submit-booking`;
 
+    // Inject voice agent source
+    args.source = 'voice agent';
+
     console.log('[VAPI Webhook] Submitting booking to:', url, 'Args:', JSON.stringify(args));
     const response = await fetch(url, {
         method: 'POST',

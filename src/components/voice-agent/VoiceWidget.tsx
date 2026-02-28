@@ -106,13 +106,12 @@ export default function VoiceWidget() {
                                     type="text"
                                     value={inputText}
                                     onChange={(e) => setInputText(e.target.value)}
-                                    placeholder={isConnected ? "Type or speak..." : "Connect to chat..."}
-                                    disabled={!isConnected}
+                                    placeholder="Type a message..."
                                     className="flex-1 px-4 py-2 bg-gray-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all disabled:opacity-50"
                                 />
                                 <button
                                     type="submit"
-                                    disabled={!inputText.trim() || !isConnected}
+                                    disabled={!inputText.trim()}
                                     className="p-2 bg-amber-600 text-white rounded-full hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                 >
                                     <MessageSquare size={18} />

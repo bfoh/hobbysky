@@ -1,33 +1,58 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { supabase } from "../../lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Loader2, Moon, Utensils, Wifi, CalendarCheck, MapPin } from '@/components/icons';
 import { toast } from "sonner";
+import { SubmitRequestDialog } from "@/components/guest/SubmitRequestDialog";
 
 export default function GuestDashboard() {
     const { token } = useParams();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
+    const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
     const [data, setData] = useState<{ guest: any; booking: any } | null>(null);
 
     useEffect(() => {
         if (!token) return;
 
-        // Verify Token
-        fetch(`/.netlify/functions/verify-guest?token=${token}`)
-            .then(res => res.json())
-            .then(res => {
-                if (res.error) {
-                    toast.error("Invalid Link. Please contact the front desk.");
-                    // In real app, redirect to error page
+        const fetchBooking = async () => {
+            try {
+                const { data: bookingData, error } = await supabase.rpc('get_booking_by_token', {
+                    token_input: token
+                });
+
+                if (error) throw error;
+
+                if (bookingData && bookingData.length > 0) {
+                    const b = bookingData[0];
+                    setData({
+                        guest: {
+                            name: b.guest_name,
+                            room: b.room_number
+                        },
+                        booking: {
+                            id: b.id,
+                            checkIn: b.check_in,
+                            checkOut: b.check_out,
+                            status: b.status
+                        }
+                    });
                 } else {
-                    setData(res);
+                    toast.error("Invalid Link. Please contact the front desk.");
+                    navigate('/guest');
                 }
-            })
-            .catch(() => toast.error("Connection Error"))
-            .finally(() => setLoading(false));
-    }, [token]);
+            } catch (err) {
+                console.error("Dashboard Load Error:", err);
+                toast.error("Connection Error");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchBooking();
+    }, [token, navigate]);
 
     if (loading) {
         return (
@@ -96,7 +121,7 @@ export default function GuestDashboard() {
                     </CardContent>
                 </Card>
 
-                <Card className="hover:bg-neutral-50 transition-colors cursor-pointer" onClick={() => navigate('services')}>
+                <Card className="hover:bg-neutral-50 transition-colors cursor-pointer" onClick={() => setIsRequestDialogOpen(true)}>
                     <CardContent className="p-4 flex flex-col items-center text-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
                             <CalendarCheck className="w-5 h-5" />
@@ -109,6 +134,13 @@ export default function GuestDashboard() {
                 </Card>
             </div>
 
+            {token && (
+                <SubmitRequestDialog
+                    open={isRequestDialogOpen}
+                    onOpenChange={setIsRequestDialogOpen}
+                    bookingToken={token}
+                />
+            )}
         </div>
     );
 }

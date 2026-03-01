@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { supabase } from '../../lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
@@ -23,24 +24,31 @@ export function GuestLoginPage() {
 
         setLoading(true)
         try {
-            const res = await fetch('/.netlify/functions/guest-login', {
-                method: 'POST',
-                body: JSON.stringify({ roomNumber, firstName })
+            const { data, error } = await supabase.rpc('login_guest', {
+                p_room_num: roomNumber,
+                p_name_input: firstName
             })
 
-            const data = await res.json()
+            console.log('[GuestLoginPage] RPC response:', { data, error })
 
-            if (res.ok && data.success) {
-                toast.success(`Welcome back, ${data.guestName}!`)
+            if (error) {
+                console.error("Login RPC Error:", error)
+                toast.error("Network error. Please try again.")
+                return
+            }
+
+            // The RPC returns a JSON object mapped to `data`
+            if (data && data.success) {
+                toast.success(`Welcome back, ${data.guest_name}!`)
                 // Redirect to the guest dashboard with the retrieved token
                 navigate(`/guest/${data.token}`)
             } else {
-                toast.error(data.error || "Login failed. Please check your details.")
+                toast.error(data?.error || "Login failed. Please check your details.")
             }
 
         } catch (err) {
-            console.error("Login Error:", err)
-            toast.error("Network error. Please try again.")
+            console.error("Login Error Catch:", err)
+            toast.error("An unexpected error occurred. Please try again.")
         } finally {
             setLoading(false)
         }

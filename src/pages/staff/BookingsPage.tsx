@@ -599,8 +599,8 @@ export function BookingsPage() {
                         key={opt.value}
                         type="button"
                         className={`px-3 py-2 rounded-lg border-2 text-sm font-medium transition-all ${formData.paymentType === opt.value
-                            ? `${opt.color} ring-2 ring-offset-1 ring-primary/30`
-                            : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
+                          ? `${opt.color} ring-2 ring-offset-1 ring-primary/30`
+                          : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
                           }`}
                         onClick={() => setFormData({ ...formData, paymentType: opt.value as any })}
                       >
@@ -792,7 +792,7 @@ export function BookingsPage() {
           <div className="flex flex-col items-center justify-center p-6 space-y-6">
             <div id="printable-qr" className="bg-white p-4 rounded-xl shadow-sm border">
               <QRCodeSVG
-                value="https://hobbysky.com/guest"
+                value="https://hobbyskyguesthouse.com/guest"
                 size={200}
                 level="H"
                 includeMargin={true}
@@ -803,7 +803,7 @@ export function BookingsPage() {
               <p className="text-sm font-medium">Scan to login</p>
               <div className="flex items-center gap-2 justify-center">
                 <code className="bg-muted px-2 py-1 rounded text-xs select-all">
-                  https://hobbysky.com/guest
+                  https://hobbyskyguesthouse.com/guest
                 </code>
               </div>
             </div>
@@ -847,7 +847,7 @@ export function BookingsPage() {
                         <div class="qr-container">
                           ${printContent.innerHTML}
                         </div>
-                        <div class="url"><strong>https://hobbysky.com/guest</strong></div>
+                        <div class="url"><strong>https://hobbyskyguesthouse.com/guest</strong></div>
                         <div class="instructions">
                           <h3>How to Login</h3>
                           <p>Scan this QR code with your phone camera, then enter your Room Number and First Name.</p>

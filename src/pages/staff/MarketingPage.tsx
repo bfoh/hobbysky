@@ -342,7 +342,7 @@ export default function MarketingPage() {
                                                 <div className="py-4">
                                                     <div className="bg-muted p-4 rounded-md text-sm mb-4">
                                                         <p className="font-semibold mb-1">Preview:</p>
-                                                        <p className="whitespace-pre-wrap">{editContent.replace("{{name}}", "John Doe").replace("{{guest_link}}", "https://hobbysky.com/guest/...")}</p>
+                                                        <p className="whitespace-pre-wrap">{editContent.replace("{{name}}", "John Doe").replace("{{guest_link}}", "https://hobbyskyguesthouse.com/guest/...")}</p>
                                                     </div>
                                                     {recipientCount === 0 && (
                                                         <p className="text-red-500 text-sm">No eligible guests found to receive this message.</p>

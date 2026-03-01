@@ -243,7 +243,7 @@ export async function generateInvoiceHTML(invoiceData: InvoiceData): Promise<str
     const settings = await hotelSettingsService.getHotelSettings()
     const currency = settings.currency || 'GHS'
 
-    const sharedCss = `*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',system-ui,-apple-system,sans-serif;line-height:1.6;color:#1E293B;background:#fff;font-size:11px}.w{max-width:794px;margin:0 auto;background:#fff;padding:40px}h1{font-size:24px;font-weight:300;color:#1E3D22;margin-bottom:6px;letter-spacing:-0.5px}h3{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#C9963C;margin-bottom:12px}p{font-size:11px;color:#475569;margin:3px 0}strong{color:#1E3D22;font-weight:600}em{font-style:normal;color:#64748B}.lbl{font-size:10px;font-weight:500;color:#C9963C;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}.hd{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:28px;border-bottom:1px solid #E2E8F0;margin-bottom:36px;position:relative}.im{text-align:right}.im .dt{font-size:20px;font-weight:300;color:#1E3D22;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}.im .dn{font-size:12px;font-weight:500;color:#64748B;margin-bottom:14px;letter-spacing:0.5px}.ic p{font-size:11px}.ig{display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-bottom:48px}table.ct{width:100%;border-collapse:collapse;margin-bottom:40px}table.ct th{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#94A3B8;text-align:left;padding:14px 4px;border-bottom:1px solid #E2E8F0}table.ct td{padding:14px 4px;color:#1E293B;border-bottom:1px solid #F1F5F9}table.ct th.r,table.ct td.r{text-align:right}table.ct th.c,table.ct td.c{text-align:center}.tw{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:48px}.sp{flex:1;padding-right:48px}table.tt{width:300px;border-collapse:collapse}table.tt td{padding:10px 4px;font-size:11px;color:#475569}table.tt tr.sub td{border-top:1px dashed #E2E8F0;font-weight:500;color:#1E3D22;padding-top:14px}table.tt tr.gt td{border-top:2px solid #1E3D22;padding-top:16px;padding-bottom:16px;font-size:15px;font-weight:600;color:#1E3D22}.ft{padding-top:28px;border-top:1px solid #E2E8F0;text-align:center}.ft .ty{font-size:12px;font-weight:500;color:#1E3D22;margin-bottom:10px}.ft .fr{font-size:9px;color:#64748B;display:flex;justify-content:space-between}.sb{text-align:center;padding:10px;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:36px;border:1px solid currentColor;border-radius:2px}.bdg{display:inline-block;margin-top:10px;padding:5px 14px;border:1px solid currentColor;border-radius:2px;font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase}.sh td{font-size:9px;font-weight:600;color:#C9963C;text-transform:uppercase;letter-spacing:1px;padding:12px 4px 6px!important}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}`
+    const sharedCss = `*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',system-ui,-apple-system,sans-serif;line-height:1.5;color:#1E293B;background:#fff;font-size:10.5px}.w{max-width:794px;margin:0 auto;background:#fff;padding:22px}h1{font-size:21px;font-weight:300;color:#1E3D22;margin-bottom:4px;letter-spacing:-0.5px}h3{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#C9963C;margin-bottom:8px}p{font-size:10.5px;color:#475569;margin:2px 0}strong{color:#1E3D22;font-weight:600}em{font-style:normal;color:#64748B}.lbl{font-size:9px;font-weight:500;color:#C9963C;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}.hd{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:14px;border-bottom:1px solid #E2E8F0;margin-bottom:16px;position:relative}.im{text-align:right}.im .dt{font-size:17px;font-weight:300;color:#1E3D22;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}.im .dn{font-size:11px;font-weight:500;color:#64748B;margin-bottom:10px;letter-spacing:0.5px}.ic p{font-size:10.5px}.ig{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:16px}table.ct{width:100%;border-collapse:collapse;margin-bottom:12px}table.ct th{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#94A3B8;text-align:left;padding:7px 4px;border-bottom:1px solid #E2E8F0}table.ct td{padding:7px 4px;color:#1E293B;border-bottom:1px solid #F1F5F9}table.ct th.r,table.ct td.r{text-align:right}table.ct th.c,table.ct td.c{text-align:center}.tw{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}.sp{flex:1;padding-right:28px}table.tt{width:270px;border-collapse:collapse}table.tt td{padding:5px 4px;font-size:10.5px;color:#475569}table.tt tr.sub td{border-top:1px dashed #E2E8F0;font-weight:500;color:#1E3D22;padding-top:8px}table.tt tr.gt td{border-top:2px solid #1E3D22;padding-top:10px;padding-bottom:10px;font-size:14px;font-weight:600;color:#1E3D22}.ft{padding-top:12px;border-top:1px solid #E2E8F0;text-align:center}.ft .ty{font-size:11px;font-weight:500;color:#1E3D22;margin-bottom:6px}.ft .fr{font-size:9px;color:#64748B;display:flex;justify-content:space-between}.sb{text-align:center;padding:7px;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;border:1px solid currentColor;border-radius:2px}.bdg{display:inline-block;margin-top:8px;padding:4px 12px;border:1px solid currentColor;border-radius:2px;font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase}.sh td{font-size:9px;font-weight:600;color:#C9963C;text-transform:uppercase;letter-spacing:1px;padding:8px 4px 4px!important}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}@page{size:A4;margin:0}}`
 
     const htmlContent = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>Invoice ${invoiceData.invoiceNumber}</title><style>${sharedCss}</style></head>
@@ -254,9 +254,7 @@ export async function generateInvoiceHTML(invoiceData: InvoiceData): Promise<str
     <div class="lbl">Guest House</div>
     <h1>${invoiceData.hotel.name}</h1>
     <p>${invoiceData.hotel.address}</p>
-    <p>Tel: ${invoiceData.hotel.phone} &nbsp;|&nbsp; ${invoiceData.hotel.email}</p>
-    <p class="tin">TIN: 71786161-3</p>
-  </div>
+    <p>Tel: 0243512529 &nbsp;|&nbsp; ${invoiceData.hotel.email}</p>  </div>
   <div class="im">
     <div class="dt">Invoice</div>
     <div class="dn">${invoiceData.invoiceNumber}</div>
@@ -313,7 +311,7 @@ export async function generateInvoiceHTML(invoiceData: InvoiceData): Promise<str
   <div class="ty">Thank you for choosing ${invoiceData.hotel.name}!</div>
   <div class="fr">
     <div><p><strong>Payment Methods:</strong> Cash &nbsp;·&nbsp; Mobile Money &nbsp;·&nbsp; Bank Transfer</p></div>
-    <div style="text-align:right"><p>${invoiceData.hotel.phone} &nbsp;|&nbsp; ${invoiceData.hotel.email}</p><p>TIN: 71786161-3</p></div>
+    <div style="text-align:right"><p>0243512529 &nbsp;|&nbsp; ${invoiceData.hotel.email}</p><p>www.hobbyskyguesthouse.com</p></div>
   </div>
 </div>
 </div></body></html>`
@@ -366,23 +364,18 @@ export async function generateInvoicePDF(invoiceData: InvoiceData): Promise<Blob
       format: 'a4'
     })
 
-    const imgWidth = 210 // A4 width in mm
-    const pageHeight = 295 // A4 height in mm
-    const imgHeight = (canvas.height * imgWidth) / canvas.width
-    let heightLeft = imgHeight
+    const pageW = 210 // A4 width in mm
+    const pageH = 297 // A4 height in mm
+    const imgW = pageW
+    const imgH = (canvas.height * imgW) / canvas.width
 
-    let position = 0
-
-    // Add image to PDF
-    pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight)
-    heightLeft -= pageHeight
-
-    // Add new pages if needed
-    while (heightLeft >= 0) {
-      position = heightLeft - imgHeight
-      pdf.addPage()
-      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight)
-      heightLeft -= pageHeight
+    if (imgH <= pageH) {
+      pdf.addImage(imgData, 'JPEG', 0, 0, imgW, imgH)
+    } else {
+      // Scale down to fit on a single page
+      const scale = pageH / imgH
+      const scaledW = imgW * scale
+      pdf.addImage(imgData, 'JPEG', (pageW - scaledW) / 2, 0, scaledW, pageH)
     }
 
     console.log('✅ [InvoicePDF] PDF generated successfully')
@@ -454,7 +447,7 @@ export async function sendInvoiceEmail(invoiceData: InvoiceData, pdfBlob: Blob):
           Your full invoice is attached as a PDF. You can also view and download it at any time using the button below.
         </p>
         <p style="margin:0 0 18px;color:#8CA48E;font-family:Arial,Helvetica,sans-serif;font-size:13px;">
-          If you have any questions about this invoice, please contact us at ${invoiceData.hotel.phone} or ${invoiceData.hotel.email}.
+          If you have any questions about this invoice, please contact us at 0243512529 or ${invoiceData.hotel.email}.
         </p>
       `,
       callToAction: {
@@ -490,7 +483,7 @@ We hope you enjoyed your stay and look forward to welcoming you back to ${invoic
 
 ---
 ${invoiceData.hotel.name} Hotel Management System
-Phone: ${invoiceData.hotel.phone} | Email: ${invoiceData.hotel.email}
+Phone: 0243512529 | Email: ${invoiceData.hotel.email}
 Website: ${invoiceData.hotel.website}
     `
 
@@ -725,7 +718,7 @@ export async function generatePreInvoiceHTML(preInvoiceData: PreInvoiceData): Pr
       </div>`
     }
 
-    const sharedCss = `*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',system-ui,-apple-system,sans-serif;line-height:1.6;color:#1E293B;background:#fff;font-size:11px}.w{max-width:794px;margin:0 auto;background:#fff;padding:40px}h1{font-size:24px;font-weight:300;color:#1E3D22;margin-bottom:6px;letter-spacing:-0.5px}h3{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#C9963C;margin-bottom:12px}p{font-size:11px;color:#475569;margin:3px 0}strong{color:#1E3D22;font-weight:600}em{font-style:normal;color:#64748B}.lbl{font-size:10px;font-weight:500;color:#C9963C;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}.hd{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:28px;border-bottom:1px solid #E2E8F0;margin-bottom:36px;position:relative}.im{text-align:right}.im .dt{font-size:20px;font-weight:300;color:#1E3D22;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}.im .dn{font-size:12px;font-weight:500;color:#64748B;margin-bottom:14px;letter-spacing:0.5px}.ic p{font-size:11px}.ig{display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-bottom:48px}table.ct{width:100%;border-collapse:collapse;margin-bottom:40px}table.ct th{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#94A3B8;text-align:left;padding:14px 4px;border-bottom:1px solid #E2E8F0}table.ct td{padding:14px 4px;color:#1E293B;border-bottom:1px solid #F1F5F9}table.ct th.r,table.ct td.r{text-align:right}table.ct th.c,table.ct td.c{text-align:center}.tw{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:48px}.sp{flex:1;padding-right:48px}table.tt{width:300px;border-collapse:collapse}table.tt td{padding:10px 4px;font-size:11px;color:#475569}table.tt tr.sub td{border-top:1px dashed #E2E8F0;font-weight:500;color:#1E3D22;padding-top:14px}table.tt tr.gt td{border-top:2px solid #1E3D22;padding-top:16px;padding-bottom:16px;font-size:15px;font-weight:600;color:#1E3D22}.ft{padding-top:28px;border-top:1px solid #E2E8F0;text-align:center}.ft .ty{font-size:12px;font-weight:500;color:#1E3D22;margin-bottom:10px}.ft .fr{font-size:9px;color:#64748B;display:flex;justify-content:space-between}.sb{text-align:center;padding:10px;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:36px;border:1px solid currentColor;border-radius:2px}.bdg{display:inline-block;margin-top:10px;padding:5px 14px;border:1px solid currentColor;border-radius:2px;font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase}.sh td{font-size:9px;font-weight:600;color:#C9963C;text-transform:uppercase;letter-spacing:1px;padding:12px 4px 6px!important}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}`
+    const sharedCss = `*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',system-ui,-apple-system,sans-serif;line-height:1.5;color:#1E293B;background:#fff;font-size:10.5px}.w{max-width:794px;margin:0 auto;background:#fff;padding:22px}h1{font-size:21px;font-weight:300;color:#1E3D22;margin-bottom:4px;letter-spacing:-0.5px}h3{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#C9963C;margin-bottom:8px}p{font-size:10.5px;color:#475569;margin:2px 0}strong{color:#1E3D22;font-weight:600}em{font-style:normal;color:#64748B}.lbl{font-size:9px;font-weight:500;color:#C9963C;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}.hd{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:14px;border-bottom:1px solid #E2E8F0;margin-bottom:16px;position:relative}.im{text-align:right}.im .dt{font-size:17px;font-weight:300;color:#1E3D22;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}.im .dn{font-size:11px;font-weight:500;color:#64748B;margin-bottom:10px;letter-spacing:0.5px}.ic p{font-size:10.5px}.ig{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:16px}table.ct{width:100%;border-collapse:collapse;margin-bottom:12px}table.ct th{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#94A3B8;text-align:left;padding:7px 4px;border-bottom:1px solid #E2E8F0}table.ct td{padding:7px 4px;color:#1E293B;border-bottom:1px solid #F1F5F9}table.ct th.r,table.ct td.r{text-align:right}table.ct th.c,table.ct td.c{text-align:center}.tw{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}.sp{flex:1;padding-right:28px}table.tt{width:270px;border-collapse:collapse}table.tt td{padding:5px 4px;font-size:10.5px;color:#475569}table.tt tr.sub td{border-top:1px dashed #E2E8F0;font-weight:500;color:#1E3D22;padding-top:8px}table.tt tr.gt td{border-top:2px solid #1E3D22;padding-top:10px;padding-bottom:10px;font-size:14px;font-weight:600;color:#1E3D22}.ft{padding-top:12px;border-top:1px solid #E2E8F0;text-align:center}.ft .ty{font-size:11px;font-weight:500;color:#1E3D22;margin-bottom:6px}.ft .fr{font-size:9px;color:#64748B;display:flex;justify-content:space-between}.sb{text-align:center;padding:7px;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;border:1px solid currentColor;border-radius:2px}.bdg{display:inline-block;margin-top:8px;padding:4px 12px;border:1px solid currentColor;border-radius:2px;font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase}.sh td{font-size:9px;font-weight:600;color:#C9963C;text-transform:uppercase;letter-spacing:1px;padding:8px 4px 4px!important}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}@page{size:A4;margin:0}}`
 
     const htmlContent = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>Pre-Invoice ${preInvoiceData.invoiceNumber}</title><style>${sharedCss}</style></head>
@@ -737,9 +730,7 @@ export async function generatePreInvoiceHTML(preInvoiceData: PreInvoiceData): Pr
     <div class="lbl">Guest House</div>
     <h1>${preInvoiceData.hotel.name}</h1>
     <p>${preInvoiceData.hotel.address}</p>
-    <p>Tel: ${preInvoiceData.hotel.phone} &nbsp;|&nbsp; ${preInvoiceData.hotel.email}</p>
-    <p class="tin">TIN: 71786161-3</p>
-  </div>
+    <p>Tel: 0243512529 &nbsp;|&nbsp; ${preInvoiceData.hotel.email}</p>  </div>
   <div class="im">
     <div class="dt">Pre-Invoice</div>
     <div class="dn">${preInvoiceData.invoiceNumber}</div>
@@ -796,7 +787,7 @@ export async function generatePreInvoiceHTML(preInvoiceData: PreInvoiceData): Pr
   <div class="ty">Thank you for choosing ${preInvoiceData.hotel.name}!</div>
   <div class="fr">
     <div><p><strong>Payment Methods:</strong> Cash &nbsp;·&nbsp; Mobile Money &nbsp;·&nbsp; Bank Transfer</p></div>
-    <div style="text-align:right"><p>${preInvoiceData.hotel.phone} &nbsp;|&nbsp; ${preInvoiceData.hotel.email}</p><p>TIN: 71786161-3</p></div>
+    <div style="text-align:right"><p>0243512529 &nbsp;|&nbsp; ${preInvoiceData.hotel.email}</p><p>www.hobbyskyguesthouse.com</p></div>
   </div>
 </div>
 </div></body></html>`
@@ -848,20 +839,18 @@ export async function downloadPreInvoicePDF(preInvoiceData: PreInvoiceData): Pro
       format: 'a4'
     })
 
-    const imgWidth = 210
-    const pageHeight = 295
-    const imgHeight = (canvas.height * imgWidth) / canvas.width
-    let heightLeft = imgHeight
+    const pageW = 210 // A4 width in mm
+    const pageH = 297 // A4 height in mm
+    const imgW = pageW
+    const imgH = (canvas.height * imgW) / canvas.width
 
-    let position = 0
-    pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight)
-    heightLeft -= pageHeight
-
-    while (heightLeft >= 0) {
-      position = heightLeft - imgHeight
-      pdf.addPage()
-      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight)
-      heightLeft -= pageHeight
+    if (imgH <= pageH) {
+      pdf.addImage(imgData, 'JPEG', 0, 0, imgW, imgH)
+    } else {
+      // Scale down to fit on a single page
+      const scale = pageH / imgH
+      const scaledW = imgW * scale
+      pdf.addImage(imgData, 'JPEG', (pageW - scaledW) / 2, 0, scaledW, pageH)
     }
 
     // Download the PDF
@@ -1134,7 +1123,7 @@ export async function generateGroupInvoiceHTML(data: GroupInvoiceData): Promise<
   const settings = await hotelSettingsService.getHotelSettings()
   const currency = settings.currency || 'GHS'
 
-  const sharedCss = `*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',system-ui,-apple-system,sans-serif;line-height:1.6;color:#1E293B;background:#fff;font-size:11px}.w{max-width:794px;margin:0 auto;background:#fff;padding:40px}h1{font-size:24px;font-weight:300;color:#1E3D22;margin-bottom:6px;letter-spacing:-0.5px}h3{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#C9963C;margin-bottom:12px}p{font-size:11px;color:#475569;margin:3px 0}strong{color:#1E3D22;font-weight:600}em{font-style:normal;color:#64748B}.lbl{font-size:10px;font-weight:500;color:#C9963C;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}.hd{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:28px;border-bottom:1px solid #E2E8F0;margin-bottom:36px;position:relative}.im{text-align:right}.im .dt{font-size:20px;font-weight:300;color:#1E3D22;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}.im .dn{font-size:12px;font-weight:500;color:#64748B;margin-bottom:14px;letter-spacing:0.5px}.ic p{font-size:11px}.ig{display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-bottom:48px}table.ct{width:100%;border-collapse:collapse;margin-bottom:40px}table.ct th{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#94A3B8;text-align:left;padding:14px 4px;border-bottom:1px solid #E2E8F0}table.ct td{padding:14px 4px;color:#1E293B;border-bottom:1px solid #F1F5F9}table.ct th.r,table.ct td.r{text-align:right}table.ct th.c,table.ct td.c{text-align:center}.tw{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:48px}.sp{flex:1;padding-right:48px}table.tt{width:300px;border-collapse:collapse}table.tt td{padding:10px 4px;font-size:11px;color:#475569}table.tt tr.sub td{border-top:1px dashed #E2E8F0;font-weight:500;color:#1E3D22;padding-top:14px}table.tt tr.gt td{border-top:2px solid #1E3D22;padding-top:16px;padding-bottom:16px;font-size:15px;font-weight:600;color:#1E3D22}.ft{padding-top:28px;border-top:1px solid #E2E8F0;text-align:center}.ft .ty{font-size:12px;font-weight:500;color:#1E3D22;margin-bottom:10px}.ft .fr{font-size:9px;color:#64748B;display:flex;justify-content:space-between}.sb{text-align:center;padding:10px;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:36px;border:1px solid currentColor;border-radius:2px}.bdg{display:inline-block;margin-top:10px;padding:5px 14px;border:1px solid currentColor;border-radius:2px;font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase}.sh td{font-size:9px;font-weight:600;color:#C9963C;text-transform:uppercase;letter-spacing:1px;padding:12px 4px 6px!important}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}`
+  const sharedCss = `*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',system-ui,-apple-system,sans-serif;line-height:1.5;color:#1E293B;background:#fff;font-size:10.5px}.w{max-width:794px;margin:0 auto;background:#fff;padding:22px}h1{font-size:21px;font-weight:300;color:#1E3D22;margin-bottom:4px;letter-spacing:-0.5px}h3{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#C9963C;margin-bottom:8px}p{font-size:10.5px;color:#475569;margin:2px 0}strong{color:#1E3D22;font-weight:600}em{font-style:normal;color:#64748B}.lbl{font-size:9px;font-weight:500;color:#C9963C;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}.hd{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:14px;border-bottom:1px solid #E2E8F0;margin-bottom:16px;position:relative}.im{text-align:right}.im .dt{font-size:17px;font-weight:300;color:#1E3D22;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}.im .dn{font-size:11px;font-weight:500;color:#64748B;margin-bottom:10px;letter-spacing:0.5px}.ic p{font-size:10.5px}.ig{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:16px}table.ct{width:100%;border-collapse:collapse;margin-bottom:12px}table.ct th{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#94A3B8;text-align:left;padding:7px 4px;border-bottom:1px solid #E2E8F0}table.ct td{padding:7px 4px;color:#1E293B;border-bottom:1px solid #F1F5F9}table.ct th.r,table.ct td.r{text-align:right}table.ct th.c,table.ct td.c{text-align:center}.tw{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}.sp{flex:1;padding-right:28px}table.tt{width:270px;border-collapse:collapse}table.tt td{padding:5px 4px;font-size:10.5px;color:#475569}table.tt tr.sub td{border-top:1px dashed #E2E8F0;font-weight:500;color:#1E3D22;padding-top:8px}table.tt tr.gt td{border-top:2px solid #1E3D22;padding-top:10px;padding-bottom:10px;font-size:14px;font-weight:600;color:#1E3D22}.ft{padding-top:12px;border-top:1px solid #E2E8F0;text-align:center}.ft .ty{font-size:11px;font-weight:500;color:#1E3D22;margin-bottom:6px}.ft .fr{font-size:9px;color:#64748B;display:flex;justify-content:space-between}.sb{text-align:center;padding:7px;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;border:1px solid currentColor;border-radius:2px}.bdg{display:inline-block;margin-top:8px;padding:4px 12px;border:1px solid currentColor;border-radius:2px;font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase}.sh td{font-size:9px;font-weight:600;color:#C9963C;text-transform:uppercase;letter-spacing:1px;padding:8px 4px 4px!important}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}@page{size:A4;margin:0}}`
 
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>Group Invoice ${data.invoiceNumber}</title><style>${sharedCss}</style></head>
@@ -1145,9 +1134,7 @@ export async function generateGroupInvoiceHTML(data: GroupInvoiceData): Promise<
     <div class="lbl">Guest House</div>
     <h1>${data.hotel.name}</h1>
     <p>${data.hotel.address}</p>
-    <p>Tel: ${data.hotel.phone} &nbsp;|&nbsp; ${data.hotel.email}</p>
-    <p class="tin">TIN: 71786161-3</p>
-  </div>
+    <p>Tel: 0243512529 &nbsp;|&nbsp; ${data.hotel.email}</p>  </div>
   <div class="im">
     <div class="dt">Group Invoice</div>
     <div class="dn">${data.invoiceNumber}</div>
@@ -1212,7 +1199,7 @@ export async function generateGroupInvoiceHTML(data: GroupInvoiceData): Promise<
   <div class="ty">Thank you for choosing ${data.hotel.name}!</div>
   <div class="fr">
     <div><p><strong>Payment Methods:</strong> Cash &nbsp;·&nbsp; Mobile Money &nbsp;·&nbsp; Bank Transfer</p></div>
-    <div style="text-align:right"><p>${data.hotel.phone} &nbsp;|&nbsp; ${data.hotel.email}</p><p>TIN: 71786161-3</p></div>
+    <div style="text-align:right"><p>0243512529 &nbsp;|&nbsp; ${data.hotel.email}</p><p>www.hobbyskyguesthouse.com</p></div>
   </div>
 </div>
 </div></body></html>`
@@ -1245,22 +1232,18 @@ export async function generateGroupInvoicePDF(data: GroupInvoiceData): Promise<B
   const imgData = canvas.toDataURL('image/jpeg', 0.95)
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
 
-  const imgWidth = 210 // A4 width in mm
-  const pageHeight = 297 // A4 height in mm
-  const imgHeight = (canvas.height * imgWidth) / canvas.width
-  let heightLeft = imgHeight
-  let position = 0
+  const pageW = 210 // A4 width in mm
+  const pageH = 297 // A4 height in mm
+  const imgW = pageW
+  const imgH = (canvas.height * imgW) / canvas.width
 
-  // Add first page
-  pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight)
-  heightLeft -= pageHeight
-
-  // Add additional pages if content extends beyond first page
-  while (heightLeft > 0) {
-    position = heightLeft - imgHeight
-    pdf.addPage()
-    pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight)
-    heightLeft -= pageHeight
+  if (imgH <= pageH) {
+    pdf.addImage(imgData, 'JPEG', 0, 0, imgW, imgH)
+  } else {
+    // Scale down to fit on a single page
+    const scale = pageH / imgH
+    const scaledW = imgW * scale
+    pdf.addImage(imgData, 'JPEG', (pageW - scaledW) / 2, 0, scaledW, pageH)
   }
 
   console.log('✅ [GroupInvoicePDF] PDF generated with', pdf.getNumberOfPages(), 'page(s)')
@@ -1381,7 +1364,7 @@ export async function generateGroupPreInvoiceHTML(data: GroupPreInvoiceData): Pr
 </div>`
   }
 
-  const sharedCss = `*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',system-ui,-apple-system,sans-serif;line-height:1.6;color:#1E293B;background:#fff;font-size:11px}.w{max-width:794px;margin:0 auto;background:#fff;padding:40px}h1{font-size:24px;font-weight:300;color:#1E3D22;margin-bottom:6px;letter-spacing:-0.5px}h3{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#C9963C;margin-bottom:12px}p{font-size:11px;color:#475569;margin:3px 0}strong{color:#1E3D22;font-weight:600}em{font-style:normal;color:#64748B}.lbl{font-size:10px;font-weight:500;color:#C9963C;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}.hd{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:28px;border-bottom:1px solid #E2E8F0;margin-bottom:36px;position:relative}.im{text-align:right}.im .dt{font-size:20px;font-weight:300;color:#1E3D22;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}.im .dn{font-size:12px;font-weight:500;color:#64748B;margin-bottom:14px;letter-spacing:0.5px}.ic p{font-size:11px}.ig{display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-bottom:48px}table.ct{width:100%;border-collapse:collapse;margin-bottom:40px}table.ct th{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#94A3B8;text-align:left;padding:14px 4px;border-bottom:1px solid #E2E8F0}table.ct td{padding:14px 4px;color:#1E293B;border-bottom:1px solid #F1F5F9}table.ct th.r,table.ct td.r{text-align:right}table.ct th.c,table.ct td.c{text-align:center}.tw{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:48px}.sp{flex:1;padding-right:48px}table.tt{width:300px;border-collapse:collapse}table.tt td{padding:10px 4px;font-size:11px;color:#475569}table.tt tr.sub td{border-top:1px dashed #E2E8F0;font-weight:500;color:#1E3D22;padding-top:14px}table.tt tr.gt td{border-top:2px solid #1E3D22;padding-top:16px;padding-bottom:16px;font-size:15px;font-weight:600;color:#1E3D22}.ft{padding-top:28px;border-top:1px solid #E2E8F0;text-align:center}.ft .ty{font-size:12px;font-weight:500;color:#1E3D22;margin-bottom:10px}.ft .fr{font-size:9px;color:#64748B;display:flex;justify-content:space-between}.sb{text-align:center;padding:10px;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:36px;border:1px solid currentColor;border-radius:2px}.bdg{display:inline-block;margin-top:10px;padding:5px 14px;border:1px solid currentColor;border-radius:2px;font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase}.sh td{font-size:9px;font-weight:600;color:#C9963C;text-transform:uppercase;letter-spacing:1px;padding:12px 4px 6px!important}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}`
+  const sharedCss = `*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',system-ui,-apple-system,sans-serif;line-height:1.5;color:#1E293B;background:#fff;font-size:10.5px}.w{max-width:794px;margin:0 auto;background:#fff;padding:22px}h1{font-size:21px;font-weight:300;color:#1E3D22;margin-bottom:4px;letter-spacing:-0.5px}h3{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#C9963C;margin-bottom:8px}p{font-size:10.5px;color:#475569;margin:2px 0}strong{color:#1E3D22;font-weight:600}em{font-style:normal;color:#64748B}.lbl{font-size:9px;font-weight:500;color:#C9963C;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}.hd{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:14px;border-bottom:1px solid #E2E8F0;margin-bottom:16px;position:relative}.im{text-align:right}.im .dt{font-size:17px;font-weight:300;color:#1E3D22;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}.im .dn{font-size:11px;font-weight:500;color:#64748B;margin-bottom:10px;letter-spacing:0.5px}.ic p{font-size:10.5px}.ig{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:16px}table.ct{width:100%;border-collapse:collapse;margin-bottom:12px}table.ct th{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#94A3B8;text-align:left;padding:7px 4px;border-bottom:1px solid #E2E8F0}table.ct td{padding:7px 4px;color:#1E293B;border-bottom:1px solid #F1F5F9}table.ct th.r,table.ct td.r{text-align:right}table.ct th.c,table.ct td.c{text-align:center}.tw{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}.sp{flex:1;padding-right:28px}table.tt{width:270px;border-collapse:collapse}table.tt td{padding:5px 4px;font-size:10.5px;color:#475569}table.tt tr.sub td{border-top:1px dashed #E2E8F0;font-weight:500;color:#1E3D22;padding-top:8px}table.tt tr.gt td{border-top:2px solid #1E3D22;padding-top:10px;padding-bottom:10px;font-size:14px;font-weight:600;color:#1E3D22}.ft{padding-top:12px;border-top:1px solid #E2E8F0;text-align:center}.ft .ty{font-size:11px;font-weight:500;color:#1E3D22;margin-bottom:6px}.ft .fr{font-size:9px;color:#64748B;display:flex;justify-content:space-between}.sb{text-align:center;padding:7px;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;border:1px solid currentColor;border-radius:2px}.bdg{display:inline-block;margin-top:8px;padding:4px 12px;border:1px solid currentColor;border-radius:2px;font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase}.sh td{font-size:9px;font-weight:600;color:#C9963C;text-transform:uppercase;letter-spacing:1px;padding:8px 4px 4px!important}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}@page{size:A4;margin:0}}`
 
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>Group Pre-Invoice ${data.invoiceNumber}</title><style>${sharedCss}</style></head>
@@ -1393,9 +1376,7 @@ export async function generateGroupPreInvoiceHTML(data: GroupPreInvoiceData): Pr
     <div class="lbl">Guest House</div>
     <h1>${data.hotel.name}</h1>
     <p>${data.hotel.address}</p>
-    <p>Tel: ${data.hotel.phone} &nbsp;|&nbsp; ${data.hotel.email}</p>
-    <p class="tin">TIN: 71786161-3</p>
-  </div>
+    <p>Tel: 0243512529 &nbsp;|&nbsp; ${data.hotel.email}</p>  </div>
   <div class="im">
     <div class="dt">Group Pre-Invoice</div>
     <div class="dn">${data.invoiceNumber}</div>
@@ -1465,7 +1446,7 @@ export async function generateGroupPreInvoiceHTML(data: GroupPreInvoiceData): Pr
   <div class="ty">Thank you for choosing ${data.hotel.name}!</div>
   <div class="fr">
     <div><p><strong>Payment Methods:</strong> Cash &nbsp;·&nbsp; Mobile Money &nbsp;·&nbsp; Bank Transfer</p></div>
-    <div style="text-align:right"><p>${data.hotel.phone} &nbsp;|&nbsp; ${data.hotel.email}</p><p>TIN: 71786161-3</p></div>
+    <div style="text-align:right"><p>0243512529 &nbsp;|&nbsp; ${data.hotel.email}</p><p>www.hobbyskyguesthouse.com</p></div>
   </div>
 </div>
 </div></body></html>`
@@ -1496,20 +1477,18 @@ export async function generateGroupPreInvoicePDF(data: GroupPreInvoiceData): Pro
   const imgData = canvas.toDataURL('image/jpeg', 0.95)
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
 
-  const imgWidth = 210
-  const pageHeight = 297
-  const imgHeight = (canvas.height * imgWidth) / canvas.width
-  let heightLeft = imgHeight
-  let position = 0
+  const pageW = 210 // A4 width in mm
+  const pageH = 297 // A4 height in mm
+  const imgW = pageW
+  const imgH = (canvas.height * imgW) / canvas.width
 
-  pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight)
-  heightLeft -= pageHeight
-
-  while (heightLeft > 0) {
-    position = heightLeft - imgHeight
-    pdf.addPage()
-    pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight)
-    heightLeft -= pageHeight
+  if (imgH <= pageH) {
+    pdf.addImage(imgData, 'JPEG', 0, 0, imgW, imgH)
+  } else {
+    // Scale down to fit on a single page
+    const scale = pageH / imgH
+    const scaledW = imgW * scale
+    pdf.addImage(imgData, 'JPEG', (pageW - scaledW) / 2, 0, scaledW, pageH)
   }
 
   console.log('✅ [GroupPreInvoicePDF] PDF generated with', pdf.getNumberOfPages(), 'page(s)')

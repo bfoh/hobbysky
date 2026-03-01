@@ -21,16 +21,19 @@ export default function AmenitiesSection() {
                     </h2>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
                     {displayedAmenities.map((amenity) => (
                         <div
                             key={amenity.name}
-                            className="bg-white px-6 py-5 rounded-[14px] shadow-[0_2px_10px_rgb(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:-translate-y-1 border border-resort-green-50 flex items-center gap-4 transition-all duration-300"
+                            className="group bg-white flex flex-col items-center justify-center gap-3.5 py-7 px-4 rounded-2xl border border-gray-100 shadow-sm hover:shadow-[0_12px_40px_-8px_rgba(26,58,42,0.18)] hover:-translate-y-1.5 transition-all duration-300 cursor-default"
                         >
-                            <div className="w-12 h-12 rounded-full bg-[#e8f5ed] flex items-center justify-center flex-shrink-0">
-                                <amenity.icon className="text-[#88c5a2] w-6 h-6" />
+                            <div
+                                className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,0,0,0.25)] group-hover:shadow-[0_0_0_4px_rgba(212,160,23,0.18),inset_0_2px_4px_rgba(0,0,0,0.25)]"
+                                style={{ background: 'linear-gradient(145deg, #1E3D22, #152d18)' }}
+                            >
+                                <amenity.icon className="w-6 h-6" style={{ color: '#d4a017' }} />
                             </div>
-                            <span className="text-[15px] font-semibold text-gray-800">{amenity.name}</span>
+                            <span className="text-[13.5px] font-semibold text-gray-800 text-center leading-snug">{amenity.name}</span>
                         </div>
                     ))}
                 </div>

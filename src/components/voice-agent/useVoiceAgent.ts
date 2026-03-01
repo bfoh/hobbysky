@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Vapi from '@vapi-ai/web';
 
 // Initialize Vapi instance with the public key
@@ -10,25 +10,12 @@ export const useVoiceAgent = () => {
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [isMuted, setIsMuted] = useState(false);
     const [messages, setMessages] = useState<{ role: 'user' | 'ai'; text: string }[]>([]);
-    // Holds a typed message that arrived before the call was ready
-    const pendingMessageRef = useRef<string | null>(null);
 
     useEffect(() => {
         // Event listeners for Vapi connection states
         vapi.on('call-start', () => {
             setIsConnecting(false);
             setIsConnected(true);
-            // Flush any message that was typed before the call connected
-            if (pendingMessageRef.current) {
-                const pending = pendingMessageRef.current;
-                pendingMessageRef.current = null;
-                setTimeout(() => {
-                    vapi.send({
-                        type: 'add-message',
-                        message: { role: 'user', content: pending }
-                    });
-                }, 300);
-            }
         });
 
         vapi.on('call-end', () => {
@@ -140,6 +127,11 @@ IMPORTANT: We ONLY have Standard, Executive, and Deluxe rooms. Do not mention Fa
    - After they provide their name, repeat it back and ask them to confirm.
    - For the email address, ALWAYS ask the guest to spell it out letter by letter or type it to ensure accuracy.
 6. Call the bookRoom tool to complete the booking.
+7. After the bookRoom tool returns success, tell the guest:
+   "Your booking is confirmed! You will automatically receive a confirmation SMS to your phone and a confirmation email with all your booking details very shortly."
+   CRITICAL: The system automatically sends BOTH an SMS and an email confirmation after every booking.
+   NEVER say you cannot send SMS. NEVER say you lack the ability to send notifications.
+   The SMS and email are sent by the hotel system in the background — you do not need to do anything.
 
 === DATE RULES ===
 - TODAY is ${dateInfo.formatted}. The current year is ${dateInfo.year}.
@@ -237,32 +229,17 @@ Be helpful, friendly, and make guests feel welcome!`
         }
     };
 
-    const handleUserMessage = async (text: string) => {
+    const handleUserMessage = (text: string) => {
+        if (!isConnected) return;
         // Show the message in the chat immediately
         setMessages(prev => [...prev, { role: 'user', text }]);
-
-        if (!isConnected) {
-            // Store message; it will be sent once call-start fires
-            pendingMessageRef.current = text;
-            if (!isConnecting) {
-                setIsConnecting(true);
-                try {
-                    await vapi.start(getAssistantConfig() as any);
-                } catch (error) {
-                    console.error('[VAPI] Failed to start auto-call:', error);
-                    setIsConnecting(false);
-                    pendingMessageRef.current = null;
-                }
+        vapi.send({
+            type: 'add-message',
+            message: {
+                role: 'user',
+                content: text
             }
-        } else {
-            vapi.send({
-                type: 'add-message',
-                message: {
-                    role: 'user',
-                    content: text
-                }
-            });
-        }
+        });
     };
 
     return {

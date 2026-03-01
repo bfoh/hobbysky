@@ -176,13 +176,15 @@ function ServiceCard({ icon, label, subtitle, active, onClick }: any) {
                 }
             `}
         >
-            <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-4 transition-all duration-300
-                ${active
-                    ? 'bg-[#d4a017]/15 scale-110 shadow-inner'
-                    : 'bg-gray-50 group-hover:bg-gray-100'
-                }
-            `}>
-                <div className={`transition-colors duration-300 ${active ? 'text-[#d4a017]' : 'text-[#1a3a2a]'}`}>
+            <div
+                className={`w-14 h-14 rounded-full flex items-center justify-center mb-4 flex-shrink-0 transition-all duration-300 ${
+                    active
+                        ? 'scale-110 shadow-[0_0_0_3px_#d4a017,inset_0_2px_4px_rgba(0,0,0,0.35)]'
+                        : 'shadow-[inset_0_2px_4px_rgba(0,0,0,0.25)] group-hover:shadow-[0_0_0_4px_rgba(212,160,23,0.22),inset_0_2px_4px_rgba(0,0,0,0.25)]'
+                }`}
+                style={{ background: 'linear-gradient(145deg, #1E3D22, #152d18)' }}
+            >
+                <div className="text-[#d4a017] transition-colors duration-300">
                     {icon}
                 </div>
             </div>

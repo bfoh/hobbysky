@@ -53,17 +53,12 @@ export default function Footer() {
                 </a>
               </div>
               <div>
-                <a href="https://web.whatsapp.com/send?phone=+233240204029" target="_blank" rel="noopener noreferrer" className="hover:text-resort-gold-400 transition-colors cursor-pointer">
-                  +233 240 204 029 (WhatsApp)
+                <a href="tel:+233240204079" className="hover:text-resort-gold-400 transition-colors cursor-pointer">
+                  +233 240 204 079
                 </a>
                 <span> | </span>
-                <a href="tel:+233243512529" className="hover:text-resort-gold-400 transition-colors cursor-pointer">
-                  +233 243 512 529
-                </a>
-              </div>
-              <div>
-                <a href="tel:+233552515787" className="hover:text-resort-gold-400 transition-colors cursor-pointer">
-                  +233 552 515 787
+                <a href="https://wa.me/+233243512529" target="_blank" rel="noopener noreferrer" className="hover:text-resort-gold-400 transition-colors cursor-pointer">
+                  +233 243 512 529 (WhatsApp)
                 </a>
               </div>
             </div>
@@ -92,7 +87,7 @@ export default function Footer() {
               <a href="#" onClick={(e) => e.preventDefault()} className="w-10 h-10 flex items-center justify-center bg-resort-gold-500/20 hover:bg-resort-gold-500/40 rounded-full transition-all cursor-pointer" aria-label="TikTok">
                 <i className="ri-tiktok-fill text-xl text-resort-gold-400"></i>
               </a>
-              <a href="https://wa.me/+233240204029" target="_blank" rel="noopener noreferrer" className="w-10 h-10 flex items-center justify-center bg-resort-gold-500/20 hover:bg-resort-gold-500/40 rounded-full transition-all cursor-pointer" aria-label="WhatsApp">
+              <a href="https://wa.me/+233243512529" target="_blank" rel="noopener noreferrer" className="w-10 h-10 flex items-center justify-center bg-resort-gold-500/20 hover:bg-resort-gold-500/40 rounded-full transition-all cursor-pointer" aria-label="WhatsApp">
                 <i className="ri-whatsapp-fill text-xl text-resort-gold-400"></i>
               </a>
               <a href="#" onClick={(e) => e.preventDefault()} className="w-10 h-10 flex items-center justify-center bg-resort-gold-500/20 hover:bg-resort-gold-500/40 rounded-full transition-all cursor-pointer" aria-label="YouTube">

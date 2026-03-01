@@ -25,10 +25,10 @@ export default function ContactInfo() {
                 reservations@hobbyskyguesthouse.com
               </a>
               <a
-                href="tel:+233240204029"
+                href="tel:+233240204079"
                 className="block hover:text-resort-gold-400 transition-colors cursor-pointer"
               >
-                +233 240 204 029
+                +233 240 204 079
               </a>
               <a
                 href="tel:+233243512529"
@@ -61,12 +61,12 @@ export default function ContactInfo() {
                 reservations@hobbyskyguesthouse.com
               </a>
               <a
-                href="https://wa.me/+233240204029"
+                href="https://wa.me/+233243512529"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block hover:text-resort-gold-400 transition-colors cursor-pointer"
               >
-                WhatsApp: +233 240 204 029
+                WhatsApp: +233 243 512 529
               </a>
               <p className="text-white/70">Available 24/7</p>
             </div>
@@ -92,12 +92,6 @@ export default function ContactInfo() {
                 className="block hover:text-resort-gold-400 transition-colors cursor-pointer"
               >
                 +233 243 512 529
-              </a>
-              <a
-                href="tel:+233552515787"
-                className="block hover:text-resort-gold-400 transition-colors cursor-pointer"
-              >
-                +233 552 515 787
               </a>
             </div>
           </div>
@@ -142,7 +136,7 @@ export default function ContactInfo() {
               <i className="ri-tiktok-fill text-xl text-resort-gold-400"></i>
             </a>
             <a
-              href="https://wa.me/+233240204029"
+              href="https://wa.me/+233243512529"
               target="_blank"
               rel="noopener noreferrer"
               className="w-12 h-12 flex items-center justify-center bg-resort-gold-500/20 hover:bg-resort-gold-500/40 rounded-full transition-all cursor-pointer"

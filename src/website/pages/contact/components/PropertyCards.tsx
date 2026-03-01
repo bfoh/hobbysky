@@ -5,9 +5,9 @@ const propertyData = [
     name: "Hobbysky Guest House",
     image: "/hotelview-enhanced.png",
     address: "Abuakwa-Manhyia, Kumasi, Ashanti Region, Ghana",
-    phone: ["+233 240 204 029", "+233 243 512 529", "+233 552 515 787"],
+    phone: ["+233 240 204 079", "+233 243 512 529"],
     email: "reservations@hobbyskyguesthouse.com",
-    whatsapp: "+233240204029",
+    whatsapp: "+233243512529",
     mapSrc:
       "https://maps.google.com/maps?q=Hobbysky%20Guest%20House,%20Kumasi&t=&z=15&ie=UTF8&iwloc=&output=embed",
   },

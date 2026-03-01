@@ -106,7 +106,7 @@ export const handler = async (event, context) => {
 
         // 5. Generate iCal
         const calendar = ical({
-            name: `AMP Lodge - ${roomTypeId}`,
+            name: `Hobbysky Guest House - ${roomTypeId}`,
             timezone: 'UTC'
         });
 

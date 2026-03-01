@@ -7,7 +7,7 @@ async function sendSms(to, message, apiKey) {
         if (recipient.startsWith('0')) recipient = '233' + recipient.substring(1);
         else if (!recipient.startsWith('233') && recipient.length === 9) recipient = '233' + recipient;
 
-        const url = `https://sms.arkesel.com/sms/api?action=send-sms&api_key=${apiKey}&to=${recipient}&from=AMP Lodge&sms=${encodeURIComponent(message)}`;
+        const url = `https://sms.arkesel.com/sms/api?action=send-sms&api_key=${apiKey}&to=${recipient}&from=HobbySky&sms=${encodeURIComponent(message)}`;
         const res = await fetch(url);
         const text = await res.text();
         console.log(`[SMS] To: ${recipient}, Response: ${text}`);
@@ -28,7 +28,7 @@ async function sendEmail(to, subject, html, apiKey) {
                 'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify({
-                from: 'AMP Lodge <noreply@updates.amplodge.org>',
+                from: 'Hobbysky Guest House <noreply@hobbyskyguesthouse.com>',
                 to: [to],
                 subject: subject,
                 html: html
@@ -50,14 +50,13 @@ exports.handler = async (event) => {
     try {
         const body = JSON.parse(event.body);
         const { channel, subject, content, dryRun } = body;
-        // dryRun: if true, we just count potential recipients
 
         if (!channel || !content) {
             return { statusCode: 400, body: JSON.stringify({ error: 'Missing channel or content' }) };
         }
 
         // Init Services
-        const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+        const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
         const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
         const arkeselApiKey = process.env.ARKESEL_API_KEY;
         const resendApiKey = process.env.RESEND_API_KEY || process.env.VITE_RESEND_API_KEY;
@@ -66,7 +65,7 @@ exports.handler = async (event) => {
         // 1. Fetch Guests with Bookings (for tokens)
         const { data: guests, error: guestError } = await supabase
             .from('guests')
-            .select('id, name, email, phone, bookings(guest_token, status, check_out_date)');
+            .select('id, name, email, phone, bookings(guest_token, status, check_out)');
 
         if (guestError) {
             console.error("Error fetching guests:", guestError);
@@ -95,22 +94,20 @@ exports.handler = async (event) => {
         let failCount = 0;
         let skippedCount = 0;
 
-        // Helper to process a single guest
         const processGuest = async (guest) => {
             try {
                 const guestName = guest.name ? guest.name.split(' ')[0] : 'Guest';
 
                 // Resolve Guest Link
-                let guestLink = 'https://amplodge.org';
+                let guestLink = 'https://hobbyskyguesthouse.com';
                 if (guest.bookings && guest.bookings.length > 0) {
-                    // Prioritize active bookings
                     const activeBooking = guest.bookings.find(b =>
-                        ['confirmed', 'checked_in'].includes(b.status) &&
-                        new Date(b.check_out_date) >= new Date()
+                        ['confirmed', 'checked_in', 'checked-in'].includes(b.status) &&
+                        new Date(b.check_out) >= new Date()
                     );
                     const targetBooking = activeBooking || guest.bookings[0];
                     if (targetBooking && targetBooking.guest_token) {
-                        guestLink = `https://amplodge.org/guest/${targetBooking.guest_token}`;
+                        guestLink = `https://hobbyskyguesthouse.com/guest/${targetBooking.guest_token}`;
                     }
                 }
 
@@ -123,13 +120,12 @@ exports.handler = async (event) => {
                 if (channel === 'sms' && guest.phone && arkeselApiKey) {
                     result = await sendSms(guest.phone, personalizedContent, arkeselApiKey);
                 } else if (channel === 'email' && guest.email && guest.email.includes('@') && resendApiKey) {
-                    const personalizedSubject = (subject || 'Update from AMP Lodge').replace(/{{name}}/g, guestName);
+                    const personalizedSubject = (subject || 'A Special Message from Hobbysky Guest House').replace(/{{name}}/g, guestName);
                     result = await sendEmail(guest.email, personalizedSubject, personalizedContent, resendApiKey);
                 } else {
-                    // Missing contact info for channel
                     return { success: false, skipped: true };
                 }
-                return { success: result.success === true, skipped: false }; // Normalize result
+                return { success: result.success === true, skipped: false };
             } catch (e) {
                 console.error(`Error processing guest ${guest.id}:`, e);
                 return { success: false, skipped: false };

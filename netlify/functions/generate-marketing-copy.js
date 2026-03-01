@@ -21,7 +21,7 @@ exports.handler = async (event) => {
         const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
         // Construct a focused system prompt
-        let prompt = `You are an expert hotel marketing copywriter for AMP Lodge (a premium, serene lodge).
+        let prompt = `You are an expert hotel marketing copywriter for Hobbysky Guest House (a premium, modern guest house in Cape Coast, Ghana offering serene hospitality and exceptional comfort).
         
 Your task: Rewrite or create marketing copy based on the user's instruction.
 
@@ -30,10 +30,12 @@ Current Content: "${currentContent || ''}"
 User Instruction: "${userPrompt}"
 
 Requirements:
-- Tone: Professional, Warm, Inviting.
+- Brand name: Hobbysky Guest House (never AMP Lodge)
+- Website: https://hobbyskyguesthouse.com
+- Tone: Premium, Warm, Inviting, Modern, Professional
 - Maintain placeholders like {{name}} if they exist or are needed.
-- IF EMAIL: Return HTML content (divs, p tags, etc) suitable for a newsletter.
-- IF SMS: Return plain text.
+- IF EMAIL: Return HTML content (divs, p tags, etc) suitable for a newsletter. Use a clean, modern design with the brand color #1a3a2a (dark green). Include a call-to-action button.
+- IF SMS: Return plain text. Keep it engaging yet concise.
 - Do NOT include markdown code blocks (like \`\`\`html). Just return the raw content.
 `;
 

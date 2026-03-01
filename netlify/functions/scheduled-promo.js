@@ -1,22 +1,34 @@
 const { schedule } = require('@netlify/functions');
 const { createClient } = require('@supabase/supabase-js');
 
-// Constants
-const SMS_MESSAGE = "Long time no see! We miss having you at AMP Lodge. Treat yourself to a well-deserved break in our serene environment. Book your stay today: https://amplodge.com";
-const EMAIL_SUBJECT = "Your Home Away from Home Awaits - AMP Lodge";
+// Constants - Premium, engaging promotional messages
+const SMS_MESSAGE = "Hi! ✨ Hobbysky Guest House misses you. Escape to comfort & serenity in Cape Coast. Exclusive rates for returning guests. Book now: https://hobbyskyguesthouse.com";
+const EMAIL_SUBJECT = "We'd Love to Welcome You Back — Hobbysky Guest House";
 const EMAIL_HTML = `
-    <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #d4a017;">We Miss You!</h1>
-        <p>Hello,</p>
-        <p>It's been a while since your last visit to <strong>AMP Lodge</strong>.</p> 
-        <p>We are constantly improving to serve you better. Whether you need a peaceful getaway or a comfortable place to stay, we are ready to welcome you back.</p>
-        <div style="background-color: #f9f9f9; padding: 15px; border-left: 4px solid #d4a017; margin: 20px 0;">
-            <p style="margin: 0; font-size: 18px;"><strong>Come Relax With Us</strong></p>
-            <p style="margin: 5px 0 0; color: #666;">Experience our serenity and top-notch hospitality once again.</p>
+    <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; background: #ffffff;">
+        <div style="background: linear-gradient(135deg, #1a3a2a 0%, #2d5a3e 100%); padding: 40px 30px; text-align: center; border-radius: 0 0 24px 24px;">
+            <h1 style="color: #d4a017; font-size: 28px; margin: 0; font-weight: 800; letter-spacing: -0.5px;">We Miss You!</h1>
+            <p style="color: rgba(255,255,255,0.8); font-size: 14px; margin-top: 8px;">Your next getaway is just a click away</p>
         </div>
-        <p>You deserve a break. Let us take care of you.</p>
-        <p><a href="https://amplodge.com" style="background-color: #d4a017; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Book Your Stay Now</a></p>
-        <p style="margin-top: 30px; font-size: 12px; color: #999;">If you no longer wish to receive updates, please reply to this email.</p>
+        
+        <div style="padding: 30px;">
+            <p style="font-size: 16px; line-height: 1.6;">Hello,</p>
+            <p style="font-size: 16px; line-height: 1.6;">It's been a while since your last visit to <strong style="color: #1a3a2a;">Hobbysky Guest House</strong>. We've been busy making your next stay even more memorable.</p>
+            
+            <div style="background: linear-gradient(135deg, #f8f6f0 0%, #f0ebe0 100%); padding: 24px; border-left: 4px solid #d4a017; margin: 24px 0; border-radius: 0 12px 12px 0;">
+                <p style="margin: 0; font-size: 18px; font-weight: 700; color: #1a3a2a;">Experience Premium Comfort</p>
+                <p style="margin: 8px 0 0; color: #666; font-size: 14px; line-height: 1.5;">Discover our refined rooms, exceptional dining, and the serene atmosphere that makes Hobbysky your home away from home in Cape Coast.</p>
+            </div>
+            
+            <p style="font-size: 16px; line-height: 1.6;">You deserve a break. Let us take care of you with our signature hospitality.</p>
+            
+            <div style="text-align: center; margin: 32px 0;">
+                <a href="https://hobbyskyguesthouse.com" style="background: linear-gradient(135deg, #d4a017 0%, #b8860b 100%); color: white; padding: 14px 36px; text-decoration: none; border-radius: 50px; display: inline-block; font-weight: 700; font-size: 15px; letter-spacing: 0.5px; box-shadow: 0 4px 12px rgba(212,160,23,0.3);">Book Your Stay Now →</a>
+            </div>
+            
+            <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
+            <p style="font-size: 12px; color: #999; text-align: center;">Hobbysky Guest House Ltd, Cape Coast, Ghana<br/>If you no longer wish to receive updates, please reply to this email.</p>
+        </div>
     </div>
 `;
 
@@ -27,7 +39,7 @@ async function sendSms(to, message, apiKey) {
         if (recipient.startsWith('0')) recipient = '233' + recipient.substring(1);
         else if (!recipient.startsWith('233') && recipient.length === 9) recipient = '233' + recipient;
 
-        const url = `https://sms.arkesel.com/sms/api?action=send-sms&api_key=${apiKey}&to=${recipient}&from=AMP Lodge&sms=${encodeURIComponent(message)}`;
+        const url = `https://sms.arkesel.com/sms/api?action=send-sms&api_key=${apiKey}&to=${recipient}&from=HobbySky&sms=${encodeURIComponent(message)}`;
 
         const res = await fetch(url);
         const text = await res.text();
@@ -47,7 +59,7 @@ async function sendEmail(to, subject, html, apiKey) {
                 'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify({
-                from: 'AMP Lodge <noreply@updates.amplodge.org>',
+                from: 'Hobbysky Guest House <noreply@hobbyskyguesthouse.com>',
                 to: [to],
                 subject: subject,
                 html: html
@@ -69,7 +81,7 @@ const handler = async (event) => {
     console.log('[Scheduled Promo] Starting execution...');
 
     // Environment Variables
-    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
     const arkeselApiKey = process.env.ARKESEL_API_KEY;
     const resendApiKey = process.env.RESEND_API_KEY || process.env.VITE_RESEND_API_KEY;
@@ -82,8 +94,6 @@ const handler = async (event) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // 1. Fetch Guests
-    // Note: In production, consider paginating if you have thousands of guests.
-    // For now, we fetch distinct guests from bookings.
     const { data: bookings, error } = await supabase
         .from('bookings')
         .select('guest_id');
@@ -135,5 +145,4 @@ const handler = async (event) => {
 };
 
 // Schedule: Run at 9:00 AM on the 1st day of every month
-// Cron Syntax: "Minute Hour DayMonth Month DayWeek"
 exports.handler = schedule('0 9 1 * *', handler);

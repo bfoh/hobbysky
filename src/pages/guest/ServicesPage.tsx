@@ -84,36 +84,40 @@ export function ServicesPage() {
 
             <div className="grid grid-cols-2 gap-3 mb-6">
                 <ServiceCard
-                    icon={<BellRing className="w-6 h-6 text-blue-600" />}
+                    icon={<BellRing className="w-9 h-9 text-amber-500 drop-shadow-sm" />}
                     label="Housekeeping"
                     subtitle="Clean, towels, supplies"
                     active={type === 'housekeeping'}
                     onClick={() => setType('housekeeping')}
-                    activeColor="blue"
+                    activeColor="gold"
+                    iconBg="bg-amber-50/50"
                 />
                 <ServiceCard
-                    icon={<Car className="w-6 h-6 text-emerald-600" />}
+                    icon={<Car className="w-9 h-9 text-amber-500 drop-shadow-sm" />}
                     label="Transport"
                     subtitle="Taxi, shuttle, pickup"
                     active={type === 'transport'}
                     onClick={() => setType('transport')}
-                    activeColor="emerald"
+                    activeColor="gold"
+                    iconBg="bg-amber-50/50"
                 />
                 <ServiceCard
-                    icon={<Utensils className="w-6 h-6 text-orange-600" />}
+                    icon={<Utensils className="w-9 h-9 text-amber-500 drop-shadow-sm" />}
                     label="In-Room Dining"
                     subtitle="Food & drinks to room"
                     active={type === 'food'}
                     onClick={() => setType('food')}
-                    activeColor="orange"
+                    activeColor="gold"
+                    iconBg="bg-amber-50/50"
                 />
                 <ServiceCard
-                    icon={<Hammer className="w-6 h-6 text-red-600" />}
+                    icon={<Hammer className="w-9 h-9 text-amber-500 drop-shadow-sm" />}
                     label="Report Issue"
                     subtitle="Maintenance & repairs"
                     active={type === 'problem'}
                     onClick={() => setType('problem')}
-                    activeColor="red"
+                    activeColor="gold"
+                    iconBg="bg-amber-50/50"
                 />
             </div>
 
@@ -168,32 +172,35 @@ export function ServicesPage() {
     )
 }
 
-function ServiceCard({ icon, label, subtitle, active, onClick, activeColor }: any) {
+function ServiceCard({ icon, label, subtitle, active, onClick, activeColor, iconBg }: any) {
     const colorMap: Record<string, string> = {
-        blue: 'border-blue-400 bg-blue-50 shadow-blue-100',
-        emerald: 'border-emerald-400 bg-emerald-50 shadow-emerald-100',
-        orange: 'border-orange-400 bg-orange-50 shadow-orange-100',
-        red: 'border-red-400 bg-red-50 shadow-red-100',
+        gold: 'border-amber-400 bg-gradient-to-br from-amber-50/50 to-amber-100/30 shadow-[0_8px_30px_rgb(212,160,23,0.12)]',
     }
 
     return (
         <button
             type="button"
             onClick={onClick}
-            className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-200 group
+            className={`flex flex-col items-center justify-center py-5 px-3 rounded-2xl border transition-all duration-300 group
                 ${active
-                    ? `${colorMap[activeColor] || 'border-primary bg-primary/5'} shadow-lg scale-[1.03]`
-                    : 'border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 hover:shadow-md hover:scale-[1.02]'
+                    ? `${colorMap[activeColor] || 'border-amber-400 bg-amber-50'} scale-[1.03] ring-1 ring-amber-400/50`
+                    : 'border-gray-100 bg-white hover:bg-gray-50/50 hover:border-amber-200/60 hover:shadow-lg hover:scale-[1.02]'
                 }
             `}
         >
-            <div className={`p-3 rounded-full mb-2 transition-colors duration-200 ${active ? `bg-${activeColor}-100` : 'bg-gray-100 group-hover:bg-gray-200'}`}>
+            <div className={`p-4 rounded-2xl mb-3 transition-all duration-300 
+                ${active ? 'bg-amber-100/80 scale-110 shadow-inner' : `${iconBg} group-hover:bg-amber-100/50 group-hover:scale-105 group-hover:shadow-sm`}
+            `}>
                 {icon}
             </div>
-            <span className={`text-sm font-bold ${active ? `text-${activeColor}-700` : 'text-gray-900 group-hover:text-gray-900'}`}>
+            <span className={`text-sm font-bold tracking-tight transition-colors duration-200 
+                ${active ? 'text-amber-900' : 'text-gray-800 group-hover:text-amber-900'}
+            `}>
                 {label}
             </span>
-            <span className={`text-xs mt-0.5 ${active ? `text-${activeColor}-600` : 'text-gray-500 group-hover:text-gray-700'} font-medium`}>
+            <span className={`text-xs mt-0.5 text-center transition-colors duration-200 font-medium 
+                ${active ? 'text-amber-700/80' : 'text-gray-500'}
+            `}>
                 {subtitle}
             </span>
         </button>

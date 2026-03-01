@@ -1,20 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 export default function Header() {
-  const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   const navLinks = [
     { name: 'ROOMS', path: '/#our-rooms' },
@@ -22,16 +12,10 @@ export default function Header() {
     { name: 'CONTACT US', path: '/contact-us' }
   ];
 
-  const isSolidPage = !['/', '/gallery', '/contact-us'].includes(location.pathname);
-  const isHeaderSolid = isScrolled || isSolidPage;
-
   return (
     <>
       {/* Desktop Header */}
-      <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isHeaderSolid ? 'bg-resort-green-900 shadow-md border-b border-resort-green-800' : 'bg-transparent'
-          }`}
-      >
+      <header className="fixed top-0 left-0 right-0 z-50 bg-resort-green-900 shadow-md border-b border-resort-green-800">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-20">
             {/* Logo */}

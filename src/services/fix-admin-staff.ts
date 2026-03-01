@@ -2,7 +2,7 @@ import { blink } from '../blink/client'
 
 /**
  * Fix admin staff record - creates the missing staff record for the authenticated admin user
- * This should be run when logged in as admin@hobbysky.com
+ * This should be run when logged in as admin@hobbyskyguesthouse.com
  */
 export async function fixAdminStaffRecord() {
   try {
@@ -140,7 +140,7 @@ if (typeof window !== 'undefined') {
   // Run after a short delay to ensure auth is ready
   setTimeout(async () => {
     const currentUser = await blink.auth.me()
-    if (currentUser?.email === 'admin@hobbysky.com') {
+    if (currentUser?.email === 'admin@hobbyskyguesthouse.com') {
       console.log('🚀 [fixAdminStaffRecord] Auto-fixing admin staff record...')
       await fixAdminStaffRecord()
     }

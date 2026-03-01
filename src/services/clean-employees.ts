@@ -4,7 +4,7 @@ import { blink } from '@/blink/client'
  * Clean employees database - Remove all staff except admin
  * 
  * SAFETY FEATURES:
- * - Preserves admin@hobbysky.com account
+ * - Preserves admin@hobbyskyguesthouse.com account
  * - Preserves any owner role accounts
  * - Logs all deletions
  * - Provides detailed output
@@ -43,14 +43,14 @@ export async function cleanEmployeesDatabase() {
     
     // Filter staff to keep (admin and owner roles)
     const staffToKeep = allStaff.filter((staff: any) => {
-      return staff.email === 'admin@hobbysky.com' || 
+      return staff.email === 'admin@hobbyskyguesthouse.com' || 
              staff.role === 'owner' ||
              (staff.email && staff.email.toLowerCase().includes('admin'))
     })
     
     // Filter staff to delete
     const staffToDelete = allStaff.filter((staff: any) => {
-      return staff.email !== 'admin@hobbysky.com' && 
+      return staff.email !== 'admin@hobbyskyguesthouse.com' && 
              staff.role !== 'owner' &&
              (!staff.email || !staff.email.toLowerCase().includes('admin'))
     })
@@ -158,12 +158,12 @@ export async function cleanEmployeesDatabaseInteractive() {
   // Preview what will be deleted
   const allStaff = await (blink.db as any).staff.list({})
   const staffToKeep = allStaff.filter((staff: any) => {
-    return staff.email === 'admin@hobbysky.com' || 
+    return staff.email === 'admin@hobbyskyguesthouse.com' || 
            staff.role === 'owner' ||
            (staff.email && staff.email.toLowerCase().includes('admin'))
   })
   const staffToDelete = allStaff.filter((staff: any) => {
-    return staff.email !== 'admin@hobbysky.com' && 
+    return staff.email !== 'admin@hobbyskyguesthouse.com' && 
            staff.role !== 'owner' &&
            (!staff.email || !staff.email.toLowerCase().includes('admin'))
   })

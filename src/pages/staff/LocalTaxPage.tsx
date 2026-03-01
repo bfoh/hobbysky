@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 export function LocalTaxPage() {
   return (
     <div className="flex h-screen bg-secondary">
-      <StaffSidebar email="admin@hobbysky.com" />
+      <StaffSidebar email="admin@hobbyskyguesthouse.com" />
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="h-16 border-b bg-white flex items-center px-6">
           <h1 className="text-lg font-semibold text-secondary-foreground flex items-center gap-2">

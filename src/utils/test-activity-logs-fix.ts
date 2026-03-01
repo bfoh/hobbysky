@@ -309,7 +309,7 @@ export async function testReadableMessageFormat(): Promise<void> {
         entityId: `user_${Date.now()}`,
         details: {
           loginAt: new Date().toISOString(),
-          email: 'admin@hobbysky.com',
+          email: 'admin@hobbyskyguesthouse.com',
           role: 'admin'
         },
         userId: 'test_readable_5'

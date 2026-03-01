@@ -44,12 +44,12 @@ export default function Footer() {
             <div className="space-y-3 text-sm">
               <div>
                 <p className="font-semibold text-resort-gold-300">Hobbysky Guest House</p>
-                <p>DKC, Abuakwa, Kumasi</p>
+                <p>Abuakwa-Manhyia, Kumasi</p>
                 <p>Ashanti Region, Ghana</p>
               </div>
               <div className="pt-4">
-                <a href="mailto:reservations@hobbysky.com" className="hover:text-resort-gold-400 transition-colors cursor-pointer">
-                  reservations@hobbysky.com
+                <a href="mailto:reservations@hobbyskyguesthouse.com" className="hover:text-resort-gold-400 transition-colors cursor-pointer">
+                  reservations@hobbyskyguesthouse.com
                 </a>
               </div>
               <div>

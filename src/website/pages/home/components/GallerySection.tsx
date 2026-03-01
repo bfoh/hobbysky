@@ -68,7 +68,7 @@ export default function GallerySection() {
             </h2>
             <div className="w-20 h-1 bg-resort-gold-500 mb-6"></div>
             <p className="text-resort-green-800 text-lg leading-relaxed mb-8">
-              A serene sanctuary in the Ashanti Region - Immerse yourself in the authentic Ghanaian hospitality and modern comfort at Hobbysky Guest House. Perfectly situated in the vibrant heart of DKC, Abuakwa, Kumasi, we offer the perfect location for family getaways, private retreats, and celebrations.
+              A serene sanctuary in the Ashanti Region - Immerse yourself in the authentic Ghanaian hospitality and modern comfort at Hobbysky Guest House. Perfectly situated in the vibrant heart of Abuakwa-Manhyia, Kumasi, we offer the perfect location for family getaways, private retreats, and celebrations.
             </p>
             <Link
               to="/gallery"

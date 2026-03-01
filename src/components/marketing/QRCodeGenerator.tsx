@@ -12,7 +12,7 @@ import { Printer, Mail, MessageSquare, Download, Share2 } from '@/components/ico
 import html2canvas from "html2canvas"
 
 export function QRCodeGenerator() {
-    const [url, setUrl] = useState("https://www.hobbysky.com")
+    const [url, setUrl] = useState("https://www.hobbyskyguesthouse.com")
     const [size, setSize] = useState(300)
     const qrRef = useRef<HTMLDivElement>(null)
 
@@ -152,7 +152,7 @@ export function QRCodeGenerator() {
                         <Input
                             value={url}
                             onChange={(e) => setUrl(e.target.value)}
-                            placeholder="https://www.hobbysky.com"
+                            placeholder="https://www.hobbyskyguesthouse.com"
                         />
                     </div>
                 </CardContent>

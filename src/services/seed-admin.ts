@@ -19,7 +19,7 @@ export async function seedAdminAccount() {
   }
 
   // DEPRECATED: These should come from environment variables or Supabase Auth
-  const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'admin@hobbysky.com'
+  const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'admin@hobbyskyguesthouse.com'
   const adminPassword = '[PASSWORD_REMOVED - Set in Supabase Auth]'
   console.warn('⚠️ DEPRECATED: seed-admin.ts is legacy code. Use Supabase Auth dashboard instead.')
 

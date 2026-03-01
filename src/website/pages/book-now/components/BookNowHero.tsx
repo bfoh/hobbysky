@@ -30,7 +30,7 @@ export default function BookNowHero() {
             <div className="space-y-5 text-resort-green-800 text-[15px] leading-relaxed">
               <p>
                 Indulge in cozy accommodations and personalized service at{' '}
-                <strong>Hobbysky Guest House,</strong> located in the vibrant heart of DKC, Abuakwa.
+                <strong>Hobbysky Guest House,</strong> located in the vibrant heart of Abuakwa-Manhyia.
               </p>
               <p>
                 Our guest house offers a perfect blend of modern comfort and authentic Ghanaian hospitality, creating a home away from home for both leisure and business travelers.

@@ -455,7 +455,7 @@ ${invoiceData.downloadUrl}
 We hope you had a wonderful stay!
 
 Please rate your experience:
-https://hobbysky.com/review?bookingId=${booking.id}
+https://hobbyskyguesthouse.com/review?bookingId=${booking.id}
 
 Best regards,
 The hobbysky guest house Team

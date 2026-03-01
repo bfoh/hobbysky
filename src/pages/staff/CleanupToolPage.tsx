@@ -223,13 +223,13 @@ export function CleanupToolPage() {
       console.log(`📋 Found ${allStaff.length} staff records`)
 
       const toKeep = allStaff.filter((staff: StaffMember) => {
-        return staff.email === 'admin@hobbysky.com' ||
+        return staff.email === 'admin@hobbyskyguesthouse.com' ||
           staff.role === 'owner' ||
           (staff.email && staff.email.toLowerCase().includes('admin'))
       })
 
       const toDelete = allStaff.filter((staff: StaffMember) => {
-        return staff.email !== 'admin@hobbysky.com' &&
+        return staff.email !== 'admin@hobbyskyguesthouse.com' &&
           staff.role !== 'owner' &&
           (!staff.email || !staff.email.toLowerCase().includes('admin'))
       })

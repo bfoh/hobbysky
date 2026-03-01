@@ -149,7 +149,7 @@ Out: ${new Date(checkOut).toLocaleDateString()}
 ID: ${bookingId.slice(0, 8)}
 
 We look forward to hosting you!
-www.hobbysky.com`
+www.hobbyskyguesthouse.com`
 
     return sendSMS(phone, message, 'Booking Confirmation')
 }
@@ -176,7 +176,7 @@ BFast: 7-10AM
 Dial +233240204029 for help.
 
 Enjoy your stay @ Hobbysky Guest House!
-www.hobbysky.com`
+www.hobbyskyguesthouse.com`
 
     return sendSMS(phone, message, 'Check-in Confirmation')
 }
@@ -206,10 +206,10 @@ Safe travels & see you soon!`
 
     if (bookingId) {
         message += `
-Rate your stay: www.hobbysky.com/review?bookingId=${bookingId}`
+Rate your stay: www.hobbyskyguesthouse.com/review?bookingId=${bookingId}`
     } else {
         message += `
-www.hobbysky.com`
+www.hobbyskyguesthouse.com`
     }
 
     return sendSMS(phone, message, 'Check-out Confirmation')
@@ -232,7 +232,7 @@ Room: ${roomNumber}
 Staff: ${staffName}
 
 Link: ${completionUrl}
-www.hobbysky.com`
+www.hobbyskyguesthouse.com`
 
     return sendSMS(phone, message, 'Task Assignment')
 }

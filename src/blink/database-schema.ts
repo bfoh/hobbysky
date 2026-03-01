@@ -93,10 +93,10 @@ export async function initializeDatabaseSchema(): Promise<void> {
             const defaultSettings = {
               id: 'hotel-settings-amp-lodge',
               name: 'Hobbysky Guest House',
-              address: 'hobbysky guest house, Abuakwa DKC junction, Kumasi-Sunyani Rd, Kumasi, Ghana',
+              address: 'hobbysky guest house, Abuakwa-Manhyia, Kumasi-Sunyani Rd, Kumasi, Ghana',
               phone: '+233 55 500 9697',
-              email: 'info@hobbysky.com',
-              website: 'https://hobbysky.com',
+              email: 'info@hobbyskyguesthouse.com',
+              website: 'https://hobbyskyguesthouse.com',
               logoUrl: '/logohobbyskydarkmode.png',
               taxRate: 0.10,
               currency: 'GHS',

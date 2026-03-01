@@ -70,7 +70,7 @@ function generateEmailHtml({ title, preheader, content }) {
         <!-- Footer -->
         <tr>
           <td style="background-color:${C.headerBg};border-top:1px solid ${C.borderSub};padding:28px 32px;text-align:center;">
-            <p style="margin:0 0 6px;color:${C.textMuted};font-size:12px;font-family:Arial,sans-serif;">&copy; ${year} Hobbysky Guest House &middot; DKC Abuakwa, Kumasi, Ghana</p>
+            <p style="margin:0 0 6px;color:${C.textMuted};font-size:12px;font-family:Arial,sans-serif;">&copy; ${year} Hobbysky Guest House &middot; Abuakwa-Manhyia, Kumasi, Ghana</p>
             <p style="margin:0;color:#2B3E2E;font-size:11px;font-family:Arial,sans-serif;">This is an automated notification &mdash; please do not reply to this email.</p>
           </td>
         </tr>

@@ -348,8 +348,8 @@ export function createInvoiceData(booking: BookingWithDetails, roomDetails: any)
       name: 'Hobbysky Guest House',
       address: '123 Hotel Street, City, State 12345',
       phone: '+1 (555) 123-4567',
-      email: 'info@hobbysky.com',
-      website: 'https://hobbysky.com'
+      email: 'info@hobbyskyguesthouse.com',
+      website: 'https://hobbyskyguesthouse.com'
     }
   }
 }

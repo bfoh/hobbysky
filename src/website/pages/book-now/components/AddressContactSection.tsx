@@ -9,7 +9,7 @@ export default function AddressContactSection() {
           </h3>
 
           <div className="space-y-1 text-sm text-resort-green-800">
-            <p>DKC, Abuakwa, Kumasi</p>
+            <p>Abuakwa-Manhyia, Kumasi</p>
             <p>Ashanti Region</p>
             <p>GH</p>
             <p>Hobbysky Guest House</p>
@@ -23,10 +23,10 @@ export default function AddressContactSection() {
             </p>
             <p>
               <a
-                href="mailto:reservations@hobbysky.com"
+                href="mailto:reservations@hobbyskyguesthouse.com"
                 className="text-resort-green-700 underline hover:text-resort-gold-600 transition-colors cursor-pointer"
               >
-                reservations@hobbysky.com
+                reservations@hobbyskyguesthouse.com
               </a>
             </p>
           </div>

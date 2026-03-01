@@ -55,10 +55,10 @@ export default function ContactInfoSection() {
               <p className="text-sm">For general inquiries &amp; questions,</p>
               <p className="text-sm">contact us via email.</p>
               <a
-                href="mailto:reservations@hobbysky.com"
+                href="mailto:reservations@hobbyskyguesthouse.com"
                 className="block hover:text-resort-gold-400 transition-colors cursor-pointer break-all"
               >
-                reservations@hobbysky.com
+                reservations@hobbyskyguesthouse.com
               </a>
             </div>
           </div>
@@ -71,7 +71,7 @@ export default function ContactInfoSection() {
             <h3 className="text-xl font-bold text-resort-gold-400 mb-6">Visit Us</h3>
             <div className="space-y-3 text-white/90">
               <p className="font-medium">Hobbysky Guest House</p>
-              <p className="text-sm">DKC, Abuakwa</p>
+              <p className="text-sm">Abuakwa-Manhyia</p>
               <p className="text-sm">Kumasi,</p>
               <p className="text-sm">Ashanti Region,</p>
               <p className="text-sm">Ghana</p>

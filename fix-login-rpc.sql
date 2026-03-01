@@ -1,0 +1,3 @@
+-- Update RPC function to fix the 'r.number does not exist' error
+-- Rooms table uses 'roomNumber' not 'number' or 'room_number' based on earlier ORM observation, 
+-- Wait, let me check the actual table schema first.

@@ -19,10 +19,10 @@ export default function ContactInfo() {
             </h3>
             <div className="space-y-2 text-sm text-white/90">
               <a
-                href="mailto:reservations@hobbysky.com"
+                href="mailto:reservations@hobbyskyguesthouse.com"
                 className="block hover:text-resort-gold-400 transition-colors cursor-pointer"
               >
-                reservations@hobbysky.com
+                reservations@hobbyskyguesthouse.com
               </a>
               <a
                 href="tel:+233240204029"
@@ -55,10 +55,10 @@ export default function ContactInfo() {
             </h3>
             <div className="space-y-2 text-sm text-white/90">
               <a
-                href="mailto:reservations@hobbysky.com"
+                href="mailto:reservations@hobbyskyguesthouse.com"
                 className="block hover:text-resort-gold-400 transition-colors cursor-pointer"
               >
-                reservations@hobbysky.com
+                reservations@hobbyskyguesthouse.com
               </a>
               <a
                 href="https://wa.me/+233240204029"
@@ -82,10 +82,10 @@ export default function ContactInfo() {
             </h3>
             <div className="space-y-2 text-sm text-white/90">
               <a
-                href="mailto:reservations@hobbysky.com"
+                href="mailto:reservations@hobbyskyguesthouse.com"
                 className="block hover:text-resort-gold-400 transition-colors cursor-pointer"
               >
-                reservations@hobbysky.com
+                reservations@hobbyskyguesthouse.com
               </a>
               <a
                 href="tel:+233243512529"

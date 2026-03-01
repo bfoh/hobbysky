@@ -152,7 +152,7 @@ export function generateEmailHtml(options: EmailTemplateOptions): string {
           <tr>
             <td style="background-color:${C.headerBg};border-top:1px solid ${C.borderSub};padding:28px 32px;text-align:center;">
               <p style="margin:0 0 6px;color:${C.textMuted};font-size:12px;font-family:Arial,Helvetica,sans-serif;">
-                &copy; ${year} Hobbysky Guest House &middot; DKC Abuakwa, Kumasi, Ghana
+                &copy; ${year} Hobbysky Guest House &middot; Abuakwa-Manhyia, Kumasi, Ghana
               </p>
               <p style="margin:0;color:${C.borderSub};font-size:11px;font-family:Arial,Helvetica,sans-serif;">
                 This is an automated notification &mdash; please do not reply to this email.

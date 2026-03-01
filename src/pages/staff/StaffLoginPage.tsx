@@ -261,7 +261,7 @@ export function StaffLoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="staff@hobbysky.com"
+                placeholder="staff@hobbyskyguesthouse.com"
               />
             </div>
             <div>

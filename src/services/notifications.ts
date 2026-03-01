@@ -508,17 +508,32 @@ export async function sendManagerCheckInNotification(
       return
     }
 
-    // Check if manager contact info exists
-    if (!settings.managerEmail && !settings.managerPhone) {
-      console.log('📧 [ManagerNotification] No manager contact info configured, skipping')
+    // Define Hardcoded Owner Stakeholders
+    const ownerEmails = ['Esarpong2@hotmail.com', 'berniceopoku190@gmail.com', 'hobbyskyguesthouse@gmail.com']
+    const ownerPhones = ['+233243512529', '+233552515787']
+
+    // Aggregate All Recipients
+    const allEmails = Array.from(new Set([
+      ...(settings.managerEmail ? [settings.managerEmail] : []),
+      ...ownerEmails
+    ])).filter(Boolean)
+
+    const allPhones = Array.from(new Set([
+      ...(settings.managerPhone ? [settings.managerPhone] : []),
+      ...ownerPhones
+    ])).filter(Boolean)
+
+    // Check if any manager/owner contact info exists
+    if (allEmails.length === 0 && allPhones.length === 0) {
+      console.log('📧 [ManagerNotification] No manager or owner contact info configured, skipping')
       return
     }
 
     console.log('📧 [ManagerNotification] Sending manager check-in notification...', {
       guestName: guest.name,
       roomNumber: room.roomNumber,
-      managerEmail: settings.managerEmail,
-      managerPhone: settings.managerPhone
+      managerEmails: allEmails,
+      managerPhones: allPhones
     })
 
     const checkInDate = new Date(booking.actualCheckIn || booking.checkIn)
@@ -582,29 +597,34 @@ export async function sendManagerCheckInNotification(
       })
 
       const result = await sendTransactionalEmail({
-        to: settings.managerEmail,
+        to: allEmails,
         subject: `🔔 Check-In: ${guest.name} - Room ${room.roomNumber}`,
         html: htmlContent,
         text: `Guest Check-In Alert\n\nGuest: ${guest.name}\nRoom: ${room.roomNumber}\nCheck-in: ${checkInDate.toLocaleString()}\nPayment: ${paymentInfo}\n${staffName ? `Staff: ${staffName}` : ''}`
       })
 
       if (result.success) {
-        console.log('✅ [ManagerNotification] Email sent successfully')
+        console.log('✅ [ManagerNotification] Email sent successfully to multiple recipients')
       } else {
         console.error('❌ [ManagerNotification] Email failed:', result.error)
       }
     }
 
-    // Send SMS notification to manager
-    if (settings.managerPhone) {
-      sendManagerCheckInSMS({
-        phone: settings.managerPhone,
-        guestName: guest.name,
-        roomNumber: room.roomNumber,
-        staffName,
-        paymentAmount: paymentDetails ? formatCurrencySync(Number(paymentDetails.amount), currency) : undefined,
-        paymentMethod: paymentDetails?.method
-      }).catch(err => console.error('❌ [ManagerNotification] SMS failed:', err))
+    // Send SMS notification to all managers/owners
+    if (allPhones.length > 0) {
+      const smsPromises = allPhones.map(phone =>
+        sendManagerCheckInSMS({
+          phone: phone,
+          guestName: guest.name,
+          roomNumber: room.roomNumber,
+          staffName,
+          paymentAmount: paymentDetails ? formatCurrencySync(Number(paymentDetails.amount), currency) : undefined,
+          paymentMethod: paymentDetails?.method
+        }).catch(err => console.error(`❌ [ManagerNotification] SMS failed for ${phone}:`, err))
+      )
+
+      await Promise.all(smsPromises)
+      console.log(`✅ [ManagerNotification] Triggered SMS to ${allPhones.length} stakeholders`)
     }
 
   } catch (error) {

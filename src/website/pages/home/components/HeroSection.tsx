@@ -80,21 +80,21 @@ export default function HeroSection() {
       <div className="block md:hidden w-full bg-[#111111] px-4 py-8">
         <div className="bg-[#3a3935]/30 backdrop-blur-3xl rounded-3xl p-5 border border-white/20 shadow-2xl">
           <div className="flex flex-col gap-4">
-            <div className="flex flex-row gap-2">
-              <div className="w-1/2 relative">
-                <label className="block text-[10px] sm:text-xs font-bold tracking-widest text-white/70 mb-1.5 uppercase">Check-In</label>
+            <div className="flex flex-row justify-between gap-2.5">
+              <div className="flex-1 min-w-0 relative">
+                <label className="block text-[10px] sm:text-xs font-bold tracking-wider text-white/70 mb-1.5 uppercase pl-1">Check-In</label>
                 <input
                   type="date" value={checkInDate} min={today} onChange={(e) => setCheckInDate(e.target.value)}
                   style={{ colorScheme: 'dark' }}
-                  className="w-full px-2 sm:px-4 py-3 border border-white/15 rounded-xl focus:ring-1 focus:ring-resort-gold-300 focus:border-resort-gold-300 text-white font-medium text-xs sm:text-base bg-white/5 hover:bg-white/10 cursor-pointer outline-none"
+                  className="w-full px-2 sm:px-4 py-2.5 border border-white/15 rounded-xl focus:ring-1 focus:ring-resort-gold-300 focus:border-resort-gold-300 text-white font-medium text-[11px] sm:text-sm bg-white/5 hover:bg-white/10 cursor-pointer outline-none"
                 />
               </div>
-              <div className="w-1/2 relative">
-                <label className="block text-[10px] sm:text-xs font-bold tracking-widest text-white/70 mb-1.5 uppercase">Check-Out</label>
+              <div className="flex-1 min-w-0 relative">
+                <label className="block text-[10px] sm:text-xs font-bold tracking-wider text-white/70 mb-1.5 uppercase pl-1">Check-Out</label>
                 <input
                   type="date" value={checkOutDate} min={checkInDate || today} onChange={(e) => setCheckOutDate(e.target.value)}
                   style={{ colorScheme: 'dark' }}
-                  className="w-full px-2 sm:px-4 py-3 border border-white/15 rounded-xl focus:ring-1 focus:ring-resort-gold-300 focus:border-resort-gold-300 text-white font-medium text-xs sm:text-base bg-white/5 hover:bg-white/10 cursor-pointer outline-none"
+                  className="w-full px-2 sm:px-4 py-2.5 border border-white/15 rounded-xl focus:ring-1 focus:ring-resort-gold-300 focus:border-resort-gold-300 text-white font-medium text-[11px] sm:text-sm bg-white/5 hover:bg-white/10 cursor-pointer outline-none"
                 />
               </div>
             </div>

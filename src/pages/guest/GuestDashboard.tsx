@@ -19,24 +19,29 @@ export default function GuestDashboard() {
 
         const fetchBooking = async () => {
             try {
-                const { data: bookingData, error } = await supabase.rpc('get_booking_by_token', {
-                    token_input: token
-                });
+                // Query bookings directly instead of using broken RPC
+                const { data: bookingData, error } = await supabase
+                    .from('bookings')
+                    .select('id, check_in, check_out, status, guest_token, room_id, guest_id, rooms(room_number), guests(name)')
+                    .eq('guest_token', token)
+                    .limit(1)
+                    .single();
 
                 if (error) throw error;
 
-                if (bookingData && bookingData.length > 0) {
-                    const b = bookingData[0];
+                if (bookingData) {
+                    const guestName = (bookingData.guests as any)?.name || 'Guest';
+                    const roomNumber = (bookingData.rooms as any)?.room_number || '';
                     setData({
                         guest: {
-                            name: b.guest_name,
-                            room: b.room_number
+                            name: guestName,
+                            room: roomNumber
                         },
                         booking: {
-                            id: b.id,
-                            checkIn: b.check_in,
-                            checkOut: b.check_out,
-                            status: b.status
+                            id: bookingData.id,
+                            checkIn: bookingData.check_in,
+                            checkOut: bookingData.check_out,
+                            status: bookingData.status
                         }
                     });
                 } else {

@@ -70,7 +70,7 @@ exports.handler = async (event) => {
             console.log(`[guest-login] Checking booking: id=${booking.id}, status=${booking.status}, check_in=${booking.check_in}, check_out=${booking.check_out}`);
 
             // Check if status is valid
-            if (!['confirmed', 'checked-in'].includes(booking.status)) {
+            if (!['confirmed', 'checked-in', 'checked_in'].includes(booking.status)) {
                 console.log(`[guest-login] Skipping - status not active: ${booking.status}`);
                 continue;
             }

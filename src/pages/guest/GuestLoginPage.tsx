@@ -24,26 +24,20 @@ export function GuestLoginPage() {
 
         setLoading(true)
         try {
-            const { data, error } = await supabase.rpc('login_guest', {
-                p_room_num: roomNumber,
-                p_name_input: firstName
+            const response = await fetch('/api/guest-login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ roomNumber, firstName })
             })
 
-            console.log('[GuestLoginPage] RPC response:', { data, error })
+            const data = await response.json()
+            console.log('[GuestLoginPage] Login response:', data)
 
-            if (error) {
-                console.error("Login RPC Error:", error)
-                toast.error("Network error. Please try again.")
-                return
-            }
-
-            // The RPC returns a JSON object mapped to `data`
-            if (data && data.success) {
-                toast.success(`Welcome back, ${data.guest_name}!`)
-                // Redirect to the guest dashboard with the retrieved token
+            if (response.ok && data.success) {
+                toast.success(`Welcome back, ${data.guestName}!`)
                 navigate(`/guest/${data.token}`)
             } else {
-                toast.error(data?.error || "Login failed. Please check your details.")
+                toast.error(data?.error || "No active booking found for this Room and Name combination.")
             }
 
         } catch (err) {

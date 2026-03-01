@@ -33,7 +33,7 @@ BEGIN
     JOIN rooms r ON b.room_id = r.id
     JOIN guests g ON b.guest_id = g.id
     WHERE r.room_number = p_room_num
-    AND b.status IN ('confirmed', 'checked-in')
+    AND b.status IN ('confirmed', 'checked_in', 'checked-in')
     AND b.check_out >= CURRENT_DATE 
     AND g.name ILIKE p_name_input || '%'
     ORDER BY b.check_in DESC

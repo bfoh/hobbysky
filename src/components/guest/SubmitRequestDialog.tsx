@@ -29,6 +29,18 @@ export function SubmitRequestDialog({ open, onOpenChange, bookingToken }: Submit
     const [details, setDetails] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false)
 
+    const getPlaceholderForType = (type: ServiceRequestType | null): string => {
+        switch (type) {
+            case 'housekeeping': return 'E.g. Please clean my room and replace the bed sheets.'
+            case 'amenity': return 'E.g. I need 2 extra pillows and extra towels.'
+            case 'food': return 'E.g. I would like a club sandwich and a cold drink delivered to my room.'
+            case 'transport': return 'E.g. I need a taxi to the airport at 5:00 PM tomorrow.'
+            case 'problem': return 'E.g. The air conditioning in my room is not working properly.'
+            case 'other': return 'E.g. I would like to request a late checkout at 2:00 PM.'
+            default: return 'Select a service above, then describe what you need...'
+        }
+    }
+
     const handleSubmit = async () => {
         if (!selectedType) {
             toast.error('Please select a request type.')
@@ -60,11 +72,11 @@ export function SubmitRequestDialog({ open, onOpenChange, bookingToken }: Submit
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
+                    <DialogTitle className="flex items-center gap-2 text-lg">
                         <CalendarCheck className="w-5 h-5 text-primary" />
                         Request Service
                     </DialogTitle>
-                    <DialogDescription>
+                    <DialogDescription className="text-sm font-medium">
                         Select the type of service you need and provide any additional details.
                     </DialogDescription>
                 </DialogHeader>
@@ -75,24 +87,24 @@ export function SubmitRequestDialog({ open, onOpenChange, bookingToken }: Submit
                             <button
                                 key={type.id}
                                 onClick={() => setSelectedType(type.id)}
-                                className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${selectedType === type.id
-                                    ? 'border-primary bg-primary/10 text-primary'
-                                    : 'border-muted bg-card hover:bg-muted/50 cursor-pointer text-muted-foreground hover:text-foreground'
+                                className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-200 ${selectedType === type.id
+                                    ? 'border-primary bg-primary/10 text-primary scale-[1.03] shadow-md'
+                                    : 'border-muted bg-card hover:bg-accent/50 hover:border-accent-foreground/30 hover:scale-[1.02] hover:shadow-sm cursor-pointer text-foreground'
                                     }`}
                             >
-                                <span className="text-2xl mb-2">{type.icon}</span>
-                                <span className="text-xs font-medium text-center">{type.label}</span>
+                                <span className="text-3xl mb-2">{type.icon}</span>
+                                <span className="text-sm font-bold text-center">{type.label}</span>
                             </button>
                         ))}
                     </div>
 
                     <div className="space-y-2 mt-2">
-                        <label className="text-sm font-medium">Additional Details (Optional)</label>
+                        <label className="text-sm font-bold text-foreground">Additional Details (Optional)</label>
                         <Textarea
-                            placeholder="E.g. I need 2 extra pillows, please."
+                            placeholder={getPlaceholderForType(selectedType)}
                             value={details}
                             onChange={(e) => setDetails(e.target.value)}
-                            className="resize-none"
+                            className="resize-none text-sm"
                             rows={3}
                         />
                     </div>

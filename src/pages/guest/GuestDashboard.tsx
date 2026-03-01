@@ -77,36 +77,36 @@ export default function GuestDashboard() {
 
             {/* Welcome Card */}
             <section className="text-center space-y-2 py-4">
-                <h1 className="text-2xl font-bold tracking-tight">Welcome, {guest.name.split(' ')[0]}!</h1>
-                <p className="text-muted-foreground">We hope you enjoy your stay at Hobbysky Guest House.</p>
+                <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">Welcome, {guest.name.split(' ')[0]}!</h1>
+                <p className="text-base text-gray-600 font-medium">We hope you enjoy your stay at Hobbysky Guest House.</p>
             </section>
 
             {/* Room Card */}
-            <Card className="bg-black text-white border-0 shadow-lg overflow-hidden relative">
+            <Card className="bg-black text-white border-0 shadow-xl overflow-hidden relative">
                 <div className="absolute top-0 right-0 p-4 opacity-10">
                     <Moon className="w-32 h-32" />
                 </div>
                 <CardContent className="p-6 relative z-10">
                     <div className="flex justify-between items-start mb-6">
                         <div>
-                            <p className="text-neutral-400 text-sm uppercase tracking-wider font-medium">Room</p>
-                            <p className="text-4xl font-bold">{guest.room}</p>
+                            <p className="text-white/70 text-sm uppercase tracking-widest font-semibold">Room</p>
+                            <p className="text-5xl font-black">{guest.room}</p>
                         </div>
                         <div className="text-right">
-                            <p className="text-neutral-400 text-sm uppercase tracking-wider font-medium">Check Out</p>
-                            <p className="text-xl font-semibold">{new Date(booking.checkOut).toLocaleDateString()}</p>
-                            <p className="text-neutral-500 text-xs">11:00 AM</p>
+                            <p className="text-white/70 text-sm uppercase tracking-widest font-semibold">Check Out</p>
+                            <p className="text-2xl font-bold">{new Date(booking.checkOut).toLocaleDateString()}</p>
+                            <p className="text-white/50 text-sm font-medium">11:00 AM</p>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 mt-8">
-                        <Button variant="secondary" className="bg-white/10 hover:bg-white/20 text-white border-0 h-auto py-3 flex-col gap-1">
-                            <Wifi className="w-5 h-5" />
-                            <span className="text-xs">Wi-Fi</span>
+                        <Button variant="secondary" className="bg-white/10 hover:bg-white/30 text-white border border-white/10 hover:border-white/30 h-auto py-4 flex-col gap-2 transition-all duration-200 hover:scale-[1.03]">
+                            <Wifi className="w-6 h-6" />
+                            <span className="text-sm font-semibold">Wi-Fi</span>
                         </Button>
-                        <Button variant="secondary" className="bg-white/10 hover:bg-white/20 text-white border-0 h-auto py-3 flex-col gap-1">
-                            <Utensils className="w-5 h-5" />
-                            <span className="text-xs">Dining</span>
+                        <Button variant="secondary" className="bg-white/10 hover:bg-white/30 text-white border border-white/10 hover:border-white/30 h-auto py-4 flex-col gap-2 transition-all duration-200 hover:scale-[1.03]">
+                            <Utensils className="w-6 h-6" />
+                            <span className="text-sm font-semibold">Dining</span>
                         </Button>
                     </div>
                 </CardContent>
@@ -114,26 +114,26 @@ export default function GuestDashboard() {
 
             {/* Quick Actions Grid */}
             <div className="grid grid-cols-2 gap-4">
-                <Card className="hover:bg-neutral-50 transition-colors cursor-pointer" onClick={() => navigate('concierge')}>
-                    <CardContent className="p-4 flex flex-col items-center text-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
-                            <MapPin className="w-5 h-5" />
+                <Card className="bg-white hover:bg-orange-50 hover:shadow-lg hover:scale-[1.03] transition-all duration-200 cursor-pointer border-2 border-transparent hover:border-orange-200" onClick={() => navigate('concierge')}>
+                    <CardContent className="p-5 flex flex-col items-center text-center gap-3">
+                        <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
+                            <MapPin className="w-6 h-6" />
                         </div>
                         <div>
-                            <h3 className="font-semibold">Local Guide</h3>
-                            <p className="text-xs text-muted-foreground">Discover nearby gems</p>
+                            <h3 className="font-bold text-base text-gray-900">Local Guide</h3>
+                            <p className="text-sm text-gray-600 font-medium">Discover nearby gems</p>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="hover:bg-neutral-50 transition-colors cursor-pointer" onClick={() => setIsRequestDialogOpen(true)}>
-                    <CardContent className="p-4 flex flex-col items-center text-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                            <CalendarCheck className="w-5 h-5" />
+                <Card className="bg-white hover:bg-blue-50 hover:shadow-lg hover:scale-[1.03] transition-all duration-200 cursor-pointer border-2 border-transparent hover:border-blue-200" onClick={() => setIsRequestDialogOpen(true)}>
+                    <CardContent className="p-5 flex flex-col items-center text-center gap-3">
+                        <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                            <CalendarCheck className="w-6 h-6" />
                         </div>
                         <div>
-                            <h3 className="font-semibold">Book Services</h3>
-                            <p className="text-xs text-muted-foreground">Shuttle, Spa, Cleaning</p>
+                            <h3 className="font-bold text-base text-gray-900">Book Services</h3>
+                            <p className="text-sm text-gray-600 font-medium">Shuttle, Spa, Cleaning</p>
                         </div>
                     </CardContent>
                 </Card>

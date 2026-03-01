@@ -6,13 +6,8 @@ export default function GuestLayout() {
     return (
         <div className="min-h-screen bg-neutral-50 flex flex-col font-sans">
             {/* Header */}
-            <header className="bg-white border-b px-6 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
-                <div className="flex items-center gap-2">
-                    <img src="/logohobbyskydarkmode.png" alt="Hobbysky Guest House" className="h-10 w-auto object-contain" />
-                </div>
-                <div className="flex items-center gap-2">
-                    {/* Contextual actions could go here */}
-                </div>
+            <header className="bg-white border-b px-6 py-4 flex items-center justify-center sticky top-0 z-10 shadow-sm">
+                <img src="/logohobbyskydarkmode.png" alt="Hobbysky Guest House" className="h-12 w-auto object-contain" />
             </header>
 
             {/* Main Content Area */}

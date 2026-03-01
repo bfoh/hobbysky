@@ -82,31 +82,31 @@ export default function GuestDashboard() {
             </section>
 
             {/* Room Card */}
-            <Card className="bg-black text-white border-0 shadow-xl overflow-hidden relative">
+            <Card className="bg-[#1a3a2a] text-white border-0 shadow-[0_20px_50px_-12px_rgba(26,58,42,0.5)] overflow-hidden relative">
                 <div className="absolute top-0 right-0 p-4 opacity-10">
                     <Moon className="w-32 h-32" />
                 </div>
                 <CardContent className="p-6 relative z-10">
                     <div className="flex justify-between items-start mb-6">
                         <div>
-                            <p className="text-white/70 text-sm uppercase tracking-widest font-semibold">Room</p>
-                            <p className="text-5xl font-black">{guest.room}</p>
+                            <p className="text-[#d4a017] text-[11px] uppercase tracking-widest font-bold mb-1">Room</p>
+                            <p className="text-6xl font-black tracking-tighter">{guest.room}</p>
                         </div>
                         <div className="text-right">
-                            <p className="text-white/70 text-sm uppercase tracking-widest font-semibold">Check Out</p>
+                            <p className="text-[#d4a017] text-[11px] uppercase tracking-widest font-bold mb-1">Check Out</p>
                             <p className="text-2xl font-bold">{new Date(booking.checkOut).toLocaleDateString()}</p>
-                            <p className="text-white/50 text-sm font-medium">11:00 AM</p>
+                            <p className="text-white/60 text-sm font-medium">11:00 AM</p>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 mt-8">
-                        <Button variant="secondary" className="bg-white/10 hover:bg-white/30 text-white border border-white/10 hover:border-white/30 h-auto py-4 flex-col gap-2 transition-all duration-200 hover:scale-[1.03]">
+                        <Button variant="secondary" className="bg-white/5 hover:bg-[#d4a017] text-white hover:text-[#1a3a2a] border border-white/10 hover:border-[#d4a017] h-auto py-4 flex-col gap-2 transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(212,160,23,0.3)]">
                             <Wifi className="w-6 h-6" />
-                            <span className="text-sm font-semibold">Wi-Fi</span>
+                            <span className="text-sm font-bold">Wi-Fi</span>
                         </Button>
-                        <Button variant="secondary" className="bg-white/10 hover:bg-white/30 text-white border border-white/10 hover:border-white/30 h-auto py-4 flex-col gap-2 transition-all duration-200 hover:scale-[1.03]">
+                        <Button variant="secondary" className="bg-white/5 hover:bg-[#d4a017] text-white hover:text-[#1a3a2a] border border-white/10 hover:border-[#d4a017] h-auto py-4 flex-col gap-2 transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(212,160,23,0.3)]">
                             <Utensils className="w-6 h-6" />
-                            <span className="text-sm font-semibold">Dining</span>
+                            <span className="text-sm font-bold">Dining</span>
                         </Button>
                     </div>
                 </CardContent>
@@ -114,26 +114,26 @@ export default function GuestDashboard() {
 
             {/* Quick Actions Grid */}
             <div className="grid grid-cols-2 gap-4">
-                <Card className="bg-white hover:bg-orange-50 hover:shadow-lg hover:scale-[1.03] transition-all duration-200 cursor-pointer border-2 border-transparent hover:border-orange-200" onClick={() => navigate('concierge')}>
-                    <CardContent className="p-5 flex flex-col items-center text-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
-                            <MapPin className="w-6 h-6" />
+                <Card className="group bg-white hover:bg-[#1a3a2a] border border-gray-200 hover:border-[#1a3a2a] shadow-sm hover:shadow-[0_10px_40px_-10px_rgba(26,58,42,0.6)] hover:-translate-y-1 transition-all duration-300 cursor-pointer" onClick={() => navigate('concierge')}>
+                    <CardContent className="p-6 flex flex-col items-center text-center gap-4">
+                        <div className="w-14 h-14 rounded-full bg-gray-50 group-hover:bg-[#d4a017]/15 flex items-center justify-center transition-colors duration-300">
+                            <MapPin className="w-7 h-7 text-[#1a3a2a] group-hover:text-[#d4a017] transition-colors duration-300" />
                         </div>
                         <div>
-                            <h3 className="font-bold text-base text-gray-900">Local Guide</h3>
-                            <p className="text-sm text-gray-600 font-medium">Discover nearby gems</p>
+                            <h3 className="font-extrabold text-[15px] text-gray-900 group-hover:text-white transition-colors duration-300">Local Guide</h3>
+                            <p className="text-[12px] text-gray-500 group-hover:text-white/70 font-medium transition-colors duration-300 mt-1">Discover nearby gems</p>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-white hover:bg-blue-50 hover:shadow-lg hover:scale-[1.03] transition-all duration-200 cursor-pointer border-2 border-transparent hover:border-blue-200" onClick={() => setIsRequestDialogOpen(true)}>
-                    <CardContent className="p-5 flex flex-col items-center text-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                            <CalendarCheck className="w-6 h-6" />
+                <Card className="group bg-white hover:bg-[#1a3a2a] border border-gray-200 hover:border-[#1a3a2a] shadow-sm hover:shadow-[0_10px_40px_-10px_rgba(26,58,42,0.6)] hover:-translate-y-1 transition-all duration-300 cursor-pointer" onClick={() => setIsRequestDialogOpen(true)}>
+                    <CardContent className="p-6 flex flex-col items-center text-center gap-4">
+                        <div className="w-14 h-14 rounded-full bg-gray-50 group-hover:bg-[#d4a017]/15 flex items-center justify-center transition-colors duration-300">
+                            <CalendarCheck className="w-7 h-7 text-[#1a3a2a] group-hover:text-[#d4a017] transition-colors duration-300" />
                         </div>
                         <div>
-                            <h3 className="font-bold text-base text-gray-900">Book Services</h3>
-                            <p className="text-sm text-gray-600 font-medium">Shuttle, Spa, Cleaning</p>
+                            <h3 className="font-extrabold text-[15px] text-gray-900 group-hover:text-white transition-colors duration-300">Book Services</h3>
+                            <p className="text-[12px] text-gray-500 group-hover:text-white/70 font-medium transition-colors duration-300 mt-1">Shuttle, Spa, Cleaning</p>
                         </div>
                     </CardContent>
                 </Card>

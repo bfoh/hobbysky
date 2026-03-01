@@ -674,6 +674,7 @@ export async function generatePreInvoiceHTML(preInvoiceData: PreInvoiceData): Pr
 
     const settings = await hotelSettingsService.getHotelSettings()
     const currency = settings.currency || 'GHS'
+    const logoDataUrl = await getLogoDataUrl()
 
     const ps = preInvoiceData.paymentStatus
     const isPaid = ps === 'full'
@@ -1342,6 +1343,7 @@ export async function generateGroupPreInvoiceHTML(data: GroupPreInvoiceData): Pr
   const { formatCurrencySync } = await import('@/lib/utils')
   const settings = await hotelSettingsService.getHotelSettings()
   const currency = settings.currency || 'GHS'
+  const logoDataUrl = await getLogoDataUrl()
 
   const grandTotal = data.summary.total
   const amountPaid = data.amountPaid || 0

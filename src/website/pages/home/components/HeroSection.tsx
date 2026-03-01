@@ -45,16 +45,16 @@ export default function HeroSection() {
           </p>
         </div>
 
-        {/* Booking Widget (Desktop) — Shifted up slightly to see bounds */}
+        {/* Booking Widget (Desktop) — Increased transparency for elegant glassmorphism */}
         <div className="hidden md:block absolute bottom-6 left-1/2 -translate-x-1/2 w-full px-4 max-w-5xl z-20">
-          <div className="bg-[#3a3935]/80 backdrop-blur-2xl rounded-3xl shadow-[0_8px_40px_0_rgba(0,0,0,0.3)] p-8 border border-white/20">
+          <div className="bg-[#3a3935]/30 backdrop-blur-2xl rounded-3xl shadow-[0_8px_40px_0_rgba(0,0,0,0.3)] p-8 border border-white/20">
             <div className="flex flex-nowrap gap-5 items-end">
               <div className="flex-1 relative">
                 <label className="block text-xs font-bold tracking-widest text-white/80 mb-2 uppercase">Check-In</label>
                 <input
                   type="date" value={checkInDate} min={today} onChange={(e) => setCheckInDate(e.target.value)}
                   style={{ colorScheme: 'dark' }}
-                  className="w-full px-4 py-4 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/40 focus:border-transparent text-white font-medium text-base bg-white/10 hover:bg-white/15 cursor-pointer transition-all outline-none"
+                  className="w-full px-4 py-4 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/40 focus:border-transparent text-white font-medium text-base bg-white/5 hover:bg-white/10 cursor-pointer transition-all outline-none"
                 />
               </div>
               <div className="flex-1 relative">
@@ -62,7 +62,7 @@ export default function HeroSection() {
                 <input
                   type="date" value={checkOutDate} min={checkInDate || today} onChange={(e) => setCheckOutDate(e.target.value)}
                   style={{ colorScheme: 'dark' }}
-                  className="w-full px-4 py-4 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/40 focus:border-transparent text-white font-medium text-base bg-white/10 hover:bg-white/15 cursor-pointer transition-all outline-none"
+                  className="w-full px-4 py-4 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/40 focus:border-transparent text-white font-medium text-base bg-white/5 hover:bg-white/10 cursor-pointer transition-all outline-none"
                 />
               </div>
               <button
@@ -76,25 +76,25 @@ export default function HeroSection() {
         </div>
       </section>
 
-      {/* Booking Widget (Mobile) — Re-sized, re-styled, and placed natively below hero */}
+      {/* Booking Widget (Mobile) — Re-sized, higher transparency */}
       <div className="block md:hidden w-full bg-[#111111] px-4 py-8">
-        <div className="bg-[#3a3935]/60 backdrop-blur-xl rounded-3xl p-5 border border-white/10 shadow-2xl">
+        <div className="bg-[#3a3935]/30 backdrop-blur-3xl rounded-3xl p-5 border border-white/20 shadow-2xl">
           <div className="flex flex-col gap-4">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="flex-1 relative">
-                <label className="block text-xs font-bold tracking-widest text-white/70 mb-1.5 uppercase">Check-In</label>
+            <div className="flex flex-row gap-2">
+              <div className="w-1/2 relative">
+                <label className="block text-[10px] sm:text-xs font-bold tracking-widest text-white/70 mb-1.5 uppercase">Check-In</label>
                 <input
                   type="date" value={checkInDate} min={today} onChange={(e) => setCheckInDate(e.target.value)}
                   style={{ colorScheme: 'dark' }}
-                  className="w-full px-4 py-3 border border-white/15 rounded-xl focus:ring-1 focus:ring-resort-gold-300 focus:border-resort-gold-300 text-white font-medium text-base bg-white/5 cursor-pointer outline-none"
+                  className="w-full px-2 sm:px-4 py-3 border border-white/15 rounded-xl focus:ring-1 focus:ring-resort-gold-300 focus:border-resort-gold-300 text-white font-medium text-xs sm:text-base bg-white/5 hover:bg-white/10 cursor-pointer outline-none"
                 />
               </div>
-              <div className="flex-1 relative">
-                <label className="block text-xs font-bold tracking-widest text-white/70 mb-1.5 uppercase">Check-Out</label>
+              <div className="w-1/2 relative">
+                <label className="block text-[10px] sm:text-xs font-bold tracking-widest text-white/70 mb-1.5 uppercase">Check-Out</label>
                 <input
                   type="date" value={checkOutDate} min={checkInDate || today} onChange={(e) => setCheckOutDate(e.target.value)}
                   style={{ colorScheme: 'dark' }}
-                  className="w-full px-4 py-3 border border-white/15 rounded-xl focus:ring-1 focus:ring-resort-gold-300 focus:border-resort-gold-300 text-white font-medium text-base bg-white/5 cursor-pointer outline-none"
+                  className="w-full px-2 sm:px-4 py-3 border border-white/15 rounded-xl focus:ring-1 focus:ring-resort-gold-300 focus:border-resort-gold-300 text-white font-medium text-xs sm:text-base bg-white/5 hover:bg-white/10 cursor-pointer outline-none"
                 />
               </div>
             </div>

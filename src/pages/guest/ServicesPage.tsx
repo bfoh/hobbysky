@@ -78,49 +78,59 @@ export function ServicesPage() {
     return (
         <div className="space-y-6 pb-20 animate-fade-in">
             <div>
-                <h2 className="text-2xl font-bold">Guest Services</h2>
-                <p className="text-muted-foreground">How can we make your stay better?</p>
+                <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">Guest Services</h2>
+                <p className="text-base text-gray-600 font-medium mt-1">How can we make your stay better?</p>
             </div>
 
             <div className="grid grid-cols-2 gap-3 mb-6">
                 <ServiceCard
-                    icon={<BellRing className="w-5 h-5 text-blue-600" />}
+                    icon={<BellRing className="w-6 h-6 text-blue-600" />}
                     label="Housekeeping"
+                    subtitle="Clean, towels, supplies"
                     active={type === 'housekeeping'}
                     onClick={() => setType('housekeeping')}
+                    activeColor="blue"
                 />
                 <ServiceCard
-                    icon={<Car className="w-5 h-5 text-green-600" />}
+                    icon={<Car className="w-6 h-6 text-emerald-600" />}
                     label="Transport"
+                    subtitle="Taxi, shuttle, pickup"
                     active={type === 'transport'}
                     onClick={() => setType('transport')}
+                    activeColor="emerald"
                 />
                 <ServiceCard
-                    icon={<Utensils className="w-5 h-5 text-orange-600" />}
+                    icon={<Utensils className="w-6 h-6 text-orange-600" />}
                     label="In-Room Dining"
+                    subtitle="Food & drinks to room"
                     active={type === 'food'}
                     onClick={() => setType('food')}
+                    activeColor="orange"
                 />
                 <ServiceCard
-                    icon={<Hammer className="w-5 h-5 text-red-600" />}
+                    icon={<Hammer className="w-6 h-6 text-red-600" />}
                     label="Report Issue"
+                    subtitle="Maintenance & repairs"
                     active={type === 'problem'}
                     onClick={() => setType('problem')}
+                    activeColor="red"
                 />
             </div>
 
-            <Card>
+            <Card className="border-0 shadow-lg ring-1 ring-black/5">
                 <CardHeader>
-                    <CardTitle>Request Form</CardTitle>
-                    <CardDescription>
-                        {type ? `New ${type.replace('_', ' ')} request` : 'Select a category above'}
+                    <CardTitle className="text-xl font-bold text-gray-900">
+                        {type ? `${getTypeLabel(type)} Request` : 'Request Form'}
+                    </CardTitle>
+                    <CardDescription className="text-sm font-medium text-gray-600">
+                        {type ? `Describe what you need for ${getTypeLabel(type).toLowerCase()}.` : 'Select a category above to get started.'}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         {!['housekeeping', 'transport', 'food', 'problem'].includes(type) && type !== '' && (
                             <div className="space-y-2">
-                                <Label>Service Type</Label>
+                                <Label className="font-bold text-gray-800">Service Type</Label>
                                 <Select value={type} onValueChange={setType}>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select type..." />
@@ -134,19 +144,19 @@ export function ServicesPage() {
                         )}
 
                         <div className="space-y-2">
-                            <Label htmlFor="details">Details / Special Instructions</Label>
+                            <Label htmlFor="details" className="font-bold text-gray-800">Details / Special Instructions</Label>
                             <Textarea
                                 id="details"
                                 placeholder={getPlaceholder(type)}
-                                className="min-h-[100px]"
+                                className="min-h-[100px] text-sm font-medium"
                                 value={details}
                                 onChange={(e) => setDetails(e.target.value)}
                                 required
                             />
                         </div>
 
-                        <Button type="submit" className="w-full" size="lg" disabled={loading || !type}>
-                            {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                        <Button type="submit" className="w-full h-12 text-base font-bold shadow-md hover:shadow-lg transition-all duration-200" size="lg" disabled={loading || !type}>
+                            {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : null}
                             Submit Request
                         </Button>
                     </form>
@@ -158,34 +168,54 @@ export function ServicesPage() {
     )
 }
 
-function ServiceCard({ icon, label, active, onClick }: any) {
+function ServiceCard({ icon, label, subtitle, active, onClick, activeColor }: any) {
+    const colorMap: Record<string, string> = {
+        blue: 'border-blue-400 bg-blue-50 shadow-blue-100',
+        emerald: 'border-emerald-400 bg-emerald-50 shadow-emerald-100',
+        orange: 'border-orange-400 bg-orange-50 shadow-orange-100',
+        red: 'border-red-400 bg-red-50 shadow-red-100',
+    }
+
     return (
         <button
             type="button"
             onClick={onClick}
-            className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all duration-200
+            className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-200 group
                 ${active
-                    ? 'border-primary bg-primary/5 shadow-md scale-[1.02]'
-                    : 'border-border bg-card hover:bg-accent hover:border-accent-foreground/20'
+                    ? `${colorMap[activeColor] || 'border-primary bg-primary/5'} shadow-lg scale-[1.03]`
+                    : 'border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 hover:shadow-md hover:scale-[1.02]'
                 }
             `}
         >
-            <div className={`p-2 rounded-full mb-2 ${active ? 'bg-primary/20' : 'bg-muted'}`}>
+            <div className={`p-3 rounded-full mb-2 transition-colors duration-200 ${active ? `bg-${activeColor}-100` : 'bg-gray-100 group-hover:bg-gray-200'}`}>
                 {icon}
             </div>
-            <span className={`text-sm font-medium ${active ? 'text-primary' : 'text-foreground'}`}>
+            <span className={`text-sm font-bold ${active ? `text-${activeColor}-700` : 'text-gray-900 group-hover:text-gray-900'}`}>
                 {label}
+            </span>
+            <span className={`text-xs mt-0.5 ${active ? `text-${activeColor}-600` : 'text-gray-500 group-hover:text-gray-700'} font-medium`}>
+                {subtitle}
             </span>
         </button>
     )
 }
 
+function getTypeLabel(type: string) {
+    switch (type) {
+        case 'housekeeping': return 'Housekeeping'
+        case 'transport': return 'Transport'
+        case 'food': return 'In-Room Dining'
+        case 'problem': return 'Issue Report'
+        default: return type.charAt(0).toUpperCase() + type.slice(1)
+    }
+}
+
 function getPlaceholder(type: string) {
     switch (type) {
-        case 'housekeeping': return "e.g. Extra towels, clean room now..."
-        case 'transport': return "e.g. Taxi to airport at 5pm..."
-        case 'food': return "e.g. Burger and fries, Room 101..."
-        case 'problem': return "e.g. AC not working, leaking tap..."
-        default: return "How can we help?"
+        case 'housekeeping': return "E.g. Please clean my room and provide extra towels..."
+        case 'transport': return "E.g. I need a taxi to the airport at 5:00 PM..."
+        case 'food': return "E.g. I'd like a club sandwich and cold drink to Room 102..."
+        case 'problem': return "E.g. The air conditioning is not working properly..."
+        default: return "Select a category above, then describe what you need..."
     }
 }

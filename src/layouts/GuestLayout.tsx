@@ -1,5 +1,5 @@
-import { Outlet } from "react-router-dom";
-import { User, Phone, MapPin, Coffee, LogOut } from '@/components/icons';
+import { Outlet, useLocation } from "react-router-dom";
+import { User, Phone, MapPin, Coffee } from '@/components/icons';
 import { Link } from "react-router-dom";
 
 export default function GuestLayout() {
@@ -15,8 +15,8 @@ export default function GuestLayout() {
                 <Outlet />
             </main>
 
-            {/* Fixed Bottom Navigation - Mobile App Style */}
-            <nav className="fixed bottom-0 left-0 right-0 bg-white border-t p-2 pb-safe">
+            {/* Fixed Bottom Navigation - Premium App Style */}
+            <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-neutral-200 p-2 pb-safe z-20">
                 <div className="max-w-md mx-auto flex justify-around items-center">
                     <NavLink to="" icon={<User className="w-5 h-5" />} label="My Stay" />
                     <NavLink to="concierge" icon={<MapPin className="w-5 h-5" />} label="Concierge" />
@@ -29,11 +29,22 @@ export default function GuestLayout() {
 }
 
 function NavLink({ to, icon, label }: { to: string; icon: React.ReactNode; label: string }) {
-    // Basic active state logic could be added here manually or via useLocation
+    const location = useLocation();
+    // Determine if this is the active link
+    const pathParts = location.pathname.split('/');
+    const lastPart = pathParts[pathParts.length - 1] || '';
+    const isActive = to === '' ? !['concierge', 'services', 'help'].includes(lastPart) : lastPart === to;
+
     return (
-        <Link to={to} className="flex flex-col items-center gap-1 p-2 text-neutral-500 hover:text-black transition-colors">
+        <Link
+            to={to}
+            className={`flex flex-col items-center gap-1 p-2 transition-colors duration-200 ${isActive
+                    ? 'text-primary'
+                    : 'text-neutral-400 hover:text-neutral-800'
+                }`}
+        >
             {icon}
-            <span className="text-[10px] font-medium">{label}</span>
+            <span className={`text-xs font-semibold ${isActive ? 'text-primary' : ''}`}>{label}</span>
         </Link>
     )
 }

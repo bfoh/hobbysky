@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../../lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
@@ -49,55 +48,57 @@ export function GuestLoginPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+        <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 flex flex-col items-center justify-center p-4">
             <div className="w-full max-w-md space-y-8 animate-fade-in">
-                <div className="text-center space-y-2">
-                    <img src="/logohobbyskydarkmode.png" alt="Hobbysky Guest House" className="h-16 w-auto mx-auto object-contain" />
-                    <h1 className="text-2xl font-bold text-gray-900">Guest Portal</h1>
-                    <p className="text-sm text-gray-600">Enter your room details to access services</p>
+                <div className="text-center space-y-3">
+                    <img src="/logohobbyskydarkmode.png" alt="Hobbysky Guest House" className="h-20 w-auto mx-auto object-contain" />
+                    <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Guest Portal</h1>
+                    <p className="text-base text-gray-600 font-medium">Enter your room details to access services</p>
                 </div>
 
-                <Card className="border-t-4 border-t-primary shadow-lg">
-                    <CardHeader>
-                        <CardTitle>Sign In</CardTitle>
-                        <CardDescription>
-                            Please enter your Room Number and First Name found on your booking.
+                <Card className="border-0 shadow-xl ring-1 ring-black/5 overflow-hidden">
+                    <div className="h-1 bg-gradient-to-r from-primary via-primary/80 to-primary/60" />
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-xl font-bold text-gray-900">Sign In</CardTitle>
+                        <CardDescription className="text-sm text-gray-600 font-medium">
+                            Enter your Room Number and First Name found on your booking.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <form onSubmit={handleLogin} className="space-y-4">
+                        <form onSubmit={handleLogin} className="space-y-5">
                             <div className="space-y-2">
-                                <Label htmlFor="room">Room Number</Label>
+                                <Label htmlFor="room" className="text-sm font-bold text-gray-800">Room Number</Label>
                                 <Input
                                     id="room"
                                     placeholder="e.g. 101"
                                     value={roomNumber}
                                     onChange={(e) => setRoomNumber(e.target.value)}
-                                    className="h-11"
+                                    className="h-12 text-base font-medium border-gray-300 focus:border-primary focus:ring-primary/30"
                                     required
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="firstname">First Name</Label>
+                                <Label htmlFor="firstname" className="text-sm font-bold text-gray-800">First Name</Label>
                                 <Input
                                     id="firstname"
                                     placeholder="e.g. John"
                                     value={firstName}
                                     onChange={(e) => setFirstName(e.target.value)}
-                                    className="h-11"
+                                    className="h-12 text-base font-medium border-gray-300 focus:border-primary focus:ring-primary/30"
                                     required
                                 />
                             </div>
-                            <Button type="submit" className="w-full h-11 text-base font-medium" disabled={loading}>
-                                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogIn className="mr-2 h-4 w-4" />}
+                            <Button type="submit" className="w-full h-12 text-base font-bold shadow-md hover:shadow-lg transition-all duration-200" disabled={loading}>
+                                {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <LogIn className="mr-2 h-5 w-5" />}
                                 Access Portal
                             </Button>
                         </form>
                     </CardContent>
                 </Card>
 
-                <p className="text-center text-xs text-gray-500">
-                    Having trouble? Contact reception at +233 55 500 9697
+                <p className="text-center text-sm text-gray-500 font-medium">
+                    Having trouble? Contact reception at{' '}
+                    <a href="tel:+233555009697" className="text-primary font-bold hover:underline">+233 55 500 9697</a>
                 </p>
             </div>
         </div>

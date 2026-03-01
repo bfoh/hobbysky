@@ -82,42 +82,34 @@ export function ServicesPage() {
                 <p className="text-base text-gray-600 font-medium mt-1">How can we make your stay better?</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 mb-6">
+            <div className="grid grid-cols-2 gap-4 mb-8">
                 <ServiceCard
-                    icon={<BellRing className="w-9 h-9 text-amber-500 drop-shadow-sm" />}
+                    icon={<BellRing className="w-8 h-8" />}
                     label="Housekeeping"
                     subtitle="Clean, towels, supplies"
                     active={type === 'housekeeping'}
                     onClick={() => setType('housekeeping')}
-                    activeColor="gold"
-                    iconBg="bg-amber-50/50"
                 />
                 <ServiceCard
-                    icon={<Car className="w-9 h-9 text-amber-500 drop-shadow-sm" />}
+                    icon={<Car className="w-8 h-8" />}
                     label="Transport"
                     subtitle="Taxi, shuttle, pickup"
                     active={type === 'transport'}
                     onClick={() => setType('transport')}
-                    activeColor="gold"
-                    iconBg="bg-amber-50/50"
                 />
                 <ServiceCard
-                    icon={<Utensils className="w-9 h-9 text-amber-500 drop-shadow-sm" />}
+                    icon={<Utensils className="w-8 h-8" />}
                     label="In-Room Dining"
                     subtitle="Food & drinks to room"
                     active={type === 'food'}
                     onClick={() => setType('food')}
-                    activeColor="gold"
-                    iconBg="bg-amber-50/50"
                 />
                 <ServiceCard
-                    icon={<Hammer className="w-9 h-9 text-amber-500 drop-shadow-sm" />}
+                    icon={<Hammer className="w-8 h-8" />}
                     label="Report Issue"
                     subtitle="Maintenance & repairs"
                     active={type === 'problem'}
                     onClick={() => setType('problem')}
-                    activeColor="gold"
-                    iconBg="bg-amber-50/50"
                 />
             </div>
 
@@ -172,34 +164,35 @@ export function ServicesPage() {
     )
 }
 
-function ServiceCard({ icon, label, subtitle, active, onClick, activeColor, iconBg }: any) {
-    const colorMap: Record<string, string> = {
-        gold: 'border-amber-400 bg-gradient-to-br from-amber-50/50 to-amber-100/30 shadow-[0_8px_30px_rgb(212,160,23,0.12)]',
-    }
-
+function ServiceCard({ icon, label, subtitle, active, onClick }: any) {
     return (
         <button
             type="button"
             onClick={onClick}
-            className={`flex flex-col items-center justify-center py-5 px-3 rounded-2xl border transition-all duration-300 group
+            className={`flex flex-col items-center justify-center p-6 rounded-2xl border transition-all duration-300 outline-none focus:ring-2 focus:ring-[#d4a017] focus:ring-offset-2
                 ${active
-                    ? `${colorMap[activeColor] || 'border-amber-400 bg-amber-50'} scale-[1.03] ring-1 ring-amber-400/50`
-                    : 'border-gray-100 bg-white hover:bg-gray-50/50 hover:border-amber-200/60 hover:shadow-lg hover:scale-[1.02]'
+                    ? 'border-[#1a3a2a] bg-[#1a3a2a] shadow-[0_10px_40px_-10px_rgba(26,58,42,0.6)] scale-[1.03]'
+                    : 'border-gray-200 bg-white hover:border-[#1a3a2a]/30 hover:shadow-lg hover:-translate-y-1'
                 }
             `}
         >
-            <div className={`p-4 rounded-2xl mb-3 transition-all duration-300 
-                ${active ? 'bg-amber-100/80 scale-110 shadow-inner' : `${iconBg} group-hover:bg-amber-100/50 group-hover:scale-105 group-hover:shadow-sm`}
+            <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-4 transition-all duration-300
+                ${active
+                    ? 'bg-[#d4a017]/15 scale-110 shadow-inner'
+                    : 'bg-gray-50 group-hover:bg-gray-100'
+                }
             `}>
-                {icon}
+                <div className={`transition-colors duration-300 ${active ? 'text-[#d4a017]' : 'text-[#1a3a2a]'}`}>
+                    {icon}
+                </div>
             </div>
-            <span className={`text-sm font-bold tracking-tight transition-colors duration-200 
-                ${active ? 'text-amber-900' : 'text-gray-800 group-hover:text-amber-900'}
+            <span className={`text-[15px] font-extrabold tracking-tight transition-colors duration-300 
+                ${active ? 'text-white' : 'text-gray-900'}
             `}>
                 {label}
             </span>
-            <span className={`text-xs mt-0.5 text-center transition-colors duration-200 font-medium 
-                ${active ? 'text-amber-700/80' : 'text-gray-500'}
+            <span className={`text-[11px] uppercase tracking-wider mt-1.5 text-center font-bold transition-colors duration-300 
+                ${active ? 'text-[#d4a017]' : 'text-gray-500'}
             `}>
                 {subtitle}
             </span>

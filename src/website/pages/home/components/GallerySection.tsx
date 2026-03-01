@@ -35,9 +35,9 @@ export default function GallerySection() {
   return (
     <section className="py-20 px-4 bg-resort-green-50">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
           {/* Image Slider */}
-          <div className="relative h-[500px] rounded-lg overflow-hidden shadow-2xl border-2 border-resort-gold-300/30">
+          <div className="relative h-[280px] sm:h-[380px] md:h-[500px] rounded-lg overflow-hidden shadow-2xl border-2 border-resort-gold-300/30">
             <img
               src={galleryImages[currentImageIndex]}
               alt="Hobbysky Guest House Gallery"
@@ -62,17 +62,17 @@ export default function GallerySection() {
           </div>
 
           {/* Content */}
-          <div>
-            <h2 className="text-4xl md:text-5xl font-bold text-resort-green-900 mb-6">
+          <div className="text-center md:text-left">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-resort-green-900 mb-6">
               OUR GALLERY
             </h2>
-            <div className="w-20 h-1 bg-resort-gold-500 mb-6"></div>
-            <p className="text-resort-green-800 text-lg leading-relaxed mb-8">
+            <div className="w-20 h-1 bg-resort-gold-500 mb-6 mx-auto md:mx-0"></div>
+            <p className="text-resort-green-800 text-base md:text-lg leading-relaxed mb-8">
               A serene sanctuary in the Ashanti Region - Immerse yourself in the authentic Ghanaian hospitality and modern comfort at Hobbysky Guest House. Perfectly situated in the vibrant heart of Abuakwa-Manhyia, Kumasi, we offer the perfect location for family getaways, private retreats, and celebrations.
             </p>
             <Link
               to="/gallery"
-              className="inline-flex items-center justify-center whitespace-nowrap bg-gradient-to-r from-resort-gold-500 to-resort-gold-600 hover:from-resort-gold-600 hover:to-resort-gold-700 text-white px-8 py-3 rounded-md font-semibold transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer text-base"
+              className="inline-flex w-full sm:w-auto items-center justify-center whitespace-nowrap bg-gradient-to-r from-resort-gold-500 to-resort-gold-600 hover:from-resort-gold-600 hover:to-resort-gold-700 text-white px-8 py-3.5 rounded-md font-semibold transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer text-base"
             >
               GO TO GALLERY
             </Link>

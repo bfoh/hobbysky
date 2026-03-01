@@ -20,7 +20,7 @@ export default function PropertyCards() {
         <h2 className="text-3xl md:text-4xl font-bold text-center text-resort-green-900 mb-4">
           Our Properties
         </h2>
-        <div className="w-20 h-1 bg-resort-gold-500 mx-auto mb-14"></div>
+        <div className="w-20 h-1 bg-resort-gold-500 mx-auto mb-8 md:mb-14"></div>
 
         <div className="grid grid-cols-1 max-w-lg mx-auto gap-8">
           {propertyData.map((property, index) => (

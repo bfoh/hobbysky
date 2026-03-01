@@ -78,8 +78,8 @@ export default function BookingSearchWidget({ onResults }: Props) {
   };
 
   return (
-    <section className="py-12 bg-white">
-      <div className="max-w-4xl mx-auto px-6">
+    <section className="py-8 md:py-12 bg-white">
+      <div className="max-w-4xl mx-auto px-4 md:px-6">
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 md:p-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 lg:gap-6 items-end">
 

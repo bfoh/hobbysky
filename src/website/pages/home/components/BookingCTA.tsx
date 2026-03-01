@@ -2,14 +2,14 @@
 export default function BookingCTA() {
   return (
     <section
-      className="relative py-32 px-4 bg-cover bg-center"
+      className="relative py-20 md:py-32 px-4 bg-cover bg-center"
       style={{
         backgroundImage: 'url(/room-deluxe.jpg)'
       }}
     >
       <div className="absolute inset-0 bg-resort-green-950/60"></div>
       <div className="relative z-10 max-w-4xl mx-auto text-center">
-        <h2 className="text-resort-gold-400 text-4xl md:text-5xl font-bold mb-8">
+        <h2 className="text-resort-gold-400 text-3xl sm:text-4xl md:text-5xl font-bold mb-6 md:mb-8">
           Book Your Next Stay Today
         </h2>
         <a

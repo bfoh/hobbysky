@@ -48,19 +48,19 @@ export default function TestimonialsSection() {
   return (
     <section className="py-20 px-4 bg-gradient-to-br from-resort-green-800 to-resort-green-900">
       <div className="max-w-5xl mx-auto">
-        <h2 className="text-4xl md:text-5xl font-bold text-center text-resort-gold-400 mb-16">
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center text-resort-gold-400 mb-10 md:mb-16">
           What Our Guests Say
         </h2>
 
         <div className="relative">
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 md:p-12 text-center border border-resort-gold-500/20">
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 md:p-12 text-center border border-resort-gold-500/20">
             <div className="flex justify-center mb-6">
               {[...Array(testimonials[currentIndex].rating)].map((_, i) => (
-                <i key={i} className="ri-star-fill text-resort-gold-400 text-2xl"></i>
+                <i key={i} className="ri-star-fill text-resort-gold-400 text-xl md:text-2xl"></i>
               ))}
             </div>
-            
-            <p className="text-white text-lg md:text-xl leading-relaxed mb-8 min-h-[200px] flex items-center justify-center">
+
+            <p className="text-white text-base md:text-xl leading-relaxed mb-6 md:mb-8 min-h-[120px] md:min-h-[200px] flex items-center justify-center">
               {testimonials[currentIndex].text}
             </p>
             

@@ -6,9 +6,9 @@ export default function ContactInfo() {
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
           Get In Touch
         </h2>
-        <div className="w-20 h-1 bg-resort-gold-500 mx-auto mb-14"></div>
+        <div className="w-20 h-1 bg-resort-gold-500 mx-auto mb-8 md:mb-14"></div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 md:gap-10">
           {/* General Inquiries */}
           <div className="text-center">
             <div className="w-16 h-16 flex items-center justify-center bg-resort-gold-500/20 rounded-full mx-auto mb-5">
@@ -104,7 +104,7 @@ export default function ContactInfo() {
         </div>
 
         {/* Social Media */}
-        <div className="mt-16 text-center">
+        <div className="mt-10 md:mt-16 text-center">
           <h3 className="text-lg font-bold text-resort-gold-400 mb-5">
             Follow Us
           </h3>

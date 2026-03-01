@@ -28,7 +28,7 @@ export default function GalleryHero() {
       ))}
       <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/40" />
       <div className="absolute inset-0 flex items-center justify-center">
-        <h1 className="text-white text-5xl md:text-6xl font-bold tracking-wide text-center">
+        <h1 className="text-white text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-wide text-center px-4">
           <strong>Photo Gallery</strong>
         </h1>
       </div>

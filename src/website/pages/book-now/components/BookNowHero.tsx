@@ -19,9 +19,9 @@ export default function BookNowHero() {
   }, []);
 
   return (
-    <section className="pt-28 pb-16 bg-white">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-stretch">
+    <section className="pt-24 md:pt-28 pb-10 md:pb-16 bg-white">
+      <div className="max-w-7xl mx-auto px-4 md:px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-10 items-stretch">
           {/* Left - Text Content */}
           <div className="flex flex-col justify-center">
             <h2 className="text-2xl md:text-3xl text-resort-green-900 leading-snug mb-6">
@@ -39,7 +39,7 @@ export default function BookNowHero() {
           </div>
 
           {/* Right - Image Slideshow */}
-          <div className="relative w-full h-[480px] lg:h-auto min-h-[480px] rounded-lg overflow-hidden">
+          <div className="relative w-full h-[260px] sm:h-[360px] lg:h-auto lg:min-h-[480px] rounded-lg overflow-hidden">
             {Array.isArray(slideshowImages) &&
               slideshowImages.map((img, index) => (
                 <div

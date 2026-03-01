@@ -73,7 +73,7 @@ export default function OurRoomsSection() {
         <h2 className="text-center text-4xl md:text-5xl font-bold text-resort-gold-400 mb-4">
           Our Rooms
         </h2>
-        <p className="text-center text-white/70 mb-14 max-w-2xl mx-auto text-sm">
+        <p className="text-center text-white/70 mb-8 md:mb-14 max-w-2xl mx-auto text-sm">
           Experience comfort and luxury at Hobbysky Guest House. Choose from our carefully designed rooms to suit your
           stay.
         </p>
@@ -83,7 +83,7 @@ export default function OurRoomsSection() {
             <div className="w-8 h-8 border-4 border-resort-gold-500 border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
             {rooms.map((room) => (
               <div
                 key={room.id || room.name}

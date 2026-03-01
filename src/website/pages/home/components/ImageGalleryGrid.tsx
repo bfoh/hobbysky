@@ -27,9 +27,9 @@ const galleryColumns = [
 
 export default function ImageGalleryGrid() {
   return (
-    <section className="py-20 px-4 bg-white hidden md:block">
+    <section className="py-12 md:py-20 px-4 bg-white">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
           {galleryColumns.map((column, colIndex) => (
             <div key={colIndex} className="flex flex-col gap-4">
               {column.map((image, imgIndex) => (
@@ -40,7 +40,7 @@ export default function ImageGalleryGrid() {
                   <img
                     src={image}
                     alt={`Gallery image ${colIndex}-${imgIndex}`}
-                    className="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-110"
+                    className="w-full h-40 sm:h-52 md:h-64 object-cover transition-transform duration-500 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-resort-green-900/0 group-hover:bg-resort-green-900/20 transition-all duration-300"></div>
                 </div>

@@ -8,7 +8,7 @@ export default function GuestLayout() {
             {/* Header */}
             <header className="bg-white border-b px-6 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
                 <div className="flex items-center gap-2">
-                    <img src="/amp-logo.png" alt="Hobbysky Guest House" className="h-10 w-auto object-contain" />
+                    <img src="/logohobbyskydarkmode.png" alt="Hobbysky Guest House" className="h-10 w-auto object-contain" />
                 </div>
                 <div className="flex items-center gap-2">
                     {/* Contextual actions could go here */}

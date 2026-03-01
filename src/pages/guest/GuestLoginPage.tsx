@@ -58,7 +58,7 @@ export function GuestLoginPage() {
         <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
             <div className="w-full max-w-md space-y-8 animate-fade-in">
                 <div className="text-center space-y-2">
-                    <img src="/amp-logo.png" alt="Hobbysky Guest House" className="h-16 w-auto mx-auto object-contain" />
+                    <img src="/logohobbyskydarkmode.png" alt="Hobbysky Guest House" className="h-16 w-auto mx-auto object-contain" />
                     <h1 className="text-2xl font-bold text-gray-900">Guest Portal</h1>
                     <p className="text-sm text-gray-600">Enter your room details to access services</p>
                 </div>

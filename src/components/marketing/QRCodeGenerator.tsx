@@ -171,7 +171,7 @@ export function QRCodeGenerator() {
                         level={"H"}
                         includeMargin={true}
                         imageSettings={{
-                            src: "/amp-logo.png",
+                            src: "/logohobbyskydarkmode.png",
                             x: undefined,
                             y: undefined,
                             height: size * 0.2, // 20% of size

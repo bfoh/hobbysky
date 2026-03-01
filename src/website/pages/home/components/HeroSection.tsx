@@ -18,7 +18,7 @@ export default function HeroSection() {
 
   return (
     <>
-      <section className="relative h-screen w-full overflow-hidden">
+      <section className="relative h-screen w-full overflow-hidden flex flex-col">
         {/* Background Video */}
         <div className="absolute inset-0">
           <video
@@ -34,8 +34,8 @@ export default function HeroSection() {
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/50"></div>
         </div>
 
-        {/* Hero Text Overlay — pb-52 reserves space above the widget on mobile */}
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-4 pt-16 pb-52 md:pt-8 md:pb-24">
+        {/* Hero Text Overlay — padding adjusted for mobile since widget is moved below */}
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-4 pt-16 md:pt-8 md:pb-24">
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 md:mb-6 drop-shadow-xl tracking-tight leading-tight transition-transform duration-700 hover:scale-[1.02]">
             Experience Serenity & <br className="hidden md:block" />
             <span className="text-resort-gold-400">Unmatched Comfort</span>
@@ -45,45 +45,29 @@ export default function HeroSection() {
           </p>
         </div>
 
-        {/* Booking Widget — flush to bottom edge of hero section */}
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full px-3 md:px-4 max-w-5xl z-20">
-          <div className="bg-white/[0.08] backdrop-blur-2xl rounded-t-2xl md:rounded-t-3xl shadow-[0_-4px_40px_0_rgba(0,0,0,0.2)] p-4 md:p-8 border border-white/20 border-b-0">
-            {/* flex-wrap forces fields side-by-side, button wraps to its own line */}
-            <div className="flex flex-wrap gap-3 md:flex-nowrap md:gap-5 md:items-end">
-              {/* Check-In */}
-              <div className="flex-1 min-w-[calc(50%-6px)] relative">
-                <label className="block text-xs font-bold tracking-widest text-white/80 mb-1.5 md:mb-2 uppercase">Check-In</label>
+        {/* Booking Widget (Desktop) — Keep exactly the same as before */}
+        <div className="hidden md:block absolute bottom-0 left-1/2 -translate-x-1/2 w-full px-4 max-w-5xl z-20">
+          <div className="bg-white/[0.08] backdrop-blur-2xl rounded-t-3xl shadow-[0_-4px_40px_0_rgba(0,0,0,0.2)] p-8 border border-white/20 border-b-0">
+            <div className="flex flex-nowrap gap-5 items-end">
+              <div className="flex-1 relative">
+                <label className="block text-xs font-bold tracking-widest text-white/80 mb-2 uppercase">Check-In</label>
                 <input
-                  type="date"
-                  value={checkInDate}
-                  min={today}
-                  onClick={(e) => {
-                    try { (e.target as HTMLInputElement).showPicker(); } catch (err) { }
-                  }}
-                  onChange={(e) => setCheckInDate(e.target.value)}
+                  type="date" value={checkInDate} min={today} onChange={(e) => setCheckInDate(e.target.value)}
                   style={{ colorScheme: 'dark' }}
-                  className="w-full px-3 md:px-4 py-2.5 md:py-4 border border-white/20 rounded-xl md:rounded-2xl focus:ring-2 focus:ring-white/40 focus:border-transparent text-white font-medium text-sm md:text-base bg-white/10 hover:bg-white/15 cursor-pointer transition-all outline-none"
+                  className="w-full px-4 py-4 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/40 focus:border-transparent text-white font-medium text-base bg-white/10 hover:bg-white/15 cursor-pointer transition-all outline-none"
                 />
               </div>
-              {/* Check-Out */}
-              <div className="flex-1 min-w-[calc(50%-6px)] relative">
-                <label className="block text-xs font-bold tracking-widest text-white/80 mb-1.5 md:mb-2 uppercase">Check-Out</label>
+              <div className="flex-1 relative">
+                <label className="block text-xs font-bold tracking-widest text-white/80 mb-2 uppercase">Check-Out</label>
                 <input
-                  type="date"
-                  value={checkOutDate}
-                  min={checkInDate || today}
-                  onClick={(e) => {
-                    try { (e.target as HTMLInputElement).showPicker(); } catch (err) { }
-                  }}
-                  onChange={(e) => setCheckOutDate(e.target.value)}
+                  type="date" value={checkOutDate} min={checkInDate || today} onChange={(e) => setCheckOutDate(e.target.value)}
                   style={{ colorScheme: 'dark' }}
-                  className="w-full px-3 md:px-4 py-2.5 md:py-4 border border-white/20 rounded-xl md:rounded-2xl focus:ring-2 focus:ring-white/40 focus:border-transparent text-white font-medium text-sm md:text-base bg-white/10 hover:bg-white/15 cursor-pointer transition-all outline-none"
+                  className="w-full px-4 py-4 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/40 focus:border-transparent text-white font-medium text-base bg-white/10 hover:bg-white/15 cursor-pointer transition-all outline-none"
                 />
               </div>
-              {/* Button — wraps to full-width row on mobile, stays inline on desktop */}
               <button
                 onClick={handleCheckAvailability}
-                className="flex-none w-full md:w-auto whitespace-nowrap bg-gradient-to-r from-[#ce8823] to-[#e0a240] hover:from-[#b8761a] hover:to-[#ce8823] active:scale-[0.98] text-white px-8 md:px-10 py-3 md:py-4 rounded-xl md:rounded-2xl font-bold tracking-wide transition-all duration-300 shadow-[0_4px_20px_rgba(206,136,35,0.5)] hover:shadow-[0_6px_24px_rgba(206,136,35,0.4)] cursor-pointer text-sm md:text-base flex items-center justify-center"
+                className="flex-none w-auto whitespace-nowrap bg-gradient-to-r from-[#ce8823] to-[#e0a240] hover:from-[#b8761a] hover:to-[#ce8823] active:scale-[0.98] text-white px-10 py-4 rounded-2xl font-bold tracking-wide transition-all duration-300 shadow-[0_4px_20px_rgba(206,136,35,0.5)] hover:shadow-[0_6px_24px_rgba(206,136,35,0.4)] cursor-pointer text-base flex items-center justify-center"
               >
                 CHECK AVAILABILITY
               </button>
@@ -91,6 +75,38 @@ export default function HeroSection() {
           </div>
         </div>
       </section>
+
+      {/* Booking Widget (Mobile) — Re-sized, re-styled, and placed natively below hero */}
+      <div className="block md:hidden w-full bg-[#111111] px-4 py-8">
+        <div className="bg-[#3a3935]/60 backdrop-blur-xl rounded-3xl p-5 border border-white/10 shadow-2xl">
+          <div className="flex flex-col gap-4">
+            <div className="flex gap-3">
+              <div className="flex-1 relative">
+                <label className="block text-[10px] font-bold tracking-widest text-white/70 mb-1 uppercase">Check-In</label>
+                <input
+                  type="date" value={checkInDate} min={today} onChange={(e) => setCheckInDate(e.target.value)}
+                  style={{ colorScheme: 'dark' }}
+                  className="w-full px-3 py-3 border border-white/15 rounded-xl focus:ring-1 focus:ring-resort-gold-300 focus:border-resort-gold-300 text-white font-medium text-sm bg-white/5 cursor-pointer outline-none"
+                />
+              </div>
+              <div className="flex-1 relative">
+                <label className="block text-[10px] font-bold tracking-widest text-white/70 mb-1 uppercase">Check-Out</label>
+                <input
+                  type="date" value={checkOutDate} min={checkInDate || today} onChange={(e) => setCheckOutDate(e.target.value)}
+                  style={{ colorScheme: 'dark' }}
+                  className="w-full px-3 py-3 border border-white/15 rounded-xl focus:ring-1 focus:ring-resort-gold-300 focus:border-resort-gold-300 text-white font-medium text-sm bg-white/5 cursor-pointer outline-none"
+                />
+              </div>
+            </div>
+            <button
+              onClick={handleCheckAvailability}
+              className="w-full bg-[#ce8823] hover:bg-[#b8761a] active:bg-[#a36817] text-white px-6 py-3.5 rounded-xl font-bold tracking-wide transition-colors duration-200 text-sm flex items-center justify-center shadow-lg"
+            >
+              CHECK AVAILABILITY
+            </button>
+          </div>
+        </div>
+      </div>
     </>
   );
 }

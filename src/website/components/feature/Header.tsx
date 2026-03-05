@@ -7,6 +7,7 @@ export default function Header() {
   const navigate = useNavigate();
 
   const navLinks = [
+    { name: 'ABOUT', path: '/about' },
     { name: 'ROOMS', path: '/#our-rooms' },
     { name: 'GALLERY', path: '/gallery' },
     { name: 'CONTACT US', path: '/contact-us' }
@@ -36,7 +37,7 @@ export default function Header() {
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center gap-6 flex-1 justify-center">
+            <nav className="hidden lg:flex items-center gap-4 xl:gap-6 flex-1 justify-center">
               {navLinks.map((link) => (
                 link.path.startsWith('/#') ? (
                   <a
@@ -77,11 +78,21 @@ export default function Header() {
               ))}
             </nav>
 
+            {/* Phone Number — only show at xl to avoid crowding at lg */}
+            <a
+              href="tel:+233240204079"
+              className="hidden xl:flex items-center gap-1.5 text-sm text-resort-gold-300 hover:text-resort-gold-100 transition-colors whitespace-nowrap"
+              aria-label="Call us"
+            >
+              <i className="ri-phone-line text-base" />
+              <span>+233 240 204 079</span>
+            </a>
+
             {/* Book Now Button */}
             <Link
               to="/book-now"
               onClick={() => window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })}
-              className="hidden lg:inline-flex items-center justify-center whitespace-nowrap bg-gradient-to-r from-resort-gold-500 to-resort-gold-600 hover:from-resort-gold-600 hover:to-resort-gold-700 text-white px-6 py-2.5 rounded-md font-semibold transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer text-sm"
+              className="hidden lg:inline-flex items-center justify-center whitespace-nowrap bg-gradient-to-r from-resort-gold-500 to-resort-gold-600 hover:from-resort-gold-600 hover:to-resort-gold-700 text-white px-4 xl:px-6 py-2.5 rounded-md font-semibold transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer text-sm"
             >
               BOOK NOW
             </Link>
@@ -172,6 +183,15 @@ export default function Header() {
                 </Link>
               )
             ))}
+            <a
+              href="tel:+233240204079"
+              className="flex items-center gap-2 text-base text-resort-gold-300 hover:text-resort-gold-100 transition-colors py-2"
+              onClick={() => setIsMobileMenuOpen(false)}
+              aria-label="Call us"
+            >
+              <i className="ri-phone-line text-lg" />
+              <span>+233 240 204 079</span>
+            </a>
             <Link
               to="/book-now"
               onClick={() => { setIsMobileMenuOpen(false); window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); }}

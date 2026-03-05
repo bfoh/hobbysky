@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+# Block staff/internal routes
+Disallow: /staff/
+Disallow: /guest/
+Disallow: /invoice/
+Disallow: /task-complete/
+Disallow: /invoice-debug
+
+Sitemap: https://hobbyskyguesthouse.com/sitemap.xml

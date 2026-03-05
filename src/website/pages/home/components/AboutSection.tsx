@@ -12,7 +12,23 @@ export default function AboutSection() {
             Every detail at Hobbysky is crafted with your relaxation in mind. From our warm, personalized service to our inviting accommodations, we invite you to experience the finest hospitality in the Ashanti Region. Discover your perfect getaway with us.
           </p>
 
-          <div className="text-center">
+          {/* Policy trust strip */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-6 justify-items-center md:justify-items-start mb-8 text-xs sm:text-sm text-resort-green-700">
+            <span className="flex items-center gap-2">
+              <i className="ri-checkbox-circle-fill text-resort-gold-500 text-base shrink-0" />
+              Free cancellation up to 48 hours before arrival
+            </span>
+            <span className="flex items-center gap-2">
+              <i className="ri-cash-line text-resort-gold-500 text-base shrink-0" />
+              Pay at check-in — Cash, MoMo, Bank Transfer
+            </span>
+            <span className="flex items-center gap-2">
+              <i className="ri-time-line text-resort-gold-500 text-base shrink-0" />
+              Check-in 3 PM · Check-out 12 PM
+            </span>
+          </div>
+
+          <div className="text-center md:text-left">
             <a
               href="/book-now"
               className="inline-flex w-full sm:w-auto items-center justify-center whitespace-nowrap bg-gradient-to-r from-resort-gold-500 to-resort-gold-600 hover:from-resort-gold-600 hover:to-resort-gold-700 text-white px-10 py-3.5 rounded-md font-semibold transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer text-base"

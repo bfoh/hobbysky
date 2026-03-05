@@ -1,12 +1,14 @@
 
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { SEOHead } from '../../components/SEOHead';
 import HeroSection from './components/HeroSection';
 import AboutSection from './components/AboutSection';
 import OurRoomsSection from './components/OurRoomsSection';
 import AmenitiesSection from './components/AmenitiesSection';
 import GallerySection from './components/GallerySection';
 import ImageGalleryGrid from './components/ImageGalleryGrid';
+import TestimonialsSection from './components/TestimonialsSection';
 import LocationSection from './components/LocationSection';
 
 export default function HomePage() {
@@ -28,12 +30,18 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-white">
+      <SEOHead
+        title="Comfortable Accommodation in Kumasi, Ghana"
+        description="Hobbysky Guest House in Abuakwa-Manhyia, Kumasi. Modern rooms from GH₵150/night. Free WiFi, 24-hour security, free parking. Book direct for best rates."
+        path="/"
+      />
       <HeroSection />
       <AboutSection />
       <OurRoomsSection />
       <AmenitiesSection />
       <GallerySection />
       <ImageGalleryGrid />
+      <TestimonialsSection />
       <LocationSection />
     </div>
   );

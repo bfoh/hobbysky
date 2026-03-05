@@ -65,12 +65,18 @@ export default function HeroSection() {
                   className="w-full px-4 py-4 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/40 focus:border-transparent text-white font-medium text-base bg-white/5 hover:bg-white/10 cursor-pointer transition-all outline-none"
                 />
               </div>
-              <button
-                onClick={handleCheckAvailability}
-                className="flex-none w-auto whitespace-nowrap bg-gradient-to-r from-[#ce8823] to-[#e0a240] hover:from-[#b8761a] hover:to-[#ce8823] active:scale-[0.98] text-white px-10 py-4 rounded-2xl font-bold tracking-wide transition-all duration-300 shadow-[0_4px_20px_rgba(206,136,35,0.5)] hover:shadow-[0_6px_24px_rgba(206,136,35,0.4)] cursor-pointer text-base flex items-center justify-center"
-              >
-                CHECK AVAILABILITY
-              </button>
+              <div className="flex-none flex flex-col items-center gap-2">
+                <button
+                  onClick={handleCheckAvailability}
+                  className="w-auto whitespace-nowrap bg-gradient-to-r from-[#ce8823] to-[#e0a240] hover:from-[#b8761a] hover:to-[#ce8823] active:scale-[0.98] text-white px-10 py-4 rounded-2xl font-bold tracking-wide transition-all duration-300 shadow-[0_4px_20px_rgba(206,136,35,0.5)] hover:shadow-[0_6px_24px_rgba(206,136,35,0.4)] cursor-pointer text-base flex items-center justify-center"
+                >
+                  CHECK AVAILABILITY
+                </button>
+                <p className="text-xs text-resort-gold-300/90 flex items-center gap-1">
+                  <i className="ri-shield-check-line text-sm" />
+                  Best rate guaranteed — book direct
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -104,6 +110,10 @@ export default function HeroSection() {
             >
               CHECK AVAILABILITY
             </button>
+            <p className="text-[11px] text-resort-gold-400/90 text-center flex items-center justify-center gap-1">
+              <i className="ri-shield-check-line text-xs" />
+              Best rate guaranteed — book direct
+            </p>
           </div>
         </div>
       </div>

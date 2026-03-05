@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { SEOHead } from '../../components/SEOHead';
 import BookNowHero from './components/BookNowHero';
 import BookingSearchWidget from './components/BookingSearchWidget';
 import OurRoomsSection from './components/OurRoomsSection';
@@ -169,6 +170,11 @@ export default function BookNowPage() {
 
   return (
     <article>
+      <SEOHead
+        title="Book Your Stay"
+        description="Check availability and book a room at Hobbysky Guest House, Kumasi, Ghana. Standard, Executive, and Deluxe rooms available. Pay at check-in — Cash, MoMo, Bank Transfer."
+        path="/book-now"
+      />
       <BookNowHero />
 
       {/* Step progress indicator (shown on steps 1–4, hidden on success) */}

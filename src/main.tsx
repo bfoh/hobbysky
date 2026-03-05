@@ -1,5 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { HelmetProvider } from 'react-helmet-async'
 import App from './App'
 import { ThemeProvider } from './components/theme-provider'
 import './index.css'
@@ -28,8 +29,10 @@ console.log('📧 Email Service Endpoint: /.netlify/functions/send-email')
 
 ReactDOM.createRoot(document.getElementById('app-root')!).render(
   <React.StrictMode>
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme" attribute="class">
-      <App />
-    </ThemeProvider>
+    <HelmetProvider>
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme" attribute="class">
+        <App />
+      </ThemeProvider>
+    </HelmetProvider>
   </React.StrictMode>,
-) 
+)

@@ -78,8 +78,8 @@ export function ServicesPage() {
     return (
         <div className="space-y-6 pb-20 animate-fade-in">
             <div>
-                <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">Guest Services</h2>
-                <p className="text-base text-gray-600 font-medium mt-1">How can we make your stay better?</p>
+                <h2 className="text-3xl font-extrabold text-white tracking-tight">Guest Services</h2>
+                <p className="text-base text-neutral-300 font-medium mt-1">How can we make your stay better?</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-8">
@@ -113,12 +113,13 @@ export function ServicesPage() {
                 />
             </div>
 
-            <Card className="border-0 shadow-lg ring-1 ring-black/5">
+            <Card className="border border-[#2a3a2e] bg-[#162019] shadow-xl overflow-hidden">
+                <div className="h-1 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500/60" />
                 <CardHeader>
-                    <CardTitle className="text-xl font-bold text-gray-900">
+                    <CardTitle className="text-xl font-bold text-white">
                         {type ? `${getTypeLabel(type)} Request` : 'Request Form'}
                     </CardTitle>
-                    <CardDescription className="text-sm font-medium text-gray-600">
+                    <CardDescription className="text-sm font-medium text-neutral-300">
                         {type ? `Describe what you need for ${getTypeLabel(type).toLowerCase()}.` : 'Select a category above to get started.'}
                     </CardDescription>
                 </CardHeader>
@@ -126,9 +127,9 @@ export function ServicesPage() {
                     <form onSubmit={handleSubmit} className="space-y-4">
                         {!['housekeeping', 'transport', 'food', 'problem'].includes(type) && type !== '' && (
                             <div className="space-y-2">
-                                <Label className="font-bold text-gray-800">Service Type</Label>
+                                <Label className="font-bold text-neutral-200">Service Type</Label>
                                 <Select value={type} onValueChange={setType}>
-                                    <SelectTrigger>
+                                    <SelectTrigger className="bg-[#1e2e24] border-[#3a4f3e] text-white">
                                         <SelectValue placeholder="Select type..." />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -140,18 +141,23 @@ export function ServicesPage() {
                         )}
 
                         <div className="space-y-2">
-                            <Label htmlFor="details" className="font-bold text-gray-800">Details / Special Instructions</Label>
+                            <Label htmlFor="details" className="font-bold text-neutral-200">Details / Special Instructions</Label>
                             <Textarea
                                 id="details"
                                 placeholder={getPlaceholder(type)}
-                                className="min-h-[100px] text-sm font-medium"
+                                className="min-h-[100px] text-sm font-medium bg-[#1e2e24] border-[#3a4f3e] text-white placeholder:text-neutral-500 focus:border-amber-500 focus:ring-amber-500/30"
                                 value={details}
                                 onChange={(e) => setDetails(e.target.value)}
                                 required
                             />
                         </div>
 
-                        <Button type="submit" className="w-full h-12 text-base font-bold shadow-md hover:shadow-lg transition-all duration-200" size="lg" disabled={loading || !type}>
+                        <Button
+                            type="submit"
+                            className="w-full h-12 text-base font-bold bg-amber-600 hover:bg-amber-500 text-white shadow-md hover:shadow-lg transition-all duration-200"
+                            size="lg"
+                            disabled={loading || !type}
+                        >
                             {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : null}
                             Submit Request
                         </Button>
@@ -169,32 +175,31 @@ function ServiceCard({ icon, label, subtitle, active, onClick }: any) {
         <button
             type="button"
             onClick={onClick}
-            className={`flex flex-col items-center justify-center p-6 rounded-2xl border transition-all duration-300 outline-none focus:ring-2 focus:ring-[#d4a017] focus:ring-offset-2
+            className={`flex flex-col items-center justify-center p-6 rounded-2xl border transition-all duration-300 outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-[#0c1a12]
                 ${active
-                    ? 'border-[#1a3a2a] bg-[#1a3a2a] shadow-[0_10px_40px_-10px_rgba(26,58,42,0.6)] scale-[1.03]'
-                    : 'border-gray-200 bg-white hover:border-[#1a3a2a]/30 hover:shadow-lg hover:-translate-y-1'
+                    ? 'border-amber-500/50 bg-[#1a3a2a] shadow-[0_10px_40px_-10px_rgba(26,58,42,0.6)] scale-[1.03]'
+                    : 'border-[#2a3a2e] bg-[#162019] hover:border-amber-500/30 hover:shadow-lg hover:-translate-y-1'
                 }
             `}
         >
             <div
-                className={`w-14 h-14 rounded-full flex items-center justify-center mb-4 flex-shrink-0 transition-all duration-300 ${
-                    active
+                className={`w-14 h-14 rounded-full flex items-center justify-center mb-4 flex-shrink-0 transition-all duration-300 ${active
                         ? 'scale-110 shadow-[0_0_0_3px_#d4a017,inset_0_2px_4px_rgba(0,0,0,0.35)]'
-                        : 'shadow-[inset_0_2px_4px_rgba(0,0,0,0.25)] group-hover:shadow-[0_0_0_4px_rgba(212,160,23,0.22),inset_0_2px_4px_rgba(0,0,0,0.25)]'
-                }`}
+                        : 'shadow-[inset_0_2px_4px_rgba(0,0,0,0.25)]'
+                    }`}
                 style={{ background: 'linear-gradient(145deg, #1E3D22, #152d18)' }}
             >
-                <div className="text-[#d4a017] transition-colors duration-300">
+                <div className="text-amber-400 transition-colors duration-300">
                     {icon}
                 </div>
             </div>
             <span className={`text-[15px] font-extrabold tracking-tight transition-colors duration-300 
-                ${active ? 'text-white' : 'text-gray-900'}
+                ${active ? 'text-white' : 'text-neutral-200'}
             `}>
                 {label}
             </span>
             <span className={`text-[11px] uppercase tracking-wider mt-1.5 text-center font-bold transition-colors duration-300 
-                ${active ? 'text-[#d4a017]' : 'text-gray-500'}
+                ${active ? 'text-amber-400' : 'text-neutral-400'}
             `}>
                 {subtitle}
             </span>

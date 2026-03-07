@@ -5,6 +5,7 @@ import { Button } from '../ui/button'
 import { ScrollArea } from '../ui/scroll-area'
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '../ui/sheet'
 import { activityLogService } from '@/services/activity-log-service'
+import { useGuestRequestAlerts } from '@/hooks/use-guest-request-alerts'
 import {
   LayoutDashboard,
   Calendar,
@@ -57,6 +58,9 @@ export function AppLayout() {
 
   // Use the same hook that's working in EmployeesPage
   const { role, canManageEmployees, loading: isLoadingStaff } = useStaffRole()
+
+  // Global real-time alerts for guest service requests
+  useGuestRequestAlerts()
 
   // Remember last known admin state to prevent flicker
   const lastKnownAdminStateRef = React.useRef<boolean>(false)
@@ -449,22 +453,7 @@ export function AppLayout() {
                   <TrendingUp className={cn("w-5 h-5 flex-shrink-0 transition-transform z-10 relative", location.pathname === '/staff/analytics' ? "scale-110 drop-shadow-md text-primary" : "group-hover:text-foreground")} />
                   <span className="z-10 relative tracking-wide">Analytics</span>
                 </Link>
-                <Link
-                  to="/staff/email-diagnostics"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={cn(
-                    'group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ease-out border border-transparent relative overflow-hidden',
-                    location.pathname === '/staff/email-diagnostics'
-                      ? 'bg-primary/10 text-primary border-primary/20 shadow-[0_0_15px_rgba(0,0,0,0.1)] translate-x-1'
-                      : 'text-muted-foreground hover:bg-white/5 hover:text-foreground hover:border-white/10'
-                  )}
-                >
-                  {location.pathname === '/staff/email-diagnostics' && (
-                    <div className="absolute left-0 inset-y-0 w-1 bg-primary shadow-[0_0_10px_currentColor] rounded-r-full" />
-                  )}
-                  <Network className={cn("w-5 h-5 flex-shrink-0 transition-transform z-10 relative", location.pathname === '/staff/email-diagnostics' ? "scale-110 drop-shadow-md text-primary" : "group-hover:text-foreground")} />
-                  <span className="z-10 relative tracking-wide">Email Diagnostics</span>
-                </Link>
+
                 <Link
                   to="/staff/settings"
                   onClick={() => setMobileMenuOpen(false)}

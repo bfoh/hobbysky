@@ -73,15 +73,15 @@ export function ConciergePage() {
     return (
         <div className="space-y-6 pb-20 animate-fade-in">
             <div>
-                <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">Local Guide</h2>
-                <p className="text-base text-gray-600 font-medium mt-1">Curated recommendations for your stay.</p>
+                <h2 className="text-3xl font-extrabold text-white tracking-tight">Local Guide</h2>
+                <p className="text-base text-neutral-300 font-medium mt-1">Curated recommendations for your stay.</p>
             </div>
 
             <Tabs defaultValue="eat" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 h-12 bg-neutral-100 rounded-xl p-1">
-                    <TabsTrigger value="eat" className="rounded-lg font-bold text-sm data-[state=active]:shadow-md">🍽️ Eat & Drink</TabsTrigger>
-                    <TabsTrigger value="do" className="rounded-lg font-bold text-sm data-[state=active]:shadow-md">🎯 Activities</TabsTrigger>
-                    <TabsTrigger value="info" className="rounded-lg font-bold text-sm data-[state=active]:shadow-md">ℹ️ Info</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-3 h-12 bg-[#162019] border border-[#2a3a2e] rounded-xl p-1">
+                    <TabsTrigger value="eat" className="rounded-lg font-bold text-sm text-neutral-300 data-[state=active]:bg-[#1a3a2a] data-[state=active]:text-white data-[state=active]:shadow-md">🍽️ Eat & Drink</TabsTrigger>
+                    <TabsTrigger value="do" className="rounded-lg font-bold text-sm text-neutral-300 data-[state=active]:bg-[#1a3a2a] data-[state=active]:text-white data-[state=active]:shadow-md">🎯 Activities</TabsTrigger>
+                    <TabsTrigger value="info" className="rounded-lg font-bold text-sm text-neutral-300 data-[state=active]:bg-[#1a3a2a] data-[state=active]:text-white data-[state=active]:shadow-md">ℹ️ Info</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="eat" className="space-y-4 mt-4 data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:slide-in-from-bottom-2">
@@ -108,33 +108,33 @@ export function ConciergePage() {
 
 function GemCard({ item, icon }: { item: any, icon: any }) {
     return (
-        <Card className="border-0 shadow-md ring-1 ring-black/5 hover:shadow-lg hover:scale-[1.01] transition-all duration-200 overflow-hidden">
+        <Card className="border border-[#2a3a2e] bg-[#162019] shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all duration-200 overflow-hidden">
             <CardHeader className="p-4 pb-2">
                 <div className="flex justify-between items-start">
                     <div className="flex-1">
-                        <CardTitle className="text-lg font-bold text-gray-900">{item.name}</CardTitle>
-                        <CardDescription className="flex items-center gap-2 mt-1 text-sm font-medium">
+                        <CardTitle className="text-lg font-bold text-white">{item.name}</CardTitle>
+                        <CardDescription className="flex items-center gap-2 mt-1 text-sm font-medium text-neutral-400">
                             {icon}
                             <span>{item.type}</span>
                             {item.rating && (
-                                <span className="flex items-center gap-0.5 text-amber-600 font-bold">
-                                    <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                                <span className="flex items-center gap-0.5 text-amber-400 font-bold">
+                                    <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
                                     {item.rating}
                                 </span>
                             )}
                         </CardDescription>
                     </div>
                     {item.distance && (
-                        <span className="text-xs font-bold bg-primary/10 text-primary px-3 py-1.5 rounded-full whitespace-nowrap">
+                        <span className="text-xs font-bold bg-amber-500/15 text-amber-400 px-3 py-1.5 rounded-full whitespace-nowrap border border-amber-500/20">
                             {item.distance}
                         </span>
                     )}
                 </div>
             </CardHeader>
             <CardContent className="p-4 pt-2">
-                <p className="text-sm text-gray-700 font-medium mb-3 leading-relaxed">{item.desc}</p>
+                <p className="text-sm text-neutral-300 font-medium mb-3 leading-relaxed">{item.desc}</p>
                 {item.phone && (
-                    <Button variant="outline" size="sm" className="w-full font-bold border-2 hover:bg-primary/5 hover:border-primary/30 transition-all duration-200" asChild>
+                    <Button variant="outline" size="sm" className="w-full font-bold border-[#3a4f3e] text-neutral-200 hover:bg-amber-500/10 hover:border-amber-500/30 hover:text-amber-400 transition-all duration-200" asChild>
                         <a href={`tel:${item.phone}`}>
                             <Phone className="w-4 h-4 mr-2" />
                             Call Now

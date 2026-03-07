@@ -48,47 +48,56 @@ export function GuestLoginPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 flex flex-col items-center justify-center p-4">
-            <div className="w-full max-w-md space-y-8 animate-fade-in">
+        <div className="min-h-screen bg-[#0c1a12] flex flex-col items-center justify-center p-4">
+            {/* Subtle background pattern */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(200,170,100,0.06)_0%,_transparent_60%)]" />
+
+            <div className="relative w-full max-w-md space-y-8 animate-fade-in">
+                {/* Header */}
                 <div className="text-center space-y-3">
                     <img src="/logohobbyskydarkmode.png" alt="Hobbysky Guest House" className="h-20 w-auto mx-auto object-contain" />
-                    <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Guest Portal</h1>
-                    <p className="text-base text-gray-600 font-medium">Enter your room details to access services</p>
+                    <h1 className="text-3xl font-extrabold text-white tracking-tight">Guest Portal</h1>
+                    <p className="text-base text-neutral-300 font-medium">Enter your room details to access services</p>
                 </div>
 
-                <Card className="border-0 shadow-xl ring-1 ring-black/5 overflow-hidden">
-                    <div className="h-1 bg-gradient-to-r from-primary via-primary/80 to-primary/60" />
+                {/* Login Card */}
+                <Card className="border border-[#2a3a2e] bg-[#162019] shadow-2xl shadow-black/40 overflow-hidden">
+                    <div className="h-1 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500/60" />
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-xl font-bold text-gray-900">Sign In</CardTitle>
-                        <CardDescription className="text-sm text-gray-600 font-medium">
+                        <CardTitle className="text-xl font-bold text-white">Sign In</CardTitle>
+                        <CardDescription className="text-sm text-neutral-300 font-medium">
                             Enter your Room Number and First Name found on your booking.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleLogin} className="space-y-5">
                             <div className="space-y-2">
-                                <Label htmlFor="room" className="text-sm font-bold text-gray-800">Room Number</Label>
+                                <Label htmlFor="room" className="text-sm font-bold text-neutral-200">Room Number</Label>
                                 <Input
                                     id="room"
                                     placeholder="e.g. 101"
                                     value={roomNumber}
                                     onChange={(e) => setRoomNumber(e.target.value)}
-                                    className="h-12 text-base font-medium border-gray-300 focus:border-primary focus:ring-primary/30"
+                                    className="h-12 text-base font-medium bg-[#1e2e24] border-[#3a4f3e] text-white placeholder:text-neutral-500 focus:border-amber-500 focus:ring-amber-500/30"
                                     required
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="firstname" className="text-sm font-bold text-gray-800">First Name</Label>
+                                <Label htmlFor="firstname" className="text-sm font-bold text-neutral-200">First Name</Label>
                                 <Input
                                     id="firstname"
                                     placeholder="e.g. John"
                                     value={firstName}
                                     onChange={(e) => setFirstName(e.target.value)}
-                                    className="h-12 text-base font-medium border-gray-300 focus:border-primary focus:ring-primary/30"
+                                    className="h-12 text-base font-medium bg-[#1e2e24] border-[#3a4f3e] text-white placeholder:text-neutral-500 focus:border-amber-500 focus:ring-amber-500/30"
                                     required
                                 />
                             </div>
-                            <Button type="submit" className="w-full h-12 text-base font-bold shadow-md hover:shadow-lg transition-all duration-200" disabled={loading}>
+                            <Button
+                                type="submit"
+                                className="w-full h-12 text-base font-bold bg-amber-600 hover:bg-amber-500 text-white shadow-md hover:shadow-lg transition-all duration-200"
+                                disabled={loading}
+                            >
                                 {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <LogIn className="mr-2 h-5 w-5" />}
                                 Access Portal
                             </Button>
@@ -96,9 +105,10 @@ export function GuestLoginPage() {
                     </CardContent>
                 </Card>
 
-                <p className="text-center text-sm text-gray-500 font-medium">
+                {/* Footer help text */}
+                <p className="text-center text-sm text-neutral-400 font-medium">
                     Having trouble? Contact reception at{' '}
-                    <a href="tel:+233555009697" className="text-primary font-bold hover:underline">+233 55 500 9697</a>
+                    <a href="tel:+233240204079" className="text-amber-400 font-bold hover:text-amber-300 hover:underline transition-colors">+233 24 020 4079</a>
                 </p>
             </div>
         </div>

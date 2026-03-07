@@ -4,9 +4,9 @@ import { Link } from "react-router-dom";
 
 export default function GuestLayout() {
     return (
-        <div className="min-h-screen bg-neutral-50 flex flex-col font-sans">
+        <div className="min-h-screen bg-[#0c1a12] flex flex-col font-sans">
             {/* Header */}
-            <header className="bg-white border-b px-6 py-4 flex items-center justify-center sticky top-0 z-10 shadow-sm">
+            <header className="bg-[#162019] border-b border-[#2a3a2e] px-6 py-4 flex items-center justify-center sticky top-0 z-10 shadow-lg">
                 <img src="/logohobbyskydarkmode.png" alt="Hobbysky Guest House" className="h-12 w-auto object-contain" />
             </header>
 
@@ -16,7 +16,7 @@ export default function GuestLayout() {
             </main>
 
             {/* Fixed Bottom Navigation - Premium App Style */}
-            <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-neutral-200 p-2 pb-safe z-20">
+            <nav className="fixed bottom-0 left-0 right-0 bg-[#162019]/95 backdrop-blur-md border-t border-[#2a3a2e] p-2 pb-safe z-20">
                 <div className="max-w-md mx-auto flex justify-around items-center">
                     <NavLink to="" icon={<User className="w-5 h-5" />} label="My Stay" />
                     <NavLink to="concierge" icon={<MapPin className="w-5 h-5" />} label="Concierge" />
@@ -39,12 +39,12 @@ function NavLink({ to, icon, label }: { to: string; icon: React.ReactNode; label
         <Link
             to={to}
             className={`flex flex-col items-center gap-1 p-2 transition-colors duration-200 ${isActive
-                    ? 'text-primary'
-                    : 'text-neutral-400 hover:text-neutral-800'
+                ? 'text-amber-400'
+                : 'text-neutral-400 hover:text-neutral-200'
                 }`}
         >
             {icon}
-            <span className={`text-xs font-semibold ${isActive ? 'text-primary' : ''}`}>{label}</span>
+            <span className={`text-xs font-semibold ${isActive ? 'text-amber-400' : ''}`}>{label}</span>
         </Link>
     )
 }

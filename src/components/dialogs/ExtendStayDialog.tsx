@@ -257,45 +257,45 @@ export function ExtendStayDialog({
 
                 <div className="space-y-6 py-4">
                     {/* Current Checkout Info */}
-                    <div className="bg-slate-50 p-4 rounded-lg">
-                        <p className="text-sm text-muted-foreground">Current checkout date:</p>
-                        <p className="font-semibold text-lg">{currentCheckout}</p>
+                    <div className="bg-muted/60 border border-border/60 p-4 rounded-lg">
+                        <p className="text-sm text-muted-foreground font-medium">Current checkout date:</p>
+                        <p className="font-semibold text-lg text-foreground">{currentCheckout}</p>
                     </div>
 
                     {/* New Checkout Date Picker */}
                     <div className="space-y-2">
-                        <Label htmlFor="newCheckout">New Checkout Date</Label>
+                        <Label htmlFor="newCheckout" className="text-foreground font-semibold">New Checkout Date</Label>
                         <Input
                             id="newCheckout"
                             type="date"
                             min={minDate}
                             value={newCheckoutDate}
                             onChange={(e) => setNewCheckoutDate(e.target.value)}
-                            className="w-full"
+                            className="w-full bg-background border-border text-foreground"
                         />
                     </div>
 
                     {/* Extension Summary */}
                     {additionalNights > 0 && (
                         <div className="space-y-3">
-                            <div className="flex justify-between items-end">
+                            <div className="flex justify-between items-end bg-muted/40 border border-border/50 rounded-lg p-3">
                                 <div>
-                                    <p className="text-sm text-muted-foreground">Additional Nights:</p>
-                                    <p className="text-xl font-semibold">{additionalNights}</p>
+                                    <p className="text-sm text-muted-foreground font-medium">Additional Nights:</p>
+                                    <p className="text-xl font-semibold text-foreground">{additionalNights}</p>
                                     <p className="text-sm text-muted-foreground mt-1">
                                         Rate: {formatCurrencySync(selectedRoomId ? (selectedAlternativeRoom?.pricePerNight || 0) : roomRate, currency)}/night
                                     </p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-sm text-muted-foreground">Base Cost:</p>
-                                    <p className="text-xl font-semibold">{formatCurrencySync(baseCost, currency)}</p>
+                                    <p className="text-sm text-muted-foreground font-medium">Base Cost:</p>
+                                    <p className="text-xl font-semibold text-foreground">{formatCurrencySync(baseCost, currency)}</p>
                                 </div>
                             </div>
 
                             {/* Discount Section */}
-                            <div className="border-t pt-4 space-y-3">
-                                <div className="flex items-center gap-2 text-sm font-medium">
-                                    <Tag className="w-4 h-4" />
+                            <div className="border-t border-border/50 pt-4 space-y-3">
+                                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                                    <Tag className="w-4 h-4 text-amber-500" />
                                     <span>Apply Discount (Optional)</span>
                                 </div>
 
@@ -340,9 +340,9 @@ export function ExtendStayDialog({
                                 </div>
                             </div>
 
-                            <div className="flex items-center justify-between p-3 bg-amber-50 rounded-lg border border-amber-200 mt-4">
-                                <span className="font-semibold text-amber-900">Final Extension Cost</span>
-                                <span className="text-2xl font-bold text-amber-900">
+                            <div className="flex items-center justify-between p-3 bg-amber-500/15 rounded-lg border border-amber-500/30 mt-4">
+                                <span className="font-semibold text-amber-300">Final Extension Cost</span>
+                                <span className="text-2xl font-bold text-amber-300">
                                     {formatCurrencySync(displayCost, currency)}
                                 </span>
                             </div>
@@ -359,7 +359,7 @@ export function ExtendStayDialog({
 
                     {/* Available - Green */}
                     {availability?.available && !isChecking && (
-                        <div className="flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded-lg">
+                        <div className="flex items-center gap-2 text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 p-3 rounded-lg font-medium">
                             <CheckCircle2 className="h-5 w-5" />
                             Room is available for extension
                         </div>
@@ -368,11 +368,11 @@ export function ExtendStayDialog({
                     {/* Conflict - Show alternatives */}
                     {availability && !availability.available && !isChecking && (
                         <div className="space-y-4">
-                            <div className="flex items-start gap-2 text-amber-600 bg-amber-50 p-3 rounded-lg">
+                            <div className="flex items-start gap-2 text-amber-400 bg-amber-500/15 border border-amber-500/30 p-3 rounded-lg">
                                 <AlertTriangle className="h-5 w-5 mt-0.5" />
                                 <div>
-                                    <p className="font-medium">Room {room.roomNumber} is not available</p>
-                                    <p className="text-sm text-amber-700">
+                                    <p className="font-semibold text-amber-300">Room {room.roomNumber} is not available</p>
+                                    <p className="text-sm text-amber-400/80">
                                         Another booking exists for this period. Please select an alternative room below.
                                     </p>
                                 </div>
@@ -385,12 +385,12 @@ export function ExtendStayDialog({
                                     <RadioGroup value={selectedRoomId || ''} onValueChange={setSelectedRoomId}>
                                         <div className="space-y-2 max-h-40 overflow-y-auto">
                                             {availableRooms.map((r) => (
-                                                <div key={r.id} className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-slate-50 cursor-pointer">
+                                                <div key={r.id} className="flex items-center space-x-3 p-3 border border-border/60 rounded-lg hover:bg-muted/40 cursor-pointer transition-colors">
                                                     <RadioGroupItem value={r.id} id={r.id} />
                                                     <Label htmlFor={r.id} className="flex-1 cursor-pointer">
-                                                        <span className="font-medium">Room {r.roomNumber}</span>
+                                                        <span className="font-semibold text-foreground">Room {r.roomNumber}</span>
                                                         <span className="text-muted-foreground ml-2">({r.roomType})</span>
-                                                        <span className="float-right text-amber-600 font-medium">
+                                                        <span className="float-right text-amber-400 font-semibold">
                                                             {formatCurrencySync(r.pricePerNight, currency)}/night
                                                         </span>
                                                     </Label>
@@ -400,9 +400,9 @@ export function ExtendStayDialog({
                                     </RadioGroup>
                                 </div>
                             ) : (
-                                <div className="text-red-600 bg-red-50 p-3 rounded-lg">
-                                    <p className="font-medium">No rooms available</p>
-                                    <p className="text-sm">There are no alternative rooms available for this period.</p>
+                                <div className="text-red-400 bg-red-500/15 border border-red-500/30 p-3 rounded-lg">
+                                    <p className="font-semibold text-red-300">No rooms available</p>
+                                    <p className="text-sm text-red-400/80">There are no alternative rooms available for this period.</p>
                                 </div>
                             )}
                         </div>

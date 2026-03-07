@@ -61,13 +61,13 @@ export function RequestHistory({ requests, loading }: RequestHistoryProps) {
 function StatusBadge({ status }: { status: RequestStatus }) {
     switch (status) {
         case 'pending':
-            return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Received</Badge>;
+            return <Badge variant="outline" className="bg-yellow-500/15 text-yellow-300 border-yellow-500/30">Received</Badge>;
         case 'in_progress':
-            return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">In Progress</Badge>;
+            return <Badge variant="outline" className="bg-blue-500/15 text-blue-300 border-blue-500/30">In Progress</Badge>;
         case 'completed':
-            return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Completed</Badge>;
+            return <Badge variant="outline" className="bg-emerald-500/15 text-emerald-300 border-emerald-500/30">Completed</Badge>;
         case 'cancelled':
-            return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Cancelled</Badge>;
+            return <Badge variant="outline" className="bg-red-500/15 text-red-300 border-red-500/30">Cancelled</Badge>;
         default:
             return <Badge variant="secondary">{status}</Badge>;
     }

@@ -8,7 +8,7 @@ EXCLUDE USING gist (
     room_id WITH =,                                                                                                                             
     daterange(check_in, check_out) WITH &&                                                                                                      
 )                                                                                                                                               
-WHERE (status != 'cancelled');
+WHERE (status IN ('reserved', 'confirmed', 'checked-in', 'checked_in'));
 
 -- Update RPC function to authenticate guest by Room Number and FIRST Name
 -- Fix column references: rooms.room_number (not rooms.number), bookings.check_out (not bookings.check_out_date), bookings.check_in (not bookings.check_in_date)

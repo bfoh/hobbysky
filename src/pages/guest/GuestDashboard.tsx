@@ -61,14 +61,14 @@ export default function GuestDashboard() {
 
     if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[50vh] text-muted-foreground">
+            <div className="flex flex-col items-center justify-center min-h-[50vh] text-neutral-400">
                 <Loader2 className="w-8 h-8 animate-spin mb-4" />
-                <p>Loading your stay...</p>
+                <p className="text-neutral-300">Loading your stay...</p>
             </div>
         );
     }
 
-    if (!data) return <div className="p-4 text-center">Invalid Access Link</div>;
+    if (!data) return <div className="p-4 text-center text-neutral-300">Invalid Access Link</div>;
 
     const { guest, booking } = data;
 
@@ -77,34 +77,34 @@ export default function GuestDashboard() {
 
             {/* Welcome Card */}
             <section className="text-center space-y-2 py-4">
-                <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">Welcome, {guest.name.split(' ')[0]}!</h1>
-                <p className="text-base text-gray-600 font-medium">We hope you enjoy your stay at Hobbysky Guest House.</p>
+                <h1 className="text-3xl font-extrabold tracking-tight text-white">Welcome, {guest.name.split(' ')[0]}!</h1>
+                <p className="text-base text-neutral-300 font-medium">We hope you enjoy your stay at Hobbysky Guest House.</p>
             </section>
 
             {/* Room Card */}
-            <Card className="bg-[#1a3a2a] text-white border-0 shadow-[0_20px_50px_-12px_rgba(26,58,42,0.5)] overflow-hidden relative">
+            <Card className="bg-[#1a3a2a] text-white border border-[#2a4a32] shadow-[0_20px_50px_-12px_rgba(26,58,42,0.5)] overflow-hidden relative">
                 <div className="absolute top-0 right-0 p-4 opacity-10">
                     <Moon className="w-32 h-32" />
                 </div>
                 <CardContent className="p-6 relative z-10">
                     <div className="flex justify-between items-start mb-6">
                         <div>
-                            <p className="text-[#d4a017] text-[11px] uppercase tracking-widest font-bold mb-1">Room</p>
-                            <p className="text-6xl font-black tracking-tighter">{guest.room}</p>
+                            <p className="text-amber-400 text-[11px] uppercase tracking-widest font-bold mb-1">Room</p>
+                            <p className="text-6xl font-black tracking-tighter text-white">{guest.room}</p>
                         </div>
                         <div className="text-right">
-                            <p className="text-[#d4a017] text-[11px] uppercase tracking-widest font-bold mb-1">Check Out</p>
-                            <p className="text-2xl font-bold">{new Date(booking.checkOut).toLocaleDateString()}</p>
+                            <p className="text-amber-400 text-[11px] uppercase tracking-widest font-bold mb-1">Check Out</p>
+                            <p className="text-2xl font-bold text-white">{new Date(booking.checkOut).toLocaleDateString()}</p>
                             <p className="text-white/60 text-sm font-medium">11:00 AM</p>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 mt-8">
-                        <Button variant="secondary" className="bg-white/5 hover:bg-[#d4a017] text-white hover:text-[#1a3a2a] border border-white/10 hover:border-[#d4a017] h-auto py-4 flex-col gap-2 transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(212,160,23,0.3)]">
+                        <Button variant="secondary" className="bg-white/5 hover:bg-amber-500 text-white hover:text-[#1a3a2a] border border-white/10 hover:border-amber-500 h-auto py-4 flex-col gap-2 transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(212,160,23,0.3)]">
                             <Wifi className="w-6 h-6" />
                             <span className="text-sm font-bold">Wi-Fi</span>
                         </Button>
-                        <Button variant="secondary" className="bg-white/5 hover:bg-[#d4a017] text-white hover:text-[#1a3a2a] border border-white/10 hover:border-[#d4a017] h-auto py-4 flex-col gap-2 transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(212,160,23,0.3)]">
+                        <Button variant="secondary" className="bg-white/5 hover:bg-amber-500 text-white hover:text-[#1a3a2a] border border-white/10 hover:border-amber-500 h-auto py-4 flex-col gap-2 transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(212,160,23,0.3)]">
                             <Utensils className="w-6 h-6" />
                             <span className="text-sm font-bold">Dining</span>
                         </Button>
@@ -114,26 +114,26 @@ export default function GuestDashboard() {
 
             {/* Quick Actions Grid */}
             <div className="grid grid-cols-2 gap-4">
-                <Card className="group bg-white hover:bg-[#1a3a2a] border border-gray-200 hover:border-[#1a3a2a] shadow-sm hover:shadow-[0_10px_40px_-10px_rgba(26,58,42,0.6)] hover:-translate-y-1 transition-all duration-300 cursor-pointer" onClick={() => navigate('concierge')}>
+                <Card className="group bg-[#162019] hover:bg-[#1a3a2a] border border-[#2a3a2e] hover:border-amber-500/30 shadow-lg hover:shadow-[0_10px_40px_-10px_rgba(26,58,42,0.6)] hover:-translate-y-1 transition-all duration-300 cursor-pointer" onClick={() => navigate('concierge')}>
                     <CardContent className="p-6 flex flex-col items-center text-center gap-4">
-                        <div className="w-14 h-14 rounded-full bg-gray-50 group-hover:bg-[#d4a017]/15 flex items-center justify-center transition-colors duration-300">
-                            <MapPin className="w-7 h-7 text-[#1a3a2a] group-hover:text-[#d4a017] transition-colors duration-300" />
+                        <div className="w-14 h-14 rounded-full bg-[#1a3a2a] group-hover:bg-amber-500/15 flex items-center justify-center transition-colors duration-300">
+                            <MapPin className="w-7 h-7 text-amber-400 group-hover:text-amber-300 transition-colors duration-300" />
                         </div>
                         <div>
-                            <h3 className="font-extrabold text-[15px] text-gray-900 group-hover:text-white transition-colors duration-300">Local Guide</h3>
-                            <p className="text-[12px] text-gray-500 group-hover:text-white/70 font-medium transition-colors duration-300 mt-1">Discover nearby gems</p>
+                            <h3 className="font-extrabold text-[15px] text-white transition-colors duration-300">Local Guide</h3>
+                            <p className="text-[12px] text-neutral-400 group-hover:text-neutral-300 font-medium transition-colors duration-300 mt-1">Discover nearby gems</p>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="group bg-white hover:bg-[#1a3a2a] border border-gray-200 hover:border-[#1a3a2a] shadow-sm hover:shadow-[0_10px_40px_-10px_rgba(26,58,42,0.6)] hover:-translate-y-1 transition-all duration-300 cursor-pointer" onClick={() => setIsRequestDialogOpen(true)}>
+                <Card className="group bg-[#162019] hover:bg-[#1a3a2a] border border-[#2a3a2e] hover:border-amber-500/30 shadow-lg hover:shadow-[0_10px_40px_-10px_rgba(26,58,42,0.6)] hover:-translate-y-1 transition-all duration-300 cursor-pointer" onClick={() => setIsRequestDialogOpen(true)}>
                     <CardContent className="p-6 flex flex-col items-center text-center gap-4">
-                        <div className="w-14 h-14 rounded-full bg-gray-50 group-hover:bg-[#d4a017]/15 flex items-center justify-center transition-colors duration-300">
-                            <CalendarCheck className="w-7 h-7 text-[#1a3a2a] group-hover:text-[#d4a017] transition-colors duration-300" />
+                        <div className="w-14 h-14 rounded-full bg-[#1a3a2a] group-hover:bg-amber-500/15 flex items-center justify-center transition-colors duration-300">
+                            <CalendarCheck className="w-7 h-7 text-amber-400 group-hover:text-amber-300 transition-colors duration-300" />
                         </div>
                         <div>
-                            <h3 className="font-extrabold text-[15px] text-gray-900 group-hover:text-white transition-colors duration-300">Book Services</h3>
-                            <p className="text-[12px] text-gray-500 group-hover:text-white/70 font-medium transition-colors duration-300 mt-1">Shuttle, Spa, Cleaning</p>
+                            <h3 className="font-extrabold text-[15px] text-white transition-colors duration-300">Book Services</h3>
+                            <p className="text-[12px] text-neutral-400 group-hover:text-neutral-300 font-medium transition-colors duration-300 mt-1">Shuttle, Spa, Cleaning</p>
                         </div>
                     </CardContent>
                 </Card>

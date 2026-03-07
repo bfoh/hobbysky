@@ -16,8 +16,8 @@ ADD COLUMN IF NOT EXISTS manager_notifications_enabled BOOLEAN DEFAULT true;
 -- Update existing record with default values
 UPDATE hotel_settings
 SET 
-    manager_email = 'manager@amplodge.org',
-    manager_phone = '+233555009697',
+    manager_email = 'berniceopoku190@gmail.com',
+    manager_phone = '+233243512529',
     manager_notifications_enabled = true
 WHERE manager_email IS NULL;
 

@@ -123,6 +123,31 @@ export function ReservationsPage() {
 
   useEffect(() => {
     if (!user) return
+    // Hydrate bookings: parse GROUP_DATA from specialRequests and spread onto booking objects
+    // This must be called on ALL raw booking arrays before setting state
+    const hydrateBookings = (rawBookings: Booking[]): Booking[] => {
+      return rawBookings.map(booking => {
+        const rawSpecialRequests = (booking as any).special_requests || booking.specialRequests || ''
+        if (!rawSpecialRequests) return { ...booking, _rawSpecialRequests: '' } as Booking;
+        const match = rawSpecialRequests.match(/<!-- GROUP_DATA:(.*?) -->/)
+        if (match && match[1]) {
+          try {
+            const groupData = JSON.parse(match[1]);
+            return {
+              ...booking,
+              ...groupData,
+              _rawSpecialRequests: rawSpecialRequests,
+              special_requests: rawSpecialRequests,
+              specialRequests: rawSpecialRequests.replace(/<!-- GROUP_DATA:.*? -->/g, '').trim()
+            } as Booking;
+          } catch (e) {
+            console.warn('Failed to parse group data for booking', booking.id, e);
+          }
+        }
+        return { ...booking, _rawSpecialRequests: rawSpecialRequests, special_requests: rawSpecialRequests } as Booking;
+      });
+    }
+
     const load = async () => {
       try {
         const [b, r, g, rt, charges] = await Promise.all([
@@ -151,32 +176,7 @@ export function ReservationsPage() {
         }
 
 
-        const hydratedBookings = (b as Booking[]).map(booking => {
-          // Preserve the raw special_requests field for invoice generation
-          // Note: Supabase returns snake_case, our interface uses camelCase
-          const rawSpecialRequests = (booking as any).special_requests || booking.specialRequests || ''
-
-          if (!rawSpecialRequests) return { ...booking, _rawSpecialRequests: '' };
-
-          const match = rawSpecialRequests.match(/<!-- GROUP_DATA:(.*?) -->/)
-          if (match && match[1]) {
-            try {
-              const groupData = JSON.parse(match[1]);
-              return {
-                ...booking,
-                ...groupData,
-                // Preserve raw special requests for invoice generation
-                _rawSpecialRequests: rawSpecialRequests,
-                special_requests: rawSpecialRequests, // Keep snake_case for DB compatibility
-                // Clean the specialRequests for UI display (so user doesn't see technical data)
-                specialRequests: rawSpecialRequests.replace(/<!-- GROUP_DATA:.*? -->/g, '').trim()
-              };
-            } catch (e) {
-              console.warn('Failed to parse group data for booking', booking.id, e);
-            }
-          }
-          return { ...booking, _rawSpecialRequests: rawSpecialRequests, special_requests: rawSpecialRequests };
-        });
+        const hydratedBookings = hydrateBookings(b as Booking[]);
 
         const uniqueBookings = hydratedBookings.reduce((acc: Booking[], current) => {
           // Helper to normalize date (strip time)
@@ -785,7 +785,7 @@ export function ReservationsPage() {
       toast.error('Failed to check out guest')
       // Reload data to restore correct state
       const [b] = await Promise.all([db.bookings.list({ orderBy: { createdAt: 'desc' }, limit: 500 })])
-      setBookings(b)
+      setBookings(hydrateBookings(b))
     } finally {
       setProcessing(false)
     }
@@ -831,7 +831,7 @@ export function ReservationsPage() {
           if (checkInDialog) {
             // Reload data to ensure everything is synced
             const [b] = await Promise.all([db.bookings.list({ orderBy: { createdAt: 'desc' }, limit: 500 })])
-            setBookings(b)
+            setBookings(hydrateBookings(b))
             // Also reload rooms to update status
             const [r] = await Promise.all([db.rooms.list({ limit: 500 })])
             setRooms(r)
@@ -873,7 +873,7 @@ export function ReservationsPage() {
                 db.bookings.list({ orderBy: { createdAt: 'desc' }, limit: 500 }),
                 db.bookingCharges?.list({ limit: 1000 }) || Promise.resolve([])
               ])
-              setBookings(b)
+              setBookings(hydrateBookings(b))
               setAllCharges(charges || [])
             }}
           />
@@ -943,7 +943,7 @@ export function ReservationsPage() {
               db.bookings.list({ orderBy: { createdAt: 'desc' }, limit: 500 }),
               db.bookingCharges?.list({ limit: 1000 }) || Promise.resolve([])
             ])
-            setBookings(b)
+            setBookings(hydrateBookings(b))
             setAllCharges(charges || [])
           }}
         />
@@ -1313,10 +1313,10 @@ export function ReservationsPage() {
                               {allCheckedOut
                                 ? <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ring-1 ring-inset bg-slate-500/15 text-slate-300 border-slate-500/30 ring-slate-500/10">Checked Out</span>
                                 : allCheckedIn
-                                ? <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ring-1 ring-inset bg-sky-500/15 text-sky-300 border-sky-500/30 ring-sky-500/10">Checked In</span>
-                                : anyCheckedIn
-                                ? <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ring-1 ring-inset bg-amber-500/15 text-amber-400 border-amber-500/30 ring-amber-500/10">Partial</span>
-                                : <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ring-1 ring-inset bg-emerald-500/15 text-emerald-400 border-emerald-500/30 ring-emerald-500/10">Confirmed</span>
+                                  ? <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ring-1 ring-inset bg-sky-500/15 text-sky-300 border-sky-500/30 ring-sky-500/10">Checked In</span>
+                                  : anyCheckedIn
+                                    ? <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ring-1 ring-inset bg-amber-500/15 text-amber-400 border-amber-500/30 ring-amber-500/10">Partial</span>
+                                    : <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ring-1 ring-inset bg-emerald-500/15 text-emerald-400 border-emerald-500/30 ring-emerald-500/10">Confirmed</span>
                               }
                             </TableCell>
                             <TableCell className="py-3 text-[10px] text-muted-foreground">
@@ -1381,6 +1381,10 @@ export function ReservationsPage() {
                                 <TableCell className="py-2 pl-6">
                                   <div className="font-mono text-[10px] text-muted-foreground/60 bg-muted/30 px-1.5 py-0.5 rounded w-fit">
                                     #{b.id.slice(-8)}
+                                  </div>
+                                  <div className="flex items-center gap-1 mt-1">
+                                    <Users className="w-2.5 h-2.5 text-amber-500/60" />
+                                    <span className="text-[9px] text-amber-500/60 font-mono">{groupReference}</span>
                                   </div>
                                 </TableCell>
                                 <TableCell className="py-2">

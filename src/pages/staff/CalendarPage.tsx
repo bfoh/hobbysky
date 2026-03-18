@@ -81,6 +81,9 @@ export function CalendarPage() {
       const combined = (propertiesData || []).map((p: any) => {
         const rn = String(p.roomNumber || '').trim()
         const roomMatch = rn ? roomByNumber.get(rn) : null
+        // Resolve price from roomType so child components (e.g. ExtendStayDialog) can use it directly
+        const roomType = (roomTypesData || []).find((rt: any) => rt.id === p.propertyTypeId)
+        const resolvedPrice = Number(roomType?.basePrice) || Number(p.basePrice) || 0
         return {
           id: roomMatch?.id || (rn ? `room-${rn.toLowerCase().replace(/[^a-z0-9]/g, '-')}` : p.id), // prefer room.id so bookings map correctly
           roomNumber: rn || p.name || '',
@@ -88,7 +91,8 @@ export function CalendarPage() {
           maxGuests: Number(p.maxGuests || 0),
           basePrice: Number(p.basePrice || 0),
           propertyTypeId: p.propertyTypeId || '',
-          ...p
+          ...p,
+          price: resolvedPrice, // resolved after spread so it is never overridden
         }
       })
 

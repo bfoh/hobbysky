@@ -481,7 +481,8 @@ export function CalendarGridView({
           }}
           room={{
             id: extendStayDialog.roomId || '',
-            roomNumber: getRoomForBooking(extendStayDialog)?.roomNumber || 'N/A'
+            roomNumber: getRoomForBooking(extendStayDialog)?.roomNumber || 'N/A',
+            price: getRoomForBooking(extendStayDialog)?.price || 0,
           }}
           onExtensionComplete={() => onBookingUpdate?.()}
         />

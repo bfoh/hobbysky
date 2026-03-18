@@ -523,10 +523,14 @@ export function CalendarTimeline({
             name: extendStayDialog.guestName || 'Guest',
             email: extendStayDialog.guestEmail || ''
           }}
-          room={{
-            id: extendStayDialog.propertyId || extendStayDialog.roomId || '',
-            roomNumber: properties.find((p) => p.id === (extendStayDialog?.propertyId || extendStayDialog?.roomId))?.roomNumber || 'N/A'
-          }}
+          room={(() => {
+            const extendRoom = properties.find((p) => p.id === (extendStayDialog?.propertyId || extendStayDialog?.roomId))
+            return {
+              id: extendStayDialog.propertyId || extendStayDialog.roomId || '',
+              roomNumber: extendRoom?.roomNumber || 'N/A',
+              price: extendRoom?.price || 0,
+            }
+          })()}
           onExtensionComplete={() => onBookingUpdate?.()}
         />
       )}

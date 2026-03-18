@@ -61,6 +61,7 @@ export function BookingsPage() {
   const navigate = useNavigate()
   const { staffRecord: staffData, role, loading: staffLoading } = useStaffRole()
   const { currency } = useCurrency()
+  const canDeleteBookings = role === 'admin' || role === 'owner'
 
   console.log('[BookingsPage] useStaffRole result:', { staffData, role, staffLoading })
   const [bookings, setBookings] = useState<BookingWithDetails[]>([])
@@ -352,6 +353,11 @@ export function BookingsPage() {
 
   const confirmDelete = async () => {
     if (!deleteId) return
+    if (!canDeleteBookings) {
+      toast.error('Permission denied: only admins and owners can delete bookings')
+      setDeleteId(null)
+      return
+    }
 
     try {
       console.log('[BookingsPage] Deleting booking with ID:', deleteId)
@@ -764,14 +770,16 @@ export function BookingsPage() {
                         {booking.paymentMethod?.replace('_', ' ') || 'Not paid'}
                       </p>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteClick(booking.id)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {canDeleteBookings && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteClick(booking.id)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               </CardContent>

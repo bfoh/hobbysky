@@ -27,7 +27,7 @@ export const ROLE_PERMISSIONS: Record<StaffRole, Permission[]> = {
     { resource: 'reviews', actions: ['read', 'update', 'delete'] }
   ],
   manager: [
-    { resource: 'bookings', actions: ['create', 'read', 'update', 'delete'] },
+    { resource: 'bookings', actions: ['create', 'read', 'update'] },
     { resource: 'properties', actions: ['create', 'read', 'update'] },
     { resource: 'guests', actions: ['create', 'read', 'update', 'delete'] },
     { resource: 'reports', actions: ['read'] },

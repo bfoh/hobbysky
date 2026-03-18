@@ -517,7 +517,7 @@ export function CalendarTimeline({
         <ExtendStayDialog
           open={!!extendStayDialog}
           onOpenChange={(open) => !open && setExtendStayDialog(null)}
-          booking={extendStayDialog}
+          booking={{ ...extendStayDialog, id: extendStayDialog.remoteId || extendStayDialog.id }}
           guest={{
             id: extendStayDialog.guestId || '',
             name: extendStayDialog.guestName || 'Guest',

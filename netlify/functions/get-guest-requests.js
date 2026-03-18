@@ -7,8 +7,13 @@ exports.handler = async (event) => {
 
     const { token } = event.queryStringParameters;
 
-    if (!token) {
+    if (!token || token === 'undefined' || token === 'null') {
         return { statusCode: 400, body: JSON.stringify({ error: 'Missing token' }) };
+    }
+
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(token)) {
+        return { statusCode: 400, body: JSON.stringify({ error: 'Invalid token format' }) };
     }
 
     try {

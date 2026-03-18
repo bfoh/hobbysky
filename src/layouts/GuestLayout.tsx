@@ -1,8 +1,12 @@
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation, useParams } from "react-router-dom";
 import { User, Phone, MapPin, Coffee } from '@/components/icons';
 import { Link } from "react-router-dom";
+import { useGuestStatusUpdates } from "@/hooks/use-guest-status-updates";
 
 export default function GuestLayout() {
+    const { token } = useParams<{ token: string }>()
+    const { requests, loading, refreshRequests } = useGuestStatusUpdates(token)
+
     return (
         <div className="min-h-screen bg-[#0c1a12] flex flex-col font-sans">
             {/* Header */}
@@ -12,7 +16,7 @@ export default function GuestLayout() {
 
             {/* Main Content Area */}
             <main className="flex-1 w-full max-w-md mx-auto p-4 pb-24">
-                <Outlet />
+                <Outlet context={{ requests, loading, refreshRequests, token }} />
             </main>
 
             {/* Fixed Bottom Navigation - Premium App Style */}

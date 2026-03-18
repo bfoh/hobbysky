@@ -94,17 +94,27 @@ export function ServiceRequestsPage() {
                 r.id === id ? { ...r, status: newStatus as any } : r
             ))
 
-            const { error } = await supabase
-                .from('service_requests')
-                .update({ status: newStatus })
-                .eq('id', id)
+            const { data: { session } } = await supabase.auth.getSession()
+            const token = session?.access_token
 
-            if (error) throw error
+            const res = await fetch('/.netlify/functions/update-request-status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                },
+                body: JSON.stringify({ requestId: id, status: newStatus })
+            })
 
-            toast.success(`Request marked as ${newStatus}`)
-        } catch (error) {
+            if (!res.ok) {
+                const errData = await res.json()
+                throw new Error(errData.error || 'Failed to update request')
+            }
+
+            toast.success(`Request marked as ${newStatus.replace('_', ' ')}`)
+        } catch (error: any) {
             console.error('Error updating status:', error)
-            toast.error('Failed to update status')
+            toast.error(error.message || 'Failed to update status')
             fetchRequests() // Revert on error
         }
     }
@@ -173,7 +183,7 @@ export function ServiceRequestsPage() {
             <Tabs defaultValue="active" className="w-full">
                 <TabsList className="grid w-full grid-cols-2 max-w-[400px]">
                     <TabsTrigger value="active">Active ({filteredRequests('active').length})</TabsTrigger>
-                    <TabsTrigger value="history">History</TabsTrigger>
+                    <TabsTrigger value="history">History ({filteredRequests('completed').length})</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="active" className="mt-6 space-y-4">
@@ -220,8 +230,14 @@ function RequestCard({ request, onUpdateStatus, onDelete, showDelete }: { reques
         <Card className="overflow-hidden hover:shadow-md transition-all">
             <CardHeader className="pb-3 bg-neutral-50/50 border-b">
                 <div className="flex justify-between items-start mb-1">
-                    <Badge variant="outline" className={`${request.status === 'pending' ? 'bg-orange-50 text-orange-700 border-orange-200 animate-pulse' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
-                        {request.status === 'pending' ? 'New Request' : 'In Progress'}
+                    <Badge variant="outline" className={`${request.status === 'pending' ? 'bg-orange-50 text-orange-700 border-orange-200 animate-pulse' :
+                        request.status === 'in_progress' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                            request.status === 'completed' ? 'bg-green-50 text-green-700 border-green-200' :
+                                'bg-gray-50 text-gray-700 border-gray-200'
+                        }`}>
+                        {request.status === 'pending' ? 'New Request' :
+                            request.status === 'in_progress' ? 'In Progress' :
+                                request.status === 'completed' ? 'Completed' : 'Cancelled'}
                     </Badge>
                     <span className="text-xs text-muted-foreground flex items-center gap-1">
                         <Clock className="w-3 h-3" />

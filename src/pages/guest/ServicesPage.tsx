@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useState } from 'react'
+import { useOutletContext } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card'
 import { Button } from '../../components/ui/button'
 import { Label } from '../../components/ui/label'
@@ -10,31 +10,15 @@ import { toast } from 'sonner'
 import { RequestHistory, ServiceRequest } from '../../components/guest/RequestHistory'
 
 export function ServicesPage() {
-    const { token } = useParams<{ token: string }>()
+    const { requests, loading: fetchingHistory, refreshRequests, token } = useOutletContext<{
+        requests: ServiceRequest[],
+        loading: boolean,
+        refreshRequests: () => void,
+        token: string
+    }>()
     const [loading, setLoading] = useState(false)
     const [type, setType] = useState<string>('')
     const [details, setDetails] = useState('')
-    const [requests, setRequests] = useState<ServiceRequest[]>([])
-    const [fetchingHistory, setFetchingHistory] = useState(true)
-
-    const fetchHistory = async () => {
-        if (!token) return
-        try {
-            const res = await fetch(`/.netlify/functions/get-guest-requests?token=${token}`)
-            const data = await res.json()
-            if (data.success) {
-                setRequests(data.requests)
-            }
-        } catch (error) {
-            console.error("Failed to fetch history", error)
-        } finally {
-            setFetchingHistory(false)
-        }
-    }
-
-    useEffect(() => {
-        fetchHistory()
-    }, [token])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -62,7 +46,7 @@ export function ServicesPage() {
                 toast.success("Request received! We'll be with you shortly.")
                 setType('')
                 setDetails('')
-                fetchHistory()
+                refreshRequests()
             } else {
                 toast.error(data.error || "Failed to submit request")
             }
@@ -184,8 +168,8 @@ function ServiceCard({ icon, label, subtitle, active, onClick }: any) {
         >
             <div
                 className={`w-14 h-14 rounded-full flex items-center justify-center mb-4 flex-shrink-0 transition-all duration-300 ${active
-                        ? 'scale-110 shadow-[0_0_0_3px_#d4a017,inset_0_2px_4px_rgba(0,0,0,0.35)]'
-                        : 'shadow-[inset_0_2px_4px_rgba(0,0,0,0.25)]'
+                    ? 'scale-110 shadow-[0_0_0_3px_#d4a017,inset_0_2px_4px_rgba(0,0,0,0.35)]'
+                    : 'shadow-[inset_0_2px_4px_rgba(0,0,0,0.25)]'
                     }`}
                 style={{ background: 'linear-gradient(145deg, #1E3D22, #152d18)' }}
             >

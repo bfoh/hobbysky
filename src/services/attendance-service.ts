@@ -198,6 +198,10 @@ export function exportAttendanceToCsv(records: AttendanceRecord[]): string {
   return [headers, ...rows].map((row) => row.join(',')).join('\n')
 }
 
+export function downloadCsv(records: AttendanceRecord[], filename = 'attendance.csv') {
+  return downloadAttendanceCsv(records, filename)
+}
+
 export function downloadAttendanceCsv(records: AttendanceRecord[], filename = 'attendance.csv') {
   const csv = exportAttendanceToCsv(records)
   const blob = new Blob([csv], { type: 'text/csv' })

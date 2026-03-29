@@ -2,145 +2,42 @@ import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import {
-  DollarSign,
-  TrendingUp,
-  BookOpen,
-  RefreshCw,
-  CreditCard,
-  Loader2,
-  CheckCircle2,
-  User,
+  DollarSign, TrendingUp, BookOpen, RefreshCw, CreditCard,
+  Loader2, CheckCircle2, User, Plus, Trash2, Send,
 } from '@/components/icons'
 import { useStaffRole } from '@/hooks/use-staff-role'
-import { blink } from '@/blink/client'
+import { format, parseISO } from 'date-fns'
 import {
-  startOfWeek,
-  endOfWeek,
-  startOfMonth,
-  endOfMonth,
-  subWeeks,
-  subMonths,
-  format,
-  isWithinInterval,
-  parseISO,
-} from 'date-fns'
+  getWeekBounds, getPastWeeksBounds, fetchBookingsForStaffWeek,
+  getOrCreateWeekReport, submitWeekReport, reviewWeekReport,
+  type WeekBounds, type WeeklyRevenueReport, type StaffWeekResult,
+} from '@/services/revenue-service'
+import {
+  standaloneSalesService, SALE_CATEGORIES, PAYMENT_METHOD_LABELS,
+  type StandaloneSale, type SaleCategory, type PaymentMethod,
+} from '@/services/standalone-sales-service'
+import { toast } from 'sonner'
 
-// ─── Types ──────────────────────────────────────────────────────────────────
-
-type Period = 'this_week' | 'last_week' | 'this_month' | 'last_month' | 'all_time'
-
-interface RawBooking {
-  id: string
-  guestId?: string
-  roomId?: string
-  checkIn: string
-  checkOut: string
-  totalPrice?: number
-  status: string
-  paymentMethod?: string
-  payment_method?: string
-  createdBy?: string
-  created_by?: string
-  createdByName?: string
-  created_by_name?: string
-  createdAt?: string
-  specialRequests?: string
-  special_requests?: string
-}
-
-interface GuestRecord {
-  id: string
-  name: string
-  email: string
-}
-
-interface RoomRecord {
-  id: string
-  roomNumber: string
-  roomTypeId?: string
-}
-
-interface RevenueRow {
-  bookingId: string
-  guestName: string
-  roomNumber: string
-  checkIn: string
-  checkOut: string
-  roomRate: number
-  additionalCharges: number
-  grandTotal: number
-  paymentMethod: string
-  status: string
-}
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function getPeriodInterval(period: Period): { start: Date; end: Date } | null {
-  const now = new Date()
-  switch (period) {
-    case 'this_week':
-      return { start: startOfWeek(now, { weekStartsOn: 1 }), end: endOfWeek(now, { weekStartsOn: 1 }) }
-    case 'last_week': {
-      const prev = subWeeks(now, 1)
-      return { start: startOfWeek(prev, { weekStartsOn: 1 }), end: endOfWeek(prev, { weekStartsOn: 1 }) }
-    }
-    case 'this_month':
-      return { start: startOfMonth(now), end: endOfMonth(now) }
-    case 'last_month': {
-      const prev = subMonths(now, 1)
-      return { start: startOfMonth(prev), end: endOfMonth(prev) }
-    }
-    case 'all_time':
-      return null
-  }
-}
-
-const PERIOD_LABELS: Record<Period, string> = {
-  this_week: 'This Week',
-  last_week: 'Last Week',
-  this_month: 'This Month',
-  last_month: 'Last Month',
-  all_time: 'All Time',
-}
-
-function fmtGHS(amount: number) {
-  return `GH₵${amount.toLocaleString('en-GH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-}
-
-function parseAdditionalCharges(specialRequests: string): number {
-  const match = specialRequests?.match(/<!-- PAYMENT_DATA:(.*?) -->/)
-  if (!match) return 0
-  try {
-    const data = JSON.parse(match[1])
-    return Number(data.additionalCharges || 0)
-  } catch {
-    return 0
-  }
-}
-
-function normaliseMethod(raw?: string): string {
-  if (!raw) return 'Not recorded'
-  const map: Record<string, string> = {
-    cash: 'Cash',
-    mobile_money: 'Mobile Money',
-    momo: 'Mobile Money',
-    card: 'Card',
-    bank_transfer: 'Bank Transfer',
-    not_paid: 'Not Paid',
-  }
-  return map[raw.toLowerCase()] || raw
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function fmtGHS(n: number) {
+  return `GH₵${n.toLocaleString('en-GH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
 const METHOD_COLORS: Record<string, string> = {
+  cash: 'border-emerald-500/30 text-emerald-600 bg-emerald-500/10',
   Cash: 'border-emerald-500/30 text-emerald-600 bg-emerald-500/10',
+  mobile_money: 'border-yellow-500/30 text-yellow-600 bg-yellow-500/10',
   'Mobile Money': 'border-yellow-500/30 text-yellow-600 bg-yellow-500/10',
+  card: 'border-blue-500/30 text-blue-600 bg-blue-500/10',
   Card: 'border-blue-500/30 text-blue-600 bg-blue-500/10',
-  'Bank Transfer': 'border-purple-500/30 text-purple-600 bg-purple-500/10',
-  'Not Paid': 'border-rose-500/30 text-rose-600 bg-rose-500/10',
-  'Not recorded': 'border-border text-muted-foreground bg-muted',
+  not_paid: 'border-rose-500/30 text-rose-600 bg-rose-500/10',
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -151,105 +48,142 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: 'border-rose-500/30 text-rose-600 bg-rose-500/10',
 }
 
+const REPORT_STATUS_COLORS: Record<string, string> = {
+  draft: 'border-muted-foreground/30 text-muted-foreground bg-muted/40',
+  submitted: 'border-yellow-500/30 text-yellow-600 bg-yellow-500/10',
+  reviewed: 'border-emerald-500/30 text-emerald-600 bg-emerald-500/10',
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
-
 export function MyRevenuePage() {
-  const { userId, staffRecord } = useStaffRole()
+  const { userId, staffRecord, role } = useStaffRole()
+  const isAdmin = role === 'admin' || role === 'owner'
 
-  const [period, setPeriod] = useState<Period>('this_week')
-  const [rows, setRows] = useState<RevenueRow[]>([])
+  // Week selection
+  const weekOptions = getPastWeeksBounds(8)
+  const [selectedWeek, setSelectedWeek] = useState<WeekBounds>(getWeekBounds())
+
+  // Data
+  const [weekResult, setWeekResult] = useState<StaffWeekResult | null>(null)
+  const [weekReport, setWeekReport] = useState<WeeklyRevenueReport | null>(null)
   const [loading, setLoading] = useState(false)
-  const [reviewedByAdmin, setReviewedByAdmin] = useState(false)
 
-  const loadRevenue = useCallback(async () => {
-    if (!userId) return
+  // Log Sale dialog
+  const [showLogSale, setShowLogSale] = useState(false)
+  const [saleDesc, setSaleDesc] = useState('')
+  const [saleCategory, setSaleCategory] = useState<SaleCategory>('food_beverage')
+  const [saleQty, setSaleQty] = useState(1)
+  const [salePrice, setSalePrice] = useState(0)
+  const [saleMethod, setSaleMethod] = useState<PaymentMethod>('cash')
+  const [saleNotes, setSaleNotes] = useState('')
+  const [saleSubmitting, setSaleSubmitting] = useState(false)
+
+  // Submit report dialog
+  const [showSubmitDialog, setShowSubmitDialog] = useState(false)
+  const [submitNotes, setSubmitNotes] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  // Admin review dialog
+  const [showReviewDialog, setShowReviewDialog] = useState(false)
+  const [adminNotes, setAdminNotes] = useState('')
+  const [reviewing, setReviewing] = useState(false)
+
+  const loadData = useCallback(async () => {
+    if (!userId || !staffRecord) return
     setLoading(true)
     try {
-      const db = blink.db as any
-
-      const [rawBookings, guests, rooms] = await Promise.all([
-        db.bookings.list({ limit: 1000 }),
-        db.guests.list({ limit: 500 }),
-        db.rooms.list({ limit: 200 }),
+      const [result, report] = await Promise.all([
+        fetchBookingsForStaffWeek(userId, selectedWeek.weekStart, selectedWeek.weekEnd),
+        getOrCreateWeekReport(userId, staffRecord.name, selectedWeek),
       ])
-
-      const guestMap = new Map<string, GuestRecord>(
-        (guests as GuestRecord[]).map((g) => [g.id, g])
-      )
-      const roomMap = new Map<string, RoomRecord>(
-        (rooms as RoomRecord[]).map((r) => [r.id, r])
-      )
-
-      // Filter: created by this user
-      const myBookings = (rawBookings as RawBooking[]).filter((b) => {
-        const createdBy = b.createdBy || b.created_by
-        return createdBy === userId
-      })
-
-      // Filter by period
-      const interval = getPeriodInterval(period)
-      const periodBookings = interval
-        ? myBookings.filter((b) => {
-            try {
-              const date = parseISO(b.createdAt || b.checkIn)
-              return isWithinInterval(date, interval)
-            } catch {
-              return false
-            }
-          })
-        : myBookings
-
-      // Map to revenue rows
-      const mappedRows: RevenueRow[] = periodBookings.map((b) => {
-        const guest = guestMap.get(b.guestId || '')
-        const room = roomMap.get(b.roomId || '')
-        const rawMethod = b.paymentMethod || b.payment_method
-        const specialReq = b.specialRequests || b.special_requests || ''
-        const additionalCharges = parseAdditionalCharges(specialReq)
-        const roomRate = Number(b.totalPrice || 0) - additionalCharges
-        return {
-          bookingId: b.id.slice(0, 8).toUpperCase(),
-          guestName: guest?.name || 'Unknown Guest',
-          roomNumber: room?.roomNumber || '—',
-          checkIn: b.checkIn,
-          checkOut: b.checkOut,
-          roomRate: Math.max(0, roomRate),
-          additionalCharges,
-          grandTotal: Number(b.totalPrice || 0),
-          paymentMethod: normaliseMethod(rawMethod),
-          status: b.status,
-        }
-      })
-
-      setRows(mappedRows)
+      setWeekResult(result)
+      setWeekReport(report)
     } catch (err) {
-      console.error('[MyRevenuePage] Failed to load revenue:', err)
+      console.error('[MyRevenuePage] load error:', err)
+      toast.error('Failed to load revenue data')
     } finally {
       setLoading(false)
     }
-  }, [userId, period])
+  }, [userId, staffRecord, selectedWeek])
 
-  useEffect(() => {
-    loadRevenue()
-  }, [loadRevenue])
+  useEffect(() => { loadData() }, [loadData])
 
-  // Aggregate stats
-  const totalRoomRevenue = rows.reduce((sum, r) => sum + r.roomRate, 0)
-  const totalAdditional = rows.reduce((sum, r) => sum + r.additionalCharges, 0)
-  const totalStandalone = 0 // placeholder — no standalone sales yet
-  const grandTotal = rows.reduce((sum, r) => sum + r.grandTotal, 0)
-  const bookingsCreated = rows.length
+  // ─── Log Sale ────────────────────────────────────────────────────────────
+  const resetSaleForm = () => {
+    setSaleDesc(''); setSaleCategory('food_beverage'); setSaleQty(1)
+    setSalePrice(0); setSaleMethod('cash'); setSaleNotes('')
+  }
 
-  // Payment method breakdown
-  const methodBreakdown = rows.reduce<Record<string, { count: number; amount: number }>>(
-    (acc, r) => {
-      if (!acc[r.paymentMethod]) acc[r.paymentMethod] = { count: 0, amount: 0 }
-      acc[r.paymentMethod].count += 1
-      acc[r.paymentMethod].amount += r.grandTotal
-      return acc
-    },
-    {}
-  )
+  const handleLogSale = async () => {
+    if (!saleDesc.trim()) { toast.error('Description is required'); return }
+    if (salePrice <= 0) { toast.error('Enter a valid price'); return }
+    if (!userId || !staffRecord) return
+    setSaleSubmitting(true)
+    try {
+      await standaloneSalesService.addSale({
+        description: saleDesc.trim(),
+        category: saleCategory,
+        quantity: saleQty,
+        unitPrice: salePrice,
+        notes: saleNotes.trim(),
+        staffId: userId,
+        staffName: staffRecord.name,
+        paymentMethod: saleMethod,
+        saleDate: format(new Date(), 'yyyy-MM-dd'),
+      })
+      toast.success('Sale logged')
+      resetSaleForm()
+      setShowLogSale(false)
+      loadData()
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to log sale')
+    } finally {
+      setSaleSubmitting(false)
+    }
+  }
+
+  const handleDeleteSale = async (id: string) => {
+    if (!confirm('Delete this sale?')) return
+    await standaloneSalesService.deleteSale(id)
+    toast.success('Sale removed')
+    loadData()
+  }
+
+  // ─── Submit report ───────────────────────────────────────────────────────
+  const handleSubmit = async () => {
+    if (!weekReport) return
+    setSubmitting(true)
+    try {
+      await submitWeekReport(weekReport.id, submitNotes)
+      toast.success('Report submitted for review')
+      setShowSubmitDialog(false)
+      setSubmitNotes('')
+      loadData()
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to submit report')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  // ─── Admin review ────────────────────────────────────────────────────────
+  const handleReview = async () => {
+    if (!weekReport || !staffRecord) return
+    setReviewing(true)
+    try {
+      await reviewWeekReport(weekReport.id, adminNotes, staffRecord.name)
+      toast.success('Report marked as reviewed')
+      setShowReviewDialog(false)
+      setAdminNotes('')
+      loadData()
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to review report')
+    } finally {
+      setReviewing(false)
+    }
+  }
+
+  const isLocked = weekReport?.status === 'submitted' || weekReport?.status === 'reviewed'
 
   return (
     <div className="p-6 space-y-6 max-w-6xl mx-auto">
@@ -261,38 +195,70 @@ export function MyRevenuePage() {
             {staffRecord?.name ? `Revenue generated by ${staffRecord.name}` : 'Your personal revenue summary'}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
-            <SelectTrigger className="w-44 h-9">
-              <SelectValue />
+        <div className="flex items-center gap-2 flex-wrap">
+          <Select
+            value={`${selectedWeek.weekStart}|${selectedWeek.weekEnd}`}
+            onValueChange={(v) => {
+              const [ws, we] = v.split('|')
+              const opt = weekOptions.find(w => w.weekStart === ws && w.weekEnd === we)
+              if (opt) setSelectedWeek(opt)
+            }}
+          >
+            <SelectTrigger className="w-52 h-9">
+              <SelectValue placeholder="Select week" />
             </SelectTrigger>
             <SelectContent>
-              {(Object.keys(PERIOD_LABELS) as Period[]).map((p) => (
-                <SelectItem key={p} value={p}>
-                  {PERIOD_LABELS[p]}
+              {weekOptions.map(w => (
+                <SelectItem key={w.weekStart} value={`${w.weekStart}|${w.weekEnd}`}>
+                  {w.label}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={loadRevenue}
-            disabled={loading}
-            className="h-9 gap-1.5"
-          >
+
+          {!isLocked && (
+            <Button variant="outline" size="sm" onClick={() => setShowLogSale(true)} className="h-9 gap-1.5">
+              <Plus className="w-4 h-4" />Log Sale
+            </Button>
+          )}
+
+          <Button variant="outline" size="sm" onClick={loadData} disabled={loading} className="h-9 gap-1.5">
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
           </Button>
         </div>
       </div>
 
-      {/* Admin-reviewed banner */}
-      {reviewedByAdmin && (
-        <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 text-sm">
-          <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-          <span className="font-medium">Reviewed by admin</span>
-          <span className="text-emerald-600">This period's revenue has been verified.</span>
+      {/* Report status banner */}
+      {weekReport && (
+        <div className={`flex items-center justify-between gap-3 px-4 py-3 rounded-xl border text-sm ${
+          weekReport.status === 'reviewed' ? 'bg-emerald-500/10 border-emerald-500/20' :
+          weekReport.status === 'submitted' ? 'bg-yellow-500/10 border-yellow-500/20' :
+          'bg-muted/30 border-border'
+        }`}>
+          <div className="flex items-center gap-2">
+            {weekReport.status === 'reviewed' && <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />}
+            <span className="font-medium capitalize">{weekReport.status}</span>
+            {weekReport.status === 'draft' && <span className="text-muted-foreground">— auto-updating until submitted</span>}
+            {weekReport.status === 'submitted' && <span className="text-muted-foreground">— awaiting manager review</span>}
+            {weekReport.status === 'reviewed' && weekReport.adminNotes && (
+              <span className="text-emerald-700">"{weekReport.adminNotes}"</span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className={REPORT_STATUS_COLORS[weekReport.status]}>
+              {weekReport.status}
+            </Badge>
+            {weekReport.status === 'draft' && (
+              <Button size="sm" onClick={() => setShowSubmitDialog(true)} className="h-7 gap-1.5 text-xs">
+                <Send className="w-3 h-3" />Submit
+              </Button>
+            )}
+            {weekReport.status === 'submitted' && isAdmin && (
+              <Button size="sm" variant="outline" onClick={() => setShowReviewDialog(true)} className="h-7 gap-1.5 text-xs">
+                <CheckCircle2 className="w-3 h-3" />Mark Reviewed
+              </Button>
+            )}
+          </div>
         </div>
       )}
 
@@ -306,34 +272,31 @@ export function MyRevenuePage() {
                 <DollarSign className="w-4 h-4 text-primary" />
               </div>
             </div>
-            <p className="text-2xl font-bold">{fmtGHS(totalRoomRevenue)}</p>
+            <p className="text-2xl font-bold">{fmtGHS(weekResult?.totalRevenue || 0)}</p>
           </CardContent>
         </Card>
-
         <Card>
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center justify-between mb-2">
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Add. Charges</p>
               <div className="w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center">
-                <TrendingUp className="w-4 h-4 text-yellow-600" />
+                <CreditCard className="w-4 h-4 text-yellow-600" />
               </div>
             </div>
-            <p className="text-2xl font-bold">{fmtGHS(totalAdditional)}</p>
+            <p className="text-2xl font-bold">{fmtGHS(weekResult?.additionalRevenue || 0)}</p>
           </CardContent>
         </Card>
-
         <Card>
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">Bookings</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Standalone Sales</p>
               <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
                 <BookOpen className="w-4 h-4 text-blue-500" />
               </div>
             </div>
-            <p className="text-2xl font-bold">{bookingsCreated}</p>
+            <p className="text-2xl font-bold">{fmtGHS(weekResult?.standaloneSalesRevenue || 0)}</p>
           </CardContent>
         </Card>
-
         <Card className="border-primary/30 bg-primary/5">
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center justify-between mb-2">
@@ -342,114 +305,118 @@ export function MyRevenuePage() {
                 <TrendingUp className="w-4 h-4 text-primary" />
               </div>
             </div>
-            <p className="text-2xl font-bold text-primary">{fmtGHS(grandTotal)}</p>
+            <p className="text-2xl font-bold text-primary">{fmtGHS(weekResult?.grandRevenue || 0)}</p>
+            <p className="text-xs text-muted-foreground mt-1">{weekResult?.bookingCount || 0} booking{weekResult?.bookingCount !== 1 ? 's' : ''}</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Payment Method Breakdown */}
-      {Object.keys(methodBreakdown).length > 0 && (
+      {/* Standalone Sales Table */}
+      {(weekResult?.standaloneSales?.length ?? 0) > 0 && (
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <CreditCard className="w-4 h-4 text-primary" />
-              Payment Method Breakdown
-            </CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Standalone Sales</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {Object.entries(methodBreakdown).map(([method, { count, amount }]) => (
-                <div
-                  key={method}
-                  className="flex flex-col gap-1 p-3 rounded-xl border bg-muted/20"
-                >
-                  <Badge
-                    variant="outline"
-                    className={`w-fit text-xs ${METHOD_COLORS[method] || 'border-border text-muted-foreground'}`}
-                  >
-                    {method}
-                  </Badge>
-                  <p className="text-lg font-semibold mt-1">{fmtGHS(amount)}</p>
-                  <p className="text-xs text-muted-foreground">{count} booking{count !== 1 ? 's' : ''}</p>
-                </div>
-              ))}
-            </div>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead className="text-right">Qty</TableHead>
+                  <TableHead className="text-right">Unit Price</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>Payment</TableHead>
+                  <TableHead>Date</TableHead>
+                  {!isLocked && <TableHead></TableHead>}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {weekResult!.standaloneSales.map((sale) => (
+                  <TableRow key={sale.id}>
+                    <TableCell className="font-medium">{sale.description}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{SALE_CATEGORIES[sale.category]}</TableCell>
+                    <TableCell className="text-right text-sm">{sale.quantity}</TableCell>
+                    <TableCell className="text-right tabular-nums text-sm">{fmtGHS(sale.unitPrice)}</TableCell>
+                    <TableCell className="text-right font-semibold tabular-nums">{fmtGHS(sale.amount)}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={`text-xs ${METHOD_COLORS[sale.paymentMethod] || ''}`}>
+                        {PAYMENT_METHOD_LABELS[sale.paymentMethod]}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{sale.saleDate}</TableCell>
+                    {!isLocked && (
+                      <TableCell>
+                        <Button variant="ghost" size="icon" onClick={() => handleDeleteSale(sale.id)} className="text-destructive hover:text-destructive h-7 w-7">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       )}
 
-      {/* Bookings Table */}
+      {/* Bookings Breakdown Table */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">
+          <CardTitle className="text-base flex items-center gap-2">
             Booking Breakdown
-            {loading && <Loader2 className="inline-block w-4 h-4 ml-2 animate-spin text-muted-foreground" />}
+            {loading && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          {!loading && rows.length === 0 ? (
+          {!loading && (weekResult?.bookings?.length ?? 0) === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 gap-2 text-center">
               <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center">
                 <User className="w-6 h-6 text-muted-foreground/60" />
               </div>
-              <p className="text-sm font-medium text-muted-foreground">No bookings found for this period</p>
-              <p className="text-xs text-muted-foreground/70">Try selecting a different time range</p>
+              <p className="text-sm font-medium text-muted-foreground">No bookings found for this week</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="whitespace-nowrap">Booking ID</TableHead>
+                    <TableHead>Booking</TableHead>
                     <TableHead>Guest</TableHead>
                     <TableHead>Room</TableHead>
-                    <TableHead className="whitespace-nowrap">Check-in</TableHead>
-                    <TableHead className="whitespace-nowrap">Check-out</TableHead>
-                    <TableHead className="text-right whitespace-nowrap">Room Rate</TableHead>
-                    <TableHead className="text-right whitespace-nowrap">Charges</TableHead>
-                    <TableHead className="text-right whitespace-nowrap">Total</TableHead>
+                    <TableHead>Check-in</TableHead>
+                    <TableHead>Check-out</TableHead>
+                    <TableHead className="text-right">Room Rate</TableHead>
+                    <TableHead className="text-right">Charges</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
                     <TableHead>Payment</TableHead>
                     <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {rows.map((row, idx) => (
-                    <TableRow key={idx}>
-                      <TableCell className="font-mono text-xs text-muted-foreground">
-                        #{row.bookingId}
-                      </TableCell>
-                      <TableCell className="font-medium whitespace-nowrap">
-                        {row.guestName}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap">{row.roomNumber}</TableCell>
+                  {(weekResult?.bookings || []).map((row) => (
+                    <TableRow key={row.id}>
+                      <TableCell className="font-mono text-xs text-muted-foreground">#{row.id.slice(0, 8).toUpperCase()}</TableCell>
+                      <TableCell className="font-medium whitespace-nowrap">{row.guestName}</TableCell>
+                      <TableCell>{row.roomNumber}</TableCell>
                       <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                         {format(parseISO(row.checkIn), 'dd MMM yyyy')}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                         {format(parseISO(row.checkOut), 'dd MMM yyyy')}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {fmtGHS(row.roomRate)}
-                      </TableCell>
+                      <TableCell className="text-right tabular-nums">{fmtGHS(row.roomRate)}</TableCell>
                       <TableCell className="text-right tabular-nums text-muted-foreground">
                         {row.additionalCharges > 0 ? fmtGHS(row.additionalCharges) : '—'}
                       </TableCell>
-                      <TableCell className="text-right font-semibold tabular-nums">
-                        {fmtGHS(row.grandTotal)}
-                      </TableCell>
+                      <TableCell className="text-right font-semibold tabular-nums">{fmtGHS(row.grandTotal)}</TableCell>
                       <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={`text-xs whitespace-nowrap ${METHOD_COLORS[row.paymentMethod] || ''}`}
-                        >
+                        <Badge variant="outline" className={`text-xs whitespace-nowrap ${METHOD_COLORS[row.paymentMethod] || ''}`}>
                           {row.paymentMethod}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={`text-xs capitalize whitespace-nowrap ${STATUS_COLORS[row.status] || 'border-border'}`}
-                        >
+                        <Badge variant="outline" className={`text-xs capitalize whitespace-nowrap ${STATUS_COLORS[row.status] || 'border-border'}`}>
                           {row.status}
                         </Badge>
                       </TableCell>
@@ -462,13 +429,111 @@ export function MyRevenuePage() {
         </CardContent>
       </Card>
 
-      {/* Summary footer */}
-      {rows.length > 0 && (
-        <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-muted/30 border text-sm">
-          <span className="text-muted-foreground">{rows.length} booking{rows.length !== 1 ? 's' : ''} — {PERIOD_LABELS[period]}</span>
-          <span className="font-semibold">{fmtGHS(grandTotal)} total</span>
-        </div>
-      )}
+      {/* ── Log Sale Dialog ──────────────────────────────────────────────── */}
+      <Dialog open={showLogSale} onOpenChange={(o) => { setShowLogSale(o); if (!o) resetSaleForm() }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Log Standalone Sale</DialogTitle>
+            <DialogDescription>Record a cash/non-booking sale (bar, food, services)</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Description *</Label>
+              <Input value={saleDesc} onChange={e => setSaleDesc(e.target.value)} placeholder="e.g. Bar — Soft Drinks" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Category</Label>
+                <Select value={saleCategory} onValueChange={v => setSaleCategory(v as SaleCategory)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(SALE_CATEGORIES).map(([k, v]) => (
+                      <SelectItem key={k} value={k}>{v}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Payment Method</Label>
+                <Select value={saleMethod} onValueChange={v => setSaleMethod(v as PaymentMethod)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(PAYMENT_METHOD_LABELS).map(([k, v]) => (
+                      <SelectItem key={k} value={k}>{v}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Quantity</Label>
+                <Input type="number" min={1} value={saleQty} onChange={e => setSaleQty(parseInt(e.target.value) || 1)} />
+              </div>
+              <div>
+                <Label>Unit Price (GH₵)</Label>
+                <Input type="number" min={0} step={0.01} value={salePrice} onChange={e => setSalePrice(parseFloat(e.target.value) || 0)} />
+              </div>
+            </div>
+            {saleQty > 0 && salePrice > 0 && (
+              <p className="text-sm font-semibold">Total: {fmtGHS(saleQty * salePrice)}</p>
+            )}
+            <div>
+              <Label>Notes (Optional)</Label>
+              <Textarea value={saleNotes} onChange={e => setSaleNotes(e.target.value)} rows={2} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowLogSale(false)}>Cancel</Button>
+            <Button onClick={handleLogSale} disabled={saleSubmitting}>
+              {saleSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Log Sale
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Submit Report Dialog ─────────────────────────────────────────── */}
+      <Dialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Submit Weekly Report</DialogTitle>
+            <DialogDescription>
+              Once submitted, the report is locked and sent for manager review. Total: {fmtGHS(weekResult?.grandRevenue || 0)}
+            </DialogDescription>
+          </DialogHeader>
+          <div>
+            <Label>Notes for manager (optional)</Label>
+            <Textarea value={submitNotes} onChange={e => setSubmitNotes(e.target.value)} rows={3} placeholder="Any context or comments..." />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSubmitDialog(false)}>Cancel</Button>
+            <Button onClick={handleSubmit} disabled={submitting}>
+              {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Send className="w-4 h-4 mr-2" />}
+              Submit Report
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Admin Review Dialog ──────────────────────────────────────────── */}
+      <Dialog open={showReviewDialog} onOpenChange={setShowReviewDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Mark as Reviewed</DialogTitle>
+            <DialogDescription>Confirm you have reviewed this weekly report.</DialogDescription>
+          </DialogHeader>
+          <div>
+            <Label>Feedback for staff (optional)</Label>
+            <Textarea value={adminNotes} onChange={e => setAdminNotes(e.target.value)} rows={3} placeholder="Well done, or any comments..." />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowReviewDialog(false)}>Cancel</Button>
+            <Button onClick={handleReview} disabled={reviewing}>
+              {reviewing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
+              Mark Reviewed
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

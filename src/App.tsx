@@ -38,6 +38,7 @@ import MarketingPage from './pages/staff/MarketingPage'
 import { ServiceRequestsPage } from './pages/staff/ServiceRequestsPage'
 import { HRPage } from './pages/staff/HRPage'
 import { MyRevenuePage } from './pages/staff/MyRevenuePage'
+import { ClockPage } from './pages/staff/ClockPage'
 import GuestLayout from './layouts/GuestLayout'
 import GuestDashboard from './pages/guest/GuestDashboard'
 import { ConciergePage } from './pages/guest/ConciergePage'
@@ -211,6 +212,7 @@ function App() {
                 <Route path="requests" element={<ServiceRequestsPage />} />
                 <Route path="hr" element={<HRPage />} />
                 <Route path="my-revenue" element={<MyRevenuePage />} />
+                <Route path="clock" element={<ClockPage />} />
               </Route>
 
               {/* Invoice debug route */}

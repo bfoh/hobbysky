@@ -52,6 +52,7 @@ export function GuestChargesDialog({
     const [quantity, setQuantity] = useState(1)
     const [unitPrice, setUnitPrice] = useState(0)
     const [notes, setNotes] = useState('')
+    const [paymentMethod, setPaymentMethod] = useState<'cash' | 'mobile_money' | 'card'>('cash')
 
     // Fetch charges when dialog opens
     useEffect(() => {
@@ -81,6 +82,7 @@ export function GuestChargesDialog({
         setQuantity(1)
         setUnitPrice(0)
         setNotes('')
+        setPaymentMethod('cash')
         setEditingChargeId(null)
         setShowAddForm(false)
     }
@@ -104,7 +106,8 @@ export function GuestChargesDialog({
                 category,
                 quantity,
                 unitPrice,
-                notes: notes.trim() || undefined
+                notes: notes.trim() || undefined,
+                paymentMethod,
             }
 
             await bookingChargesService.addCharge(chargeData)
@@ -162,6 +165,7 @@ export function GuestChargesDialog({
         setQuantity(charge.quantity)
         setUnitPrice(charge.unitPrice)
         setNotes(charge.notes || '')
+        setPaymentMethod((charge as any).paymentMethod || 'cash')
         setEditingChargeId(charge.id)
         setShowAddForm(true)
     }
@@ -288,6 +292,20 @@ export function GuestChargesDialog({
                                         </div>
 
                                         <div className="col-span-2">
+                                            <Label htmlFor="paymentMethod">Payment Method</Label>
+                                            <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as any)}>
+                                                <SelectTrigger id="paymentMethod">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="cash">Cash</SelectItem>
+                                                    <SelectItem value="mobile_money">Mobile Money</SelectItem>
+                                                    <SelectItem value="card">Card</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        <div className="col-span-2">
                                             <Label htmlFor="notes">Notes (Optional)</Label>
                                             <Textarea
                                                 id="notes"
@@ -354,6 +372,7 @@ export function GuestChargesDialog({
                                         </div>
                                         <p className="text-sm text-muted-foreground">
                                             {charge.quantity} × {formatCurrencySync(charge.unitPrice, currency)}
+                                            {(charge as any).paymentMethod && ` • ${{ cash: 'Cash', mobile_money: 'MoMo', card: 'Card' }[(charge as any).paymentMethod] || (charge as any).paymentMethod}`}
                                             {charge.notes && ` • ${charge.notes}`}
                                         </p>
                                     </div>

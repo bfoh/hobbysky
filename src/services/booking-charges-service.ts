@@ -22,6 +22,7 @@ export interface CreateChargeData {
     quantity: number
     unitPrice: number
     notes?: string
+    paymentMethod?: 'cash' | 'mobile_money' | 'card'
     createdBy?: string
 }
 
@@ -31,6 +32,7 @@ export interface UpdateChargeData {
     quantity?: number
     unitPrice?: number
     notes?: string
+    paymentMethod?: 'cash' | 'mobile_money' | 'card'
 }
 
 class BookingChargesService {
@@ -76,6 +78,7 @@ class BookingChargesService {
                 unitPrice: data.unitPrice,
                 amount: amount,
                 notes: data.notes || null,
+                paymentMethod: data.paymentMethod || 'cash',
                 createdBy: data.createdBy || null,
                 createdAt: new Date().toISOString()
             })

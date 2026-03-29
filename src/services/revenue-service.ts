@@ -280,7 +280,12 @@ export async function fetchBookingsForStaffWeek(
   const orphanChargesTotal = orphanCharges.reduce((s, c) => s + c.amount, 0)
 
   // Standalone sales for this staff member this week
-  const standaloneSales = await standaloneSalesService.getSalesForStaff(staffId, weekStart, weekEnd)
+  let standaloneSales: StandaloneSale[] = []
+  try {
+    standaloneSales = await standaloneSalesService.getSalesForStaff(staffId, weekStart, weekEnd)
+  } catch (e) {
+    console.warn('[fetchBookingsForStaffWeek] standalone sales fetch failed:', e)
+  }
   const standaloneSalesRevenue = standaloneSales.reduce((s, sale) => s + sale.amount, 0)
 
   const totalRevenue = matched.reduce((s, b) => s + b.totalPrice, 0)

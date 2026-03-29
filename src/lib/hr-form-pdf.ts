@@ -85,7 +85,7 @@ export async function generateEmploymentApplicationPDF(): Promise<void> {
   // ── LOAD LOGO ──────────────────────────────────────────────────────────────
   let logoDataUrl: string | null = null
   try {
-    const res = await fetch('/hotelview-enhanced.png')
+    const res = await fetch('/logohobbysky.png')
     const blob = await res.blob()
     logoDataUrl = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader()

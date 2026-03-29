@@ -13,13 +13,11 @@ import {
   BookOpen,
   Users,
   Network,
-  BarChart3,
   Settings,
   Menu,
   LogOut,
   Bell,
   List,
-  History,
   Tag,
   Sparkles,
   ChevronDown,
@@ -28,7 +26,9 @@ import {
   TrendingUp,
   FileText,
   Star,
-  Megaphone
+  Megaphone,
+  DollarSign,
+  QrCode,
 } from '@/components/icons'
 import { blink } from '../../blink/client'
 import { cn } from '../../lib/utils'
@@ -44,7 +44,8 @@ const navigation = [
   { name: 'Channels', href: '/staff/channels', icon: Network },
   { name: 'Reviews', href: '/staff/reviews', icon: Star },
   { name: 'Marketing', href: '/staff/marketing', icon: Megaphone },
-  { name: 'Guest Requests', href: '/staff/requests', icon: Bell }
+  { name: 'Guest Requests', href: '/staff/requests', icon: Bell },
+  { name: 'My Revenue', href: '/staff/my-revenue', icon: DollarSign },
 ]
 
 export function AppLayout() {
@@ -369,6 +370,23 @@ export function AppLayout() {
                   )}
                   <UserCheck className={cn("w-5 h-5 flex-shrink-0 transition-transform z-10 relative", location.pathname === '/staff/employees' ? "scale-110 drop-shadow-md text-primary" : "group-hover:text-foreground")} />
                   <span className="z-10 relative tracking-wide">Employees</span>
+                </Link>
+
+                <Link
+                  to="/staff/hr"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={cn(
+                    'group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ease-out border border-transparent relative overflow-hidden',
+                    location.pathname === '/staff/hr'
+                      ? 'bg-primary/10 text-primary border-primary/20 shadow-[0_0_15px_rgba(0,0,0,0.1)] translate-x-1'
+                      : 'text-muted-foreground hover:bg-white/5 hover:text-foreground hover:border-white/10'
+                  )}
+                >
+                  {location.pathname === '/staff/hr' && (
+                    <div className="absolute left-0 inset-y-0 w-1 bg-primary shadow-[0_0_10px_currentColor] rounded-r-full" />
+                  )}
+                  <QrCode className={cn("w-5 h-5 flex-shrink-0 transition-transform z-10 relative", location.pathname === '/staff/hr' ? "scale-110 drop-shadow-md text-primary" : "group-hover:text-foreground")} />
+                  <span className="z-10 relative tracking-wide">HR</span>
                 </Link>
 
                 {/* Price list collapsible - Admin only */}

@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "../../components/ui/alert-dialog"
-import { Plus, Calendar, User, Home, Search, Trash2, Users, QrCode, ExternalLink, Smartphone, Printer } from '@/components/icons'
+import { Plus, Calendar, User, Home, Search, Trash2, Users, QrCode, ExternalLink, Smartphone, Printer, X } from '@/components/icons'
 import { QRCodeSVG } from 'qrcode.react'
 import { blink } from '../../blink/client'
 import { toast } from 'sonner'
@@ -24,7 +24,7 @@ import { useStaffRole } from '../../hooks/use-staff-role'
 import { bookingEngine } from '../../services/booking-engine'
 import { calculateNights } from '../../lib/display'
 import { activityLogService } from '../../services/activity-log-service'
-import { formatCurrencySync } from '@/lib/utils'
+import { formatCurrencySync, getCurrencySymbol } from '@/lib/utils'
 import { useCurrency } from '@/hooks/use-currency'
 
 // Helper function to get current user ID
@@ -85,9 +85,10 @@ export function BookingsPage() {
     children: 0,
     totalPrice: 0,
     notes: '',
-    paymentMethod: 'Not paid',
+    paymentMethod: 'Cash',
     paymentType: 'full' as 'full' | 'part' | 'later',
-    amountPaid: 0
+    amountPaid: 0,
+    paymentSplits: [{ method: 'Cash', amount: 0 }]
   })
 
   const activeStatuses = new Set(['reserved', 'confirmed', 'checked-in'])
@@ -124,7 +125,16 @@ export function BookingsPage() {
     const pricePerNight = Number(selectedRoomType?.basePrice) || 0
     const calculatedPrice = nights * pricePerNight
 
-    setFormData(prev => ({ ...prev, totalPrice: calculatedPrice }))
+    setFormData(prev => {
+      let updatedSplits = prev.paymentSplits
+      let newAmountPaid = prev.amountPaid
+      if (prev.paymentType === 'full' && prev.paymentSplits.length === 1) {
+        updatedSplits = [{ ...prev.paymentSplits[0], amount: calculatedPrice }]
+        newAmountPaid = calculatedPrice
+      }
+
+      return { ...prev, totalPrice: calculatedPrice, paymentSplits: updatedSplits, amountPaid: newAmountPaid }
+    })
   }, [formData.propertyId, formData.checkIn, formData.checkOut, properties, roomTypes])
 
   useEffect(() => {
@@ -260,6 +270,16 @@ export function BookingsPage() {
       const roomTypeName = selectedRoomType?.name || ''
       console.log('[BookingsPage] Room type:', roomTypeName, 'from roomTypeId:', selectedProperty.roomTypeId)
 
+      const activeSplits = formData.paymentType !== 'later' ? formData.paymentSplits.filter((s: {amount: number}) => s.amount > 0) : []
+      const finalPaymentMethod = formData.paymentType !== 'later' && activeSplits.length > 0
+        ? (activeSplits.length === 1 ? activeSplits[0].method : 'Split Payment')
+        : (formData.paymentType === 'later' ? 'Not paid' : formData.paymentMethod)
+
+      const notesWithSplits = formData.notes
+        + (activeSplits.length > 1 && formData.paymentType !== 'later'
+        ? `\n<!-- PAYMENT_SPLITS:${JSON.stringify(activeSplits)} -->`
+        : '')
+
       const bookingPayload: any = {
         guest: {
           fullName: formData.guestName,
@@ -277,8 +297,8 @@ export function BookingsPage() {
         amount: formData.totalPrice,
         status: 'confirmed',
         source: 'reception',
-        notes: formData.notes,
-        payment_method: formData.paymentType === 'later' ? 'Not paid' : formData.paymentMethod,
+        notes: notesWithSplits,
+        payment_method: finalPaymentMethod,
         amountPaid: formData.paymentType === 'full' ? formData.totalPrice : formData.paymentType === 'part' ? formData.amountPaid : 0,
         paymentStatus: formData.paymentType === 'full' ? 'full' : formData.paymentType === 'part' ? 'part' : 'pending',
         createdBy: staffData?.userId || staffData?.id,
@@ -341,9 +361,10 @@ export function BookingsPage() {
       children: 0,
       totalPrice: 0,
       notes: '',
-      paymentMethod: 'Not paid',
+      paymentMethod: 'Cash',
       paymentType: 'full',
-      amountPaid: 0
+      amountPaid: 0,
+      paymentSplits: [{ method: 'Cash', amount: 0 }]
     })
   }
 
@@ -596,61 +617,178 @@ export function BookingsPage() {
                 <div className="space-y-2">
                   <Label>Payment Type</Label>
                   <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { value: 'full', label: '💵 Full Payment', color: 'bg-green-50 border-green-300 text-green-800' },
-                      { value: 'part', label: '💰 Part Payment', color: 'bg-amber-50 border-amber-300 text-amber-800' },
-                      { value: 'later', label: '⏳ Pay Later', color: 'bg-gray-50 border-gray-300 text-gray-700' }
-                    ].map((opt) => (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        className={`px-3 py-2 rounded-lg border-2 text-sm font-medium transition-all ${formData.paymentType === opt.value
-                          ? `${opt.color} ring-2 ring-offset-1 ring-primary/30`
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData(prev => ({
+                          ...prev,
+                          paymentType: 'full',
+                          amountPaid: prev.totalPrice,
+                          paymentMethod: prev.paymentMethod === 'Not paid' ? 'Cash' : prev.paymentMethod,
+                          paymentSplits: [{ method: prev.paymentMethod === 'Not paid' ? 'Cash' : prev.paymentMethod, amount: prev.totalPrice }]
+                        }))
+                      }}
+                      className={`px-3 py-2 text-center rounded-lg border-2 text-sm font-medium transition-all ${
+                        formData.paymentType === 'full'
+                          ? 'bg-green-50 border-green-300 text-green-800 ring-2 ring-offset-1 ring-primary/30'
                           : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
-                          }`}
-                        onClick={() => setFormData({ ...formData, paymentType: opt.value as any })}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
+                      }`}
+                    >
+                      💵 Full
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData(prev => ({
+                          ...prev,
+                          paymentType: 'part',
+                          amountPaid: 0,
+                          paymentMethod: prev.paymentMethod === 'Not paid' ? 'Cash' : prev.paymentMethod,
+                          paymentSplits: [{ method: prev.paymentMethod === 'Not paid' ? 'Cash' : prev.paymentMethod, amount: 0 }]
+                        }))
+                      }}
+                      className={`px-3 py-2 text-center rounded-lg border-2 text-sm font-medium transition-all ${
+                        formData.paymentType === 'part'
+                          ? 'bg-amber-50 border-amber-300 text-amber-800 ring-2 ring-offset-1 ring-primary/30'
+                          : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
+                      }`}
+                    >
+                      💰 Part
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData(prev => ({
+                          ...prev,
+                          paymentType: 'later',
+                          amountPaid: 0,
+                          paymentMethod: 'Not paid',
+                          paymentSplits: [{ method: 'Cash', amount: 0 }]
+                        }))
+                      }}
+                      className={`px-3 py-2 text-center rounded-lg border-2 text-sm font-medium transition-all ${
+                        formData.paymentType === 'later'
+                          ? 'bg-gray-50 border-gray-300 text-gray-700 ring-2 ring-offset-1 ring-primary/30'
+                          : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
+                      }`}
+                    >
+                      ⏳ Later
+                    </button>
                   </div>
                 </div>
 
                 {formData.paymentType !== 'later' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="paymentMethod">Payment Method</Label>
-                    <select
-                      id="paymentMethod"
-                      className="w-full px-3 py-2 border rounded-md"
-                      value={formData.paymentMethod}
-                      onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
-                    >
-                      <option value="Cash">Cash</option>
-                      <option value="Mobile Money">Mobile Money</option>
-                      <option value="Credit/Debit Card">Credit/Debit Card</option>
-                    </select>
+                  <div className="space-y-4">
+                    <div className="space-y-2 border p-4 rounded-md bg-secondary/30">
+                      <Label>Payment Method</Label>
+                      <div className="space-y-3">
+                        {formData.paymentSplits.map((split, i) => (
+                          <div key={i} className="flex gap-2 items-center">
+                            <select
+                              className="w-[140px] px-3 py-2 border rounded-md bg-background text-sm"
+                              value={split.method}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setFormData(prev => {
+                                  const newSplits = prev.paymentSplits.map((s, j) => j === i ? { ...s, method: val } : s);
+                                  return {
+                                    ...prev,
+                                    paymentSplits: newSplits,
+                                    paymentMethod: newSplits.length === 1 ? val : prev.paymentMethod
+                                  };
+                                });
+                              }}
+                            >
+                              <option value="Cash">💵 Cash</option>
+                              <option value="Mobile Money">📱 Mobile Money</option>
+                              <option value="Credit/Debit Card">💳 Card</option>
+                            </select>
+                            <div className="relative flex-1">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                                {getCurrencySymbol(currency)}
+                              </span>
+                              <Input
+                                type="number"
+                                min="0"
+                                step="1"
+                                value={split.amount || ''}
+                                onChange={(e) => {
+                                  const val = parseFloat(e.target.value) || 0;
+                                  setFormData(prev => {
+                                    const newSplits = prev.paymentSplits.map((s, j) => j === i ? { ...s, amount: val } : s);
+                                    let newAmountPaid = prev.amountPaid;
+                                    if (prev.paymentType === 'part') {
+                                      const newTotal = newSplits.reduce((s, sp, idx) => s + (idx === i ? val : Number(sp.amount) || 0), 0);
+                                      newAmountPaid = Math.min(newTotal, prev.totalPrice);
+                                    } else if (prev.paymentType === 'full') {
+                                      // Optional: let user adjust splits in 'full' type freely as long as it adds up
+                                    }
+                                    return { ...prev, paymentSplits: newSplits, amountPaid: newAmountPaid };
+                                  });
+                                }}
+                                className="pl-8 !mb-0"
+                              />
+                            </div>
+                            {formData.paymentSplits.length > 1 && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    paymentSplits: prev.paymentSplits.filter((_, j) => j !== i)
+                                  }));
+                                }}
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </div>
+                        ))}
+
+                        {formData.paymentSplits.length > 1 && (() => {
+                          const splitTotal = formData.paymentSplits.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+                          const target = formData.paymentType === 'full' ? formData.totalPrice : formData.amountPaid;
+                          const remaining = target - splitTotal;
+                          return (
+                            <div className="flex justify-between text-xs px-1">
+                              <span className="text-muted-foreground">Splits total</span>
+                              <span className={remaining === 0 ? 'text-emerald-500 font-semibold' : 'text-amber-500 font-semibold'}>
+                                {formatCurrencySync(splitTotal, currency)}
+                                {remaining > 0 && ` · ${formatCurrencySync(remaining, currency)} short`}
+                                {remaining < 0 && ` · ${formatCurrencySync(Math.abs(remaining), currency)} over`}
+                                {remaining === 0 && ' ✓'}
+                              </span>
+                            </div>
+                          );
+                        })()}
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData(prev => ({
+                              ...prev,
+                              paymentSplits: [...prev.paymentSplits, { method: 'Cash', amount: 0 }]
+                            }));
+                          }}
+                          className="flex items-center gap-1.5 text-xs text-primary hover:underline mt-1"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          Add another payment method
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 )}
 
-                {formData.paymentType === 'part' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="amountPaid">Amount Paid</Label>
-                    <Input
-                      id="amountPaid"
-                      type="number"
-                      min="0"
-                      max={formData.totalPrice}
-                      step="0.01"
-                      value={formData.amountPaid}
-                      onChange={(e) => setFormData({ ...formData, amountPaid: parseFloat(e.target.value) || 0 })}
-                      placeholder="Enter amount paid"
-                    />
-                    {formData.amountPaid > 0 && formData.totalPrice > 0 && (
-                      <div className="flex items-center justify-between text-sm p-2 bg-amber-50 border border-amber-200 rounded-md">
-                        <span className="text-amber-800">Remaining Balance:</span>
-                        <span className="font-bold text-red-600">{formatCurrencySync(Math.max(0, formData.totalPrice - formData.amountPaid), currency)}</span>
-                      </div>
-                    )}
+                {formData.paymentType === 'part' && formData.amountPaid > 0 && formData.totalPrice > 0 && (
+                  <div className="flex items-center justify-between text-sm p-3 bg-amber-50 border border-amber-200 rounded-md">
+                    <span className="text-amber-800">Remaining Balance:</span>
+                    <span className="font-bold text-red-600">
+                      {formatCurrencySync(Math.max(0, formData.totalPrice - formData.amountPaid), currency)}
+                    </span>
                   </div>
                 )}
 

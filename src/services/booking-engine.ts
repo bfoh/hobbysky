@@ -45,6 +45,8 @@ export interface LocalBooking {
   createdAt: string
   updatedAt: string
   payment_method?: string
+  paymentMethod?: string
+  paymentSplits?: Array<{ method: string; amount: number }>
 
   // Group Booking Fields
   groupId?: string
@@ -1187,6 +1189,15 @@ class BookingEngine {
         }
       }
 
+      // Extract split payment data
+      let paymentSplits: Array<{ method: string; amount: number }> | undefined
+      const splitsMatch = specialReq.match(/<!-- PAYMENT_SPLITS:(.*?) -->/)
+      if (splitsMatch) {
+        try {
+          paymentSplits = JSON.parse(splitsMatch[1])
+        } catch { /* ignore malformed data */ }
+      }
+
       const local: LocalBooking = {
         _id: localId,
         remoteId: remoteId || localId,
@@ -1213,6 +1224,8 @@ class BookingEngine {
         amountPaid,
         paymentStatus,
         payment_method: b.paymentMethod || b.payment_method,
+        paymentMethod: b.paymentMethod || b.payment_method,
+        paymentSplits,
         createdAt,
         updatedAt: b.updatedAt || createdAt,
         synced: true,

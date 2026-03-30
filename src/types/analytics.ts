@@ -1,5 +1,17 @@
+export interface PayMethodBreakdown {
+  cash: number
+  cashCount: number
+  mobileMoney: number
+  mobileMonetyCount: number
+  card: number
+  cardCount: number
+}
+
 export interface RevenueAnalytics {
   totalRevenue: number
+  roomRevenueTotal: number
+  standaloneSalesTotal: number
+  additionalRevenueByCategory: Record<string, number>
   revenueByPeriod: {
     today: number
     thisWeek: number
@@ -15,11 +27,14 @@ export interface RevenueAnalytics {
     bookingCount: number
     percentage: number
   }>
-  revenueByPaymentMethod: {
-    cash: number
-    mobileMoney: number
-    card: number
-    pending: number
+  revenueByPaymentMethod: PayMethodBreakdown & {
+    notPaid: number
+    notPaidCount: number
+  }
+  revenueByPaymentMethodByPeriod: {
+    thisWeek: PayMethodBreakdown
+    thisMonth: PayMethodBreakdown
+    thisYear: PayMethodBreakdown
   }
   revenueBySource: {
     online: number
@@ -92,9 +107,9 @@ export interface GuestAnalytics {
 }
 
 export interface PerformanceMetrics {
-  adr: number // Average Daily Rate
-  revPAR: number // Revenue per Available Room
-  revPOR: number // Revenue per Occupied Room
+  adr: number
+  revPAR: number
+  revPOR: number
   occupancyRate: number
   totalBookings: number
   conversionMetrics: {
@@ -162,9 +177,3 @@ export interface AnalyticsFilter {
   sources?: string[]
   status?: string[]
 }
-
-
-
-
-
-

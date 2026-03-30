@@ -1,3 +1,8 @@
+export interface PaymentSplit {
+  method: 'cash' | 'mobile_money' | 'card'
+  amount: number
+}
+
 export interface RoomType {
   id: string
   name: string

@@ -221,7 +221,8 @@ class StayExtensionService {
         newRoomId?: string,
         userId?: string,
         discountAmount?: number,
-        discountReason?: string
+        discountReason?: string,
+        paymentSplits?: Array<{ method: string; amount: number }>
     ): Promise<ExtensionResult> {
         try {
             console.log('[StayExtension] Extending stay:', { bookingId, newCheckoutDate, newRoomId })
@@ -277,6 +278,19 @@ class StayExtensionService {
 
             await db.bookings.update(bookingId, updateData)
 
+            // Determine primary payment method from splits
+            const primaryPayMethod = (paymentSplits && paymentSplits.length > 0
+                ? paymentSplits.reduce((a, b) => b.amount > a.amount ? b : a, paymentSplits[0]).method
+                : undefined) as 'cash' | 'mobile_money' | 'card' | undefined
+
+            // Build charge notes — include split data when multiple methods used
+            let chargeNotes = `Extended from ${currentCheckout.toLocaleDateString()} to ${newCheckout.toLocaleDateString()}`
+            if (paymentSplits && paymentSplits.length > 1) {
+                chargeNotes += ` <!-- CHARGE_PAY:${primaryPayMethod} --> <!-- PAYMENT_SPLITS:${JSON.stringify(paymentSplits)} -->`
+            } else if (primaryPayMethod) {
+                chargeNotes += ` <!-- CHARGE_PAY:${primaryPayMethod} -->`
+            }
+
             // Add extension charge
             const charge = await bookingChargesService.addCharge({
                 bookingId,
@@ -284,7 +298,8 @@ class StayExtensionService {
                 category: 'other',
                 quantity: additionalNights,
                 unitPrice: extensionCost / additionalNights,
-                notes: `Extended from ${currentCheckout.toLocaleDateString()} to ${newCheckout.toLocaleDateString()}`,
+                notes: chargeNotes,
+                paymentMethod: primaryPayMethod,
                 createdBy: userId
             })
 

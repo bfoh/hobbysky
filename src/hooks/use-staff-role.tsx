@@ -181,13 +181,18 @@ export function useStaffRole() {
 
   useEffect(() => {
     let currentUserId: string | null = null
+    let isInitialLoad = true
 
-    const unsubscribe = blink.auth.onAuthStateChanged((state) => {
+    const unsubscribe = blink.auth.onAuthStateChanged((state: any) => {
+      // Ignore intermediate loading states from the auth SDK
+      if (state.isLoading) return
+
       const newUserId = state.user?.id || null
 
-      // Only reload if userId actually changed
-      if (newUserId !== currentUserId) {
+      // Only reload if userId actually changed or if it's the first time
+      if (newUserId !== currentUserId || isInitialLoad) {
         currentUserId = newUserId
+        isInitialLoad = false
 
         if (newUserId) {
           setUserId(newUserId)

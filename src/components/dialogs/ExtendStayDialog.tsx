@@ -12,7 +12,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { CalendarIcon, AlertTriangle, CheckCircle2, ArrowRight, Loader2, Tag } from '@/components/icons'
+import { CalendarIcon, AlertTriangle, CheckCircle2, Loader2, Tag } from '@/components/icons'
+import { Plus, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { stayExtensionService, AvailableRoom, RoomAvailability } from '@/services/stay-extension-service'
 import { sendStayExtensionNotification } from '@/services/notifications'
@@ -76,11 +77,20 @@ export function ExtendStayDialog({
     const [availability, setAvailability] = useState<RoomAvailability | null>(null)
     const [availableRooms, setAvailableRooms] = useState<AvailableRoom[]>([])
     const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null)
-    const [showRoomSelector, setShowRoomSelector] = useState(false)
+    const [showRoomSelector, setShowRoomSelector] = useState(false) // used to trigger room selector display
 
     // Discount state
     const [discountAmount, setDiscountAmount] = useState<string>('')
     const [discountReason, setDiscountReason] = useState<string>('')
+
+    // Split payment state
+    const [splits, setSplits] = useState<Array<{ method: string; amount: number }>>(
+        [{ method: 'cash', amount: 0 }]
+    )
+    const addSplit = () => setSplits(p => [...p, { method: 'cash', amount: 0 }])
+    const removeSplit = (i: number) => setSplits(p => p.filter((_, j) => j !== i))
+    const updateSplit = (i: number, key: 'method' | 'amount', val: any) =>
+        setSplits(p => p.map((s, j) => j === i ? { ...s, [key]: val } : s))
 
     // Calculate minimum date (day after current checkout)
     const minDate = format(addDays(new Date(booking.checkOut), 1), 'yyyy-MM-dd')
@@ -113,6 +123,7 @@ export function ExtendStayDialog({
             setShowRoomSelector(false)
             setDiscountAmount('')
             setDiscountReason('')
+            setSplits([{ method: 'cash', amount: 0 }])
         }
     }, [open, room.id, room.price, booking.checkIn, booking.checkOut, booking.totalPrice])
 
@@ -181,6 +192,14 @@ export function ExtendStayDialog({
     const displayCost = Math.max(0, baseCost - discount)
     const discountError = discount > baseCost ? 'Discount cannot exceed extension cost' : ''
 
+    const splitTotal = splits.reduce((s, p) => s + (Number(p.amount) || 0), 0)
+    const splitRemaining = displayCost - splitTotal
+
+    // Keep single split in sync with the final cost
+    useEffect(() => {
+        setSplits(prev => prev.length === 1 ? [{ ...prev[0], amount: displayCost }] : prev)
+    }, [displayCost])
+
     const handleExtend = async () => {
         if (!newCheckoutDate || additionalNights <= 0) {
             toast.error('Please select a valid new checkout date')
@@ -199,20 +218,23 @@ export function ExtendStayDialog({
 
         setIsExtending(true)
         try {
+            const paymentSplitsArg = splits.filter(s => s.amount > 0).map(s => ({ method: s.method, amount: s.amount }))
+
             const result = await stayExtensionService.extendStay(
                 booking.id,
                 newCheckoutDate,
                 selectedRoomId || undefined,
-                user?.id || undefined, // userId if needed
+                user?.id || undefined,
                 discount > 0 ? discount : undefined,
-                discount > 0 && discountReason ? discountReason : undefined
+                discount > 0 && discountReason ? discountReason : undefined,
+                paymentSplitsArg
             )
 
             if (result.success) {
                 // Send notification to guest
                 try {
                     await sendStayExtensionNotification(
-                        guest,
+                        guest as any,
                         room,
                         {
                             id: booking.id,
@@ -345,6 +367,70 @@ export function ExtendStayDialog({
                                 <span className="text-2xl font-bold text-amber-300">
                                     {formatCurrencySync(displayCost, currency)}
                                 </span>
+                            </div>
+
+                            {/* Payment Method(s) */}
+                            <div className="space-y-2 pt-2">
+                                <Label>Paid By</Label>
+                                <div className="space-y-2">
+                                    {splits.map((split, i) => (
+                                        <div key={i} className="flex items-center gap-2">
+                                            <Select value={split.method} onValueChange={v => updateSplit(i, 'method', v)}>
+                                                <SelectTrigger className="w-44 shrink-0">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="cash">💵 Cash</SelectItem>
+                                                    <SelectItem value="mobile_money">📱 Mobile Money</SelectItem>
+                                                    <SelectItem value="card">💳 Card</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <div className="relative flex-1">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                                                    {getCurrencySymbol(currency)}
+                                                </span>
+                                                <Input
+                                                    type="number"
+                                                    min="0"
+                                                    step="1"
+                                                    value={split.amount || ''}
+                                                    onChange={e => updateSplit(i, 'amount', parseFloat(e.target.value) || 0)}
+                                                    className="pl-8"
+                                                />
+                                            </div>
+                                            {splits.length > 1 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeSplit(i)}
+                                                    className="text-destructive hover:text-destructive/80 p-1 rounded hover:bg-destructive/10 transition-colors shrink-0"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+
+                                    {splits.length > 1 && (
+                                        <div className="flex justify-between text-xs px-1">
+                                            <span className="text-muted-foreground">Splits total</span>
+                                            <span className={splitRemaining === 0 ? 'text-emerald-500 font-semibold' : 'text-amber-500 font-semibold'}>
+                                                {formatCurrencySync(splitTotal, currency)}
+                                                {splitRemaining > 0 && ` · ${formatCurrencySync(splitRemaining, currency)} short`}
+                                                {splitRemaining < 0 && ` · ${formatCurrencySync(Math.abs(splitRemaining), currency)} over`}
+                                                {splitRemaining === 0 && ' ✓'}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    <button
+                                        type="button"
+                                        onClick={addSplit}
+                                        className="flex items-center gap-1.5 text-xs text-primary hover:underline mt-1"
+                                    >
+                                        <Plus className="w-3.5 h-3.5" />
+                                        Add another payment method
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     )}

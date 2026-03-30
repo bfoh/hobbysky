@@ -65,7 +65,8 @@ function checkboxRow(doc: jsPDF, label: string, options: string[], x: number, y:
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(7.5)
     doc.text(opt, cx + 5, y)
-    cx += 22
+    const textW = doc.getTextWidth(opt)
+    cx += 5 + textW + 8
   })
   setColor(doc, BLACK, 'text')
   doc.setFont('helvetica', 'normal')
@@ -110,29 +111,30 @@ export async function generateEmploymentApplicationPDF(): Promise<void> {
   // Logo
   if (logoDataUrl) {
     try {
-      doc.addImage(logoDataUrl, 'PNG', M, 4, 24, 24)
+      doc.addImage(logoDataUrl, 'PNG', M, 7, 24, 24)
     } catch {}
   }
 
   // Hotel name & sub-heading
   setColor(doc, WHITE, 'text')
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(18)
-  doc.text('HOBBYSKY GUEST HOUSE', M + 28, 14)
+  doc.setFontSize(16)
+  doc.text('HOBBYSKY GUEST HOUSE', M + 30, 16)
 
   doc.setFontSize(8)
   doc.setFont('helvetica', 'normal')
-  doc.text('Property Management', M + 28, 19.5)
+  doc.text('Property Management', M + 30, 21.5)
 
   // Contact info block (right side)
-  doc.setFontSize(7)
+  doc.setFontSize(7.5)
   const contactLines = [
     'Abuakwa-Manhyia, Kumasi, Ashanti Region, Ghana',
-    'Tel: +233 240 204 079   |   Email: reservations@hobbyskyguesthouse.com',
-    'Website: https://hobbyskyguesthouse.com'
+    'Tel: +233 240 204 079',
+    'Email: reservations@hobbyskyguesthouse.com',
+    'Web: https://hobbyskyguesthouse.com'
   ]
   contactLines.forEach((line, i) => {
-    doc.text(line, PAGE_W - M, 9 + i * 5, { align: 'right' })
+    doc.text(line, PAGE_W - M, 10 + i * 4.5, { align: 'right' })
   })
 
   y = 43

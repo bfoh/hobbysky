@@ -184,6 +184,9 @@ function App() {
               {/* Staff Login Page - Public */}
               <Route path="/staff/login" element={<StaffLoginPage />} />
 
+              {/* Staff Clock-In/Out — standalone, no sidebar, handles its own auth */}
+              <Route path="/staff/clock" element={<ProtectedRoute><ClockPage /></ProtectedRoute>} />
+
               {/* Staff Portal - Protected Routes */}
               <Route path="/staff" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
                 <Route index element={<Navigate to="/staff/dashboard" replace />} />
@@ -212,7 +215,6 @@ function App() {
                 <Route path="requests" element={<ServiceRequestsPage />} />
                 <Route path="hr" element={<HRPage />} />
                 <Route path="my-revenue" element={<MyRevenuePage />} />
-                <Route path="clock" element={<ClockPage />} />
               </Route>
 
               {/* Invoice debug route */}

@@ -80,7 +80,7 @@ export async function getCurrentLocation(): Promise<{ lat: number; lng: number }
 // ─── CRUD ─────────────────────────────────────────────────────────────────────
 export async function getTodayRecord(staffId: string): Promise<AttendanceRecord | null> {
   const today = format(new Date(), 'yyyy-MM-dd')
-  const records = await db.hrAttendance.list({
+  const records = await db.hr_attendance.list({
     where: { staffId, date: today },
     limit: 1,
     orderBy: { createdAt: 'desc' },
@@ -114,7 +114,7 @@ export async function clockIn(
   // Upsert: remove any existing init record for today
   const existing = await getTodayRecord(staffId)
   if (existing) {
-    const updated = await db.hrAttendance.update(existing.id, {
+    const updated = await db.hr_attendance.update(existing.id, {
       clockIn: now,
       status,
       notes,
@@ -122,7 +122,7 @@ export async function clockIn(
     return updated
   }
 
-  const record = await db.hrAttendance.create({
+  const record = await db.hr_attendance.create({
     staffId,
     staffName,
     date: today,
@@ -154,7 +154,7 @@ export async function clockOut(
 
   const extraNotes = [record.notes, opts.notes].filter(Boolean).join(' | ')
 
-  const updated = await db.hrAttendance.update(record.id, {
+  const updated = await db.hr_attendance.update(record.id, {
     clockOut: now,
     hoursWorked: Math.round(hoursWorked * 100) / 100,
     notes: extraNotes,
@@ -164,7 +164,7 @@ export async function clockOut(
 
 export async function getLiveAttendance(): Promise<AttendanceRecord[]> {
   const today = format(new Date(), 'yyyy-MM-dd')
-  return db.hrAttendance.list({
+  return db.hr_attendance.list({
     where: { date: today },
     orderBy: { createdAt: 'desc' },
     limit: 100,
@@ -176,7 +176,7 @@ export async function getRecentAttendance(days = 30): Promise<AttendanceRecord[]
   since.setDate(since.getDate() - days)
   const sinceStr = format(since, 'yyyy-MM-dd')
 
-  const all: AttendanceRecord[] = await db.hrAttendance.list({
+  const all: AttendanceRecord[] = await db.hr_attendance.list({
     orderBy: { createdAt: 'desc' },
     limit: 1000,
   })

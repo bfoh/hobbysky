@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { blink } from '@/blink/client'
 import { toast } from 'sonner'
 import { activityLogService } from '@/services/activity-log-service'
-import { Booking, Room, Guest } from '@/types'
+import { Booking, Room, Guest, PaymentSplit } from '@/types'
 
 // Define a standardized CheckInOptions interface
 export interface CheckInOptions {
@@ -10,6 +10,7 @@ export interface CheckInOptions {
     room: Room | any
     guest: Guest | any
     paymentMethod: string
+    paymentSplits?: PaymentSplit[] // Multiple payment methods when guest splits payment
     discountAmount?: number      // Discount applied at check-in
     discountReason?: string      // Reason for discount
     user?: any // Current user for logging
@@ -18,7 +19,7 @@ export interface CheckInOptions {
 export function useCheckIn() {
     const [isProcessing, setIsProcessing] = useState(false)
 
-    const checkIn = async ({ booking, room, guest, paymentMethod, discountAmount, discountReason, user }: CheckInOptions) => {
+    const checkIn = async ({ booking, room, guest, paymentMethod, paymentSplits, discountAmount, discountReason, user }: CheckInOptions) => {
         setIsProcessing(true)
         const db = (blink.db as any)
 
@@ -104,11 +105,31 @@ export function useCheckIn() {
                     paymentMethod: paymentMethod
                 }
 
-                // Embed discount metadata into specialRequests so it persists without new DB columns
+                // Build specialRequests: carry existing content, then append metadata tags
+                let existingSr = actualBooking?.specialRequests || actualBooking?.special_requests || ''
+                // Strip any prior split/discount metadata so we don't double-append
+                existingSr = existingSr.replace(/\s*<!-- PAYMENT_SPLITS:.*? -->/g, '').replace(/\s*<!-- DISCOUNT_DATA:.*? -->/g, '').trim()
+
+                // Store split payment data (no dedicated DB column needed)
+                if (paymentSplits && paymentSplits.length > 1) {
+                    existingSr += `\n\n<!-- PAYMENT_SPLITS:${JSON.stringify(paymentSplits)} -->`
+                }
+
+                // Embed discount metadata
                 if (discountAmount && discountAmount > 0) {
-                    const existingSr = actualBooking?.specialRequests || actualBooking?.special_requests || ''
-                    const discountMeta = `<!-- DISCOUNT_DATA:${JSON.stringify({ discountAmount, discountReason: discountReason || null, finalAmount })} -->`
-                    primaryUpdate.specialRequests = (existingSr ? existingSr + ' ' : '') + discountMeta
+                    existingSr += ` <!-- DISCOUNT_DATA:${JSON.stringify({ discountAmount, discountReason: discountReason || null, finalAmount })} -->`
+                }
+
+                if (existingSr !== (actualBooking?.specialRequests || actualBooking?.special_requests || '').trim()) {
+                    primaryUpdate.specialRequests = existingSr.trim()
+                }
+
+                // Persist discount fields directly too
+                if (discountAmount && discountAmount > 0) {
+                    primaryUpdate.discountAmount = discountAmount
+                    primaryUpdate.finalAmount = finalAmount
+                    if (discountReason) primaryUpdate.discountReason = discountReason
+                    if (user?.id) primaryUpdate.discountedBy = user.id
                 }
 
                 try {
@@ -120,21 +141,6 @@ export function useCheckIn() {
                         await db.bookings.update(bookingId, { ...primaryUpdate, status: 'checked_in' })
                     } else {
                         throw statusErr
-                    }
-                }
-
-                // Secondary update — discount fields (non-blocking; columns may not exist yet)
-                if (discountAmount && discountAmount > 0) {
-                    try {
-                        await db.bookings.update(bookingId, {
-                            discountAmount: discountAmount,
-                            finalAmount: finalAmount,
-                            ...(discountReason ? { discountReason } : {}),
-                            ...(user?.id ? { discountedBy: user.id } : {})
-                        })
-                    } catch (discountErr: any) {
-                        console.warn('[useCheckIn] Discount fields could not be saved (migration needed):', discountErr.message)
-                        // Non-fatal — check-in succeeded, discount just won't be persisted
                     }
                 }
 
@@ -243,6 +249,7 @@ export function useCheckIn() {
                         actualCheckIn: new Date().toISOString(),
                         bookingId: bookingId,
                         paymentMethod,
+                        paymentSplits: paymentSplits || null,
                         originalAmount: totalPrice,
                         discountAmount: discountAmount || 0,
                         discountReason: discountReason || null,

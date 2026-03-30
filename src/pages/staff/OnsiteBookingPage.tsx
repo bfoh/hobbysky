@@ -12,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { CalendarIcon, Check, ArrowLeft, Plus, Trash, ShoppingCart, Users, ArrowRight, Minus } from '@/components/icons'
 import { format, differenceInDays } from 'date-fns'
 import { toast } from 'sonner'
-import { formatCurrencySync } from '@/lib/utils'
+import { formatCurrencySync, getCurrencySymbol } from '@/lib/utils'
+import { X } from 'lucide-react'
 import { useCurrency } from '@/hooks/use-currency'
 import { bookingEngine, LocalBooking } from '@/services/booking-engine'
 import { sendTransactionalEmail } from '@/services/email-service'
@@ -58,6 +59,11 @@ export function OnsiteBookingPage() {
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'mobile_money' | 'card' | 'not_paid'>('not_paid')
   const [paymentType, setPaymentType] = useState<'full' | 'part' | 'pending'>('pending')
   const [amountPaid, setAmountPaid] = useState<number>(0)
+  const [paymentSplits, setPaymentSplits] = useState<Array<{ method: string; amount: number }>>([{ method: 'cash', amount: 0 }])
+  const addPaySplit = () => setPaymentSplits(p => [...p, { method: 'cash', amount: 0 }])
+  const removePaySplit = (i: number) => setPaymentSplits(p => p.filter((_, j) => j !== i))
+  const updatePaySplit = (i: number, key: 'method' | 'amount', val: any) =>
+    setPaymentSplits(p => p.map((s, j) => j === i ? { ...s, [key]: val } : s))
   const [loading, setLoading] = useState(false)
 
   // Billing Adjustments State
@@ -378,6 +384,18 @@ export function OnsiteBookingPage() {
 
     setLoading(true)
     try {
+      // Derive primary method and build splits for storage
+      const activeSplits = paymentType !== 'pending' ? paymentSplits.filter(s => s.amount > 0) : []
+      const primaryMethod = activeSplits.length > 0
+        ? activeSplits.reduce((a, b) => b.amount > a.amount ? b : a, activeSplits[0]).method as 'cash' | 'mobile_money' | 'card' | 'not_paid'
+        : paymentMethod
+      const splitsMetadata = activeSplits.length > 1
+        ? ` <!-- PAYMENT_SPLITS:${JSON.stringify(activeSplits)} -->`
+        : ''
+      const effectiveAmountPaid = paymentType === 'full'
+        ? grandTotal
+        : activeSplits.reduce((s, p) => s + p.amount, 0)
+
       const groupBookings: Omit<LocalBooking, '_id' | 'createdAt' | 'updatedAt' | 'synced'>[] = cart.map((item, index) => {
         const itemNights = differenceInDays(item.checkOut, item.checkIn)
         // Room amount is just price * nights
@@ -385,6 +403,7 @@ export function OnsiteBookingPage() {
         const itemTotal = Number(item.price) * itemNights
 
         const assigned = guestAssignments[item.id] || { name: guestInfo.name, email: guestInfo.email }
+        const baseNotes = guestInfo.specialRequests || ''
         return {
           guest: {
             fullName: assigned.name,
@@ -402,14 +421,15 @@ export function OnsiteBookingPage() {
           amount: itemTotal,
           status: 'confirmed',
           source: 'reception',
+          notes: baseNotes + splitsMetadata,
           payment: {
-            method: paymentMethod,
+            method: primaryMethod === 'not_paid' ? 'not_paid' : primaryMethod,
             status: paymentType === 'full' ? 'completed' : 'pending',
-            amount: paymentType === 'full' ? itemTotal : (paymentType === 'part' ? amountPaid : 0),
+            amount: paymentType === 'full' ? itemTotal : (paymentType === 'part' ? effectiveAmountPaid : 0),
             reference: `PAY-${Date.now()}-${index}`,
             paidAt: paymentType !== 'pending' ? new Date().toISOString() : undefined
           },
-          amountPaid: paymentType === 'full' ? grandTotal : (paymentType === 'part' ? amountPaid : 0),
+          amountPaid: paymentType === 'full' ? grandTotal : (paymentType === 'part' ? effectiveAmountPaid : 0),
           paymentStatus: paymentType,
           createdBy: user?.id,
           createdByName: user?.user_metadata?.full_name || user?.email,
@@ -1041,20 +1061,73 @@ export function OnsiteBookingPage() {
                   <p className="text-sm">{guestInfo.email}</p>
                   {guestInfo.phone && <p className="text-sm">{guestInfo.phone}</p>}
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Payment Method *</label>
-                  <Select value={paymentMethod} onValueChange={(v: any) => setPaymentMethod(v)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="not_paid">🚫 Not Paid</SelectItem>
-                      <SelectItem value="cash">💵 Cash</SelectItem>
-                      <SelectItem value="mobile_money">📱 Mobile Money</SelectItem>
-                      <SelectItem value="card">💳 Credit/Debit Card</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                {paymentType !== 'pending' && (
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium">Payment Method</label>
+                    <div className="space-y-2">
+                      {paymentSplits.map((split, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <Select value={split.method} onValueChange={v => { updatePaySplit(i, 'method', v); if (paymentSplits.length === 1) setPaymentMethod(v as any) }}>
+                            <SelectTrigger className="w-44 shrink-0">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="cash">💵 Cash</SelectItem>
+                              <SelectItem value="mobile_money">📱 Mobile Money</SelectItem>
+                              <SelectItem value="card">💳 Card</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <div className="relative flex-1">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                              {getCurrencySymbol(currency)}
+                            </span>
+                            <Input
+                              type="number"
+                              min="0"
+                              step="1"
+                              value={split.amount || ''}
+                              onChange={e => {
+                                const val = parseFloat(e.target.value) || 0
+                                updatePaySplit(i, 'amount', val)
+                                if (paymentType === 'part') {
+                                  // keep amountPaid in sync with split total
+                                  const newTotal = paymentSplits.reduce((s, sp, idx) => s + (idx === i ? val : Number(sp.amount) || 0), 0)
+                                  setAmountPaid(Math.min(newTotal, grandTotal))
+                                }
+                              }}
+                              className="pl-8"
+                            />
+                          </div>
+                          {paymentSplits.length > 1 && (
+                            <button type="button" onClick={() => removePaySplit(i)} className="text-destructive hover:text-destructive/80 p-1 rounded hover:bg-destructive/10 transition-colors shrink-0">
+                              <X className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      {paymentSplits.length > 1 && (() => {
+                        const splitTotal = paymentSplits.reduce((s, p) => s + (Number(p.amount) || 0), 0)
+                        const target = paymentType === 'full' ? grandTotal : amountPaid
+                        const remaining = target - splitTotal
+                        return (
+                          <div className="flex justify-between text-xs px-1">
+                            <span className="text-muted-foreground">Splits total</span>
+                            <span className={remaining === 0 ? 'text-emerald-500 font-semibold' : 'text-amber-500 font-semibold'}>
+                              {formatCurrencySync(splitTotal, currency)}
+                              {remaining > 0 && ` · ${formatCurrencySync(remaining, currency)} short`}
+                              {remaining < 0 && ` · ${formatCurrencySync(Math.abs(remaining), currency)} over`}
+                              {remaining === 0 && ' ✓'}
+                            </span>
+                          </div>
+                        )
+                      })()}
+                      <button type="button" onClick={addPaySplit} className="flex items-center gap-1.5 text-xs text-primary hover:underline mt-1">
+                        <Plus className="w-3.5 h-3.5" />
+                        Add another payment method
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Payment Type */}
                 <div className="bg-secondary/50 p-6 rounded-lg space-y-4">
@@ -1062,7 +1135,7 @@ export function OnsiteBookingPage() {
                   <div className="grid grid-cols-3 gap-3">
                     <button
                       type="button"
-                      onClick={() => { setPaymentType('full'); setAmountPaid(grandTotal); setPaymentMethod(paymentMethod === 'not_paid' ? 'cash' : paymentMethod) }}
+                      onClick={() => { setPaymentType('full'); setAmountPaid(grandTotal); setPaymentMethod(paymentMethod === 'not_paid' ? 'cash' : paymentMethod); setPaymentSplits([{ method: paymentMethod === 'not_paid' ? 'cash' : paymentMethod, amount: grandTotal }]) }}
                       className={`p-3 rounded-lg border-2 text-center transition-all ${paymentType === 'full'
                         ? 'border-green-500 bg-green-50 text-green-700'
                         : 'border-gray-200 hover:border-gray-300'
@@ -1073,7 +1146,7 @@ export function OnsiteBookingPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => { setPaymentType('part'); setAmountPaid(0); setPaymentMethod(paymentMethod === 'not_paid' ? 'cash' : paymentMethod) }}
+                      onClick={() => { setPaymentType('part'); setAmountPaid(0); setPaymentMethod(paymentMethod === 'not_paid' ? 'cash' : paymentMethod); setPaymentSplits([{ method: paymentMethod === 'not_paid' ? 'cash' : paymentMethod, amount: 0 }]) }}
                       className={`p-3 rounded-lg border-2 text-center transition-all ${paymentType === 'part'
                         ? 'border-amber-500 bg-amber-50 text-amber-700'
                         : 'border-gray-200 hover:border-gray-300'
@@ -1084,7 +1157,7 @@ export function OnsiteBookingPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => { setPaymentType('pending'); setAmountPaid(0); setPaymentMethod('not_paid') }}
+                      onClick={() => { setPaymentType('pending'); setAmountPaid(0); setPaymentMethod('not_paid'); setPaymentSplits([{ method: 'cash', amount: 0 }]) }}
                       className={`p-3 rounded-lg border-2 text-center transition-all ${paymentType === 'pending'
                         ? 'border-red-500 bg-red-50 text-red-700'
                         : 'border-gray-200 hover:border-gray-300'
@@ -1094,28 +1167,6 @@ export function OnsiteBookingPage() {
                       <div className="text-xs text-muted-foreground mt-1">No payment yet</div>
                     </button>
                   </div>
-
-                  {/* Part Payment Amount Input */}
-                  {paymentType === 'part' && (
-                    <div className="space-y-2 pt-2">
-                      <label className="block text-sm font-medium">Amount Paid</label>
-                      <Input
-                        type="number"
-                        min={0}
-                        max={grandTotal}
-                        step={1}
-                        value={amountPaid}
-                        onChange={(e) => setAmountPaid(Math.min(parseFloat(e.target.value) || 0, grandTotal))}
-                        placeholder="Enter amount paid"
-                      />
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Remaining Balance:</span>
-                        <span className="font-bold text-amber-600">
-                          {formatCurrencySync(Math.max(0, grandTotal - amountPaid), currency)}
-                        </span>
-                      </div>
-                    </div>
-                  )}
 
                   {/* Payment Summary */}
                   <div className="bg-card rounded-lg p-4 border border-border space-y-2">

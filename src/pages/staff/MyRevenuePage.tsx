@@ -104,7 +104,17 @@ function BookingRow({ b }: { b: BookingSummary }) {
         <TableCell>{b.roomNumber}</TableCell>
         <TableCell>{b.checkIn}</TableCell>
         <TableCell>{b.checkOut}</TableCell>
-        <TableCell className="text-right font-medium">{formatGHS(b.totalPrice)}</TableCell>
+        <TableCell className="text-right font-medium">
+          {b.discountAmount > 0
+            ? <span className="line-through text-muted-foreground text-xs mr-1">{formatGHS(b.totalPrice)}</span>
+            : null}
+          {formatGHS(b.effectiveRoomRate)}
+        </TableCell>
+        <TableCell className="text-right">
+          {b.discountAmount > 0
+            ? <span className="text-red-500 font-medium text-xs" title={b.discountReason || undefined}>-{formatGHS(b.discountAmount)}</span>
+            : <span className="text-xs text-muted-foreground">—</span>}
+        </TableCell>
         <TableCell className="text-right">
           {b.additionalChargesTotal > 0
             ? <span className="text-orange-600 font-medium">{formatGHS(b.additionalChargesTotal)}</span>
@@ -135,6 +145,7 @@ function BookingRow({ b }: { b: BookingSummary }) {
             )}
           </TableCell>
           <TableCell className="text-xs text-right text-muted-foreground">×{c.quantity} @ {formatGHS(c.unitPrice)}</TableCell>
+          <TableCell />
           <TableCell className="text-right text-xs font-medium text-orange-700">{formatGHS(c.amount)}</TableCell>
           <TableCell colSpan={3} />
         </TableRow>
@@ -253,6 +264,7 @@ function BookingBreakdown({ result, onDeleteSale }: { result: StaffWeekResult; o
               <TableHead>Check-in</TableHead>
               <TableHead>Check-out</TableHead>
               <TableHead className="text-right">Room Rate</TableHead>
+              <TableHead className="text-right text-red-600">Discount</TableHead>
               <TableHead className="text-right">Charges</TableHead>
               <TableHead className="text-right">Grand Total</TableHead>
               <TableHead>Payment</TableHead>

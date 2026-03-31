@@ -51,7 +51,9 @@ class AnalyticsService {
         b => ['checked-in', 'checked-out'].includes(b.status)
       )
 
-      const roomRevenueTotal = revenueBookings.reduce((sum, b) => sum + Number(b.amount || 0), 0)
+      // Use finalAmount (post-discount) when available, otherwise full amount
+      const effectiveAmt = (b: any) => Number(b.finalAmount ?? b.amount ?? 0)
+      const roomRevenueTotal = revenueBookings.reduce((sum, b) => sum + effectiveAmt(b), 0)
 
       // Additional revenue from all booking charges
       const additionalRevenueByCategory: Record<string, number> = {}
@@ -100,7 +102,7 @@ class AnalyticsService {
       const lastYrStartStr  = toStr(lastYearStart)
       const lastYrEndStr    = toStr(lastYearEnd)
 
-      const bookingRoomRev = (bks: any[]) => bks.reduce((s, b) => s + Number(b.amount || 0), 0)
+      const bookingRoomRev = (bks: any[]) => bks.reduce((s, b) => s + effectiveAmt(b), 0)
       const salesInRange = (from: string, to?: string) =>
         (allStandaloneSales || []).reduce((sum: number, s: any) => {
           const sd = s.saleDate || s.sale_date || ''
@@ -152,7 +154,7 @@ class AnalyticsService {
         const fromProp = propertyTypeByRoomNumber.get(b.roomNumber)
         if (fromProp) typeId = fromProp
         const cur = revenueByType.get(typeId) || { revenue: 0, count: 0 }
-        revenueByType.set(typeId, { revenue: cur.revenue + Number(b.amount || 0), count: cur.count + 1 })
+        revenueByType.set(typeId, { revenue: cur.revenue + effectiveAmt(b), count: cur.count + 1 })
       })
       const revenueByRoomType = Array.from(revenueByType.entries()).map(([typeId, data]) => ({
         roomTypeId: typeId,
@@ -185,7 +187,7 @@ class AnalyticsService {
       for (const b of revenueBookings) {
         const splts = getPaySplits(b)
         const bCharges = chargesByBookingId.get(b.id) || []
-        if (splts.length === 0) { _notPaid += Number(b.amount || 0); _notPaidCount++ }
+        if (splts.length === 0) { _notPaid += effectiveAmt(b); _notPaidCount++ }
         else {
           for (const s of splts) {
             if      (s.method === 'cash')         { _cash += s.amount; _cashCount++ }
@@ -309,7 +311,7 @@ class AnalyticsService {
         }, 0)
         dailyRevenueHistory.push({
           date: dateStr,
-          revenue: dayBookings.reduce((sum, b) => sum + Number(b.amount || 0), 0)
+          revenue: dayBookings.reduce((sum, b) => sum + effectiveAmt(b), 0)
             + chargesInRange(dateStr, dateStr) + daySales,
           bookingCount: dayBookings.length,
         })

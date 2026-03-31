@@ -1730,6 +1730,7 @@ function StaffRevenueRow({
                             <TableHead className="text-xs">Check-in</TableHead>
                             <TableHead className="text-xs">Check-out</TableHead>
                             <TableHead className="text-xs text-right">Room Rate</TableHead>
+                            <TableHead className="text-xs text-right text-red-500">Discount</TableHead>
                             <TableHead className="text-xs text-right">Charges</TableHead>
                             <TableHead className="text-xs text-right">Grand Total</TableHead>
                             <TableHead className="text-xs">Payment</TableHead>
@@ -1743,7 +1744,17 @@ function StaffRevenueRow({
                               <TableCell className="text-xs">{b.roomNumber}</TableCell>
                               <TableCell className="text-xs">{b.checkIn}</TableCell>
                               <TableCell className="text-xs">{b.checkOut}</TableCell>
-                              <TableCell className="text-xs text-right font-medium">{formatGHS(b.totalPrice)}</TableCell>
+                              <TableCell className="text-xs text-right font-medium">
+                                {b.discountAmount > 0
+                                  ? <span className="line-through text-muted-foreground text-[10px] mr-1">{formatGHS(b.totalPrice)}</span>
+                                  : null}
+                                {formatGHS(b.effectiveRoomRate)}
+                              </TableCell>
+                              <TableCell className="text-xs text-right">
+                                {b.discountAmount > 0
+                                  ? <span className="text-red-500 font-medium" title={b.discountReason || undefined}>-{formatGHS(b.discountAmount)}</span>
+                                  : <span className="text-muted-foreground">—</span>}
+                              </TableCell>
                               <TableCell className="text-xs text-right">
                                 {b.additionalChargesTotal > 0
                                   ? <span className="text-orange-600 font-medium">{formatGHS(b.additionalChargesTotal)}</span>

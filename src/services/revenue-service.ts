@@ -55,14 +55,17 @@ export interface BookingSummary {
   roomNumber: string
   checkIn: string
   checkOut: string
-  totalPrice: number
+  totalPrice: number          // original room rate (before discount)
+  discountAmount: number      // discount applied at check-in (0 if none)
+  discountReason: string | null
+  effectiveRoomRate: number   // totalPrice - discountAmount (actual charged amount)
   status: string
   createdAt: string
   paymentMethod: string   // 'cash' | 'mobile_money' | 'card' | 'not_paid'
   paymentSplits?: Array<{ method: string; amount: number }>
   additionalChargesTotal: number
   additionalCharges: ChargeLineSummary[]
-  grandTotal: number       // totalPrice + additionalChargesTotal
+  grandTotal: number       // effectiveRoomRate + additionalChargesTotal
 }
 
 export interface StaffWeekResult {
@@ -125,6 +128,37 @@ function parsePaymentSplits(rawBooking: any): Array<{ method: string; amount: nu
     return Array.isArray(splits) && splits.length > 1 ? splits : undefined
   } catch {
     return undefined
+  }
+}
+
+/**
+ * Extract discount data from a raw DB booking's specialRequests or direct columns.
+ */
+function parseDiscountData(rawBooking: any): { discountAmount: number; discountReason: string | null; finalAmount: number | null } {
+  // Prefer direct DB columns
+  if (rawBooking.discountAmount || rawBooking.discount_amount) {
+    return {
+      discountAmount: Number(rawBooking.discountAmount || rawBooking.discount_amount || 0),
+      discountReason: rawBooking.discountReason || rawBooking.discount_reason || null,
+      finalAmount: rawBooking.finalAmount || rawBooking.final_amount
+        ? Number(rawBooking.finalAmount || rawBooking.final_amount)
+        : null,
+    }
+  }
+  // Fall back to metadata in specialRequests
+  const specialReq = rawBooking.special_requests || rawBooking.specialRequests || ''
+  if (!specialReq) return { discountAmount: 0, discountReason: null, finalAmount: null }
+  const match = (specialReq as string).match(/<!-- DISCOUNT_DATA:(.*?) -->/)
+  if (!match?.[1]) return { discountAmount: 0, discountReason: null, finalAmount: null }
+  try {
+    const dd = JSON.parse(match[1])
+    return {
+      discountAmount: Number(dd.discountAmount || 0),
+      discountReason: dd.discountReason || null,
+      finalAmount: dd.finalAmount != null ? Number(dd.finalAmount) : null,
+    }
+  } catch {
+    return { discountAmount: 0, discountReason: null, finalAmount: null }
   }
 }
 
@@ -214,6 +248,14 @@ export async function fetchBookingsForStaffWeek(
         ? paymentSplits.reduce((a, s) => s.amount > a.amount ? s : a, paymentSplits[0]).method
         : rawMethod
 
+      // Discount
+      const discountData = parseDiscountData(b)
+      const totalPrice = Number(b.totalPrice || 0)
+      const discountAmount = discountData.discountAmount
+      const effectiveRoomRate = discountData.finalAmount != null
+        ? discountData.finalAmount
+        : Math.max(0, totalPrice - discountAmount)
+
       // Additional charges for this booking
       const rawCharges = chargesByBookingId.get(b.id) || []
       const additionalCharges: ChargeLineSummary[] = rawCharges.map((c: any) => ({
@@ -234,14 +276,17 @@ export async function fetchBookingsForStaffWeek(
         roomNumber: room?.roomNumber || '—',
         checkIn: b.checkIn,
         checkOut: b.checkOut,
-        totalPrice: Number(b.totalPrice || 0),
+        totalPrice,
+        discountAmount,
+        discountReason: discountData.discountReason,
+        effectiveRoomRate,
         status: b.status,
         createdAt: b.createdAt || b.created_at || '',
         paymentMethod: normalizePaymentMethod(primaryMethod),
         paymentSplits,
         additionalCharges,
         additionalChargesTotal,
-        grandTotal: Number(b.totalPrice || 0) + additionalChargesTotal,
+        grandTotal: effectiveRoomRate + additionalChargesTotal,
       }
     })
 
@@ -288,7 +333,7 @@ export async function fetchBookingsForStaffWeek(
   }
   const standaloneSalesRevenue = standaloneSales.reduce((s, sale) => s + sale.amount, 0)
 
-  const totalRevenue = matched.reduce((s, b) => s + b.totalPrice, 0)
+  const totalRevenue = matched.reduce((s, b) => s + b.effectiveRoomRate, 0)
   const additionalRevenue = matched.reduce((s, b) => s + b.additionalChargesTotal, 0) + orphanChargesTotal
   const grandRevenue = totalRevenue + additionalRevenue + standaloneSalesRevenue
 

@@ -48,6 +48,11 @@ export interface LocalBooking {
   paymentMethod?: string
   paymentSplits?: Array<{ method: string; amount: number }>
 
+  // Discount fields (populated from DISCOUNT_DATA metadata or direct DB columns)
+  discountAmount?: number
+  discountReason?: string | null
+  finalAmount?: number       // totalPrice - discountAmount (the actual amount charged)
+
   // Group Booking Fields
   groupId?: string
   groupReference?: string
@@ -1198,6 +1203,27 @@ class BookingEngine {
         } catch { /* ignore malformed data */ }
       }
 
+      // Extract discount data — prefer direct DB columns, fall back to metadata
+      let discountAmount: number | undefined = b.discountAmount || b.discount_amount || undefined
+      let discountReason: string | null | undefined = b.discountReason || b.discount_reason || undefined
+      let finalAmount: number | undefined = b.finalAmount || b.final_amount || undefined
+      if (!discountAmount) {
+        const discountMatch = specialReq.match(/<!-- DISCOUNT_DATA:(.*?) -->/)
+        if (discountMatch) {
+          try {
+            const dd = JSON.parse(discountMatch[1])
+            discountAmount = dd.discountAmount || undefined
+            discountReason = dd.discountReason || null
+            finalAmount = dd.finalAmount || undefined
+          } catch { /* ignore malformed data */ }
+        }
+      }
+      // Derive finalAmount if we have discountAmount but not finalAmount
+      const totalPriceNum = Number(b.totalPrice || 0)
+      if (discountAmount && !finalAmount) {
+        finalAmount = Math.max(0, totalPriceNum - discountAmount)
+      }
+
       const local: LocalBooking = {
         _id: localId,
         remoteId: remoteId || localId,
@@ -1226,6 +1252,9 @@ class BookingEngine {
         payment_method: b.paymentMethod || b.payment_method,
         paymentMethod: b.paymentMethod || b.payment_method,
         paymentSplits,
+        discountAmount,
+        discountReason,
+        finalAmount,
         createdAt,
         updatedAt: b.updatedAt || createdAt,
         synced: true,

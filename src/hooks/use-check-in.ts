@@ -124,14 +124,6 @@ export function useCheckIn() {
                     primaryUpdate.specialRequests = existingSr.trim()
                 }
 
-                // Persist discount fields directly too
-                if (discountAmount && discountAmount > 0) {
-                    primaryUpdate.discountAmount = discountAmount
-                    primaryUpdate.finalAmount = finalAmount
-                    if (discountReason) primaryUpdate.discountReason = discountReason
-                    if (user?.id) primaryUpdate.discountedBy = user.id
-                }
-
                 try {
                     await db.bookings.update(bookingId, primaryUpdate)
                 } catch (statusErr: any) {
@@ -142,6 +134,16 @@ export function useCheckIn() {
                     } else {
                         throw statusErr
                     }
+                }
+
+                // Try persisting discount fields to dedicated columns (non-blocking — columns may not exist)
+                if (discountAmount && discountAmount > 0) {
+                    const discountUpdate: any = { finalAmount }
+                    if (discountReason) discountUpdate.discountReason = discountReason
+                    if (user?.id) discountUpdate.discountedBy = user.id
+                    db.bookings.update(bookingId, discountUpdate).catch(() => {
+                        // Columns don't exist yet — discount is already preserved in specialRequests metadata
+                    })
                 }
 
                 console.log('[useCheckIn] Booking updated successfully')

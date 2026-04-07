@@ -65,6 +65,8 @@ import {
   generateClockUrl,
   secondsUntilNextToken,
   downloadCsv,
+  parseGpsFromNotes,
+  calcHoursWorked,
   type AttendanceRecord as LiveAttendanceRecord,
 } from '@/services/attendance-service'
 import { QRCodeSVG } from 'qrcode.react'
@@ -84,7 +86,9 @@ interface AttendanceRecord {
   date: string
   clockIn: string
   clockOut: string
+  clockOutDate?: string
   hoursWorked: number
+  isOvernightShift?: boolean
   status: string
   notes: string
   createdAt: string
@@ -273,25 +277,8 @@ export function HRPage() {
 
 // ─── QR Code Panel ────────────────────────────────────────────────────────────
 
-const WINDOW_SECS = 10 * 60
-
 function QRPanel() {
-  const [url, setUrl] = useState(() => generateClockUrl())
-  const [secs, setSecs] = useState(() => secondsUntilNextToken())
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      const s = secondsUntilNextToken()
-      setSecs(s)
-      if (s === WINDOW_SECS - 1 || s === WINDOW_SECS) {
-        setUrl(generateClockUrl())
-      }
-    }, 1000)
-    return () => clearInterval(id)
-  }, [])
-
-  const m = Math.floor(secs / 60)
-  const s = secs % 60
+  const [url] = useState(() => generateClockUrl())
 
   const handlePrint = () => {
     const w = window.open('', '_blank')
@@ -318,9 +305,9 @@ function QRPanel() {
           <QrCode className="w-5 h-5 text-primary" />
           <h3 className="font-semibold">Staff Clock-In QR Code</h3>
         </div>
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <RefreshCw className="w-3.5 h-3.5" />
-          <span>Refreshes in {m}:{String(s).padStart(2, '0')}</span>
+        <div className="flex items-center gap-1.5 text-xs text-green-600">
+          <CheckCircle className="w-3.5 h-3.5" />
+          <span>Permanent QR Code</span>
         </div>
       </div>
       <div className="flex flex-col sm:flex-row items-center gap-6">
@@ -333,8 +320,8 @@ function QRPanel() {
             Post this at the hotel entrance. Staff scan with their phone camera to clock in or out.
           </p>
           <p className="flex items-center gap-2">
-            <RefreshCw className="w-4 h-4 text-blue-500 flex-shrink-0" />
-            The token rotates every 10 minutes to prevent screenshot reuse.
+            <CheckCircle className="w-4 h-4 text-primary flex-shrink-0" />
+            This is a permanent QR code. You can print it once and it will work forever.
           </p>
           <Button variant="outline" size="sm" className="gap-2 mt-2" onClick={handlePrint}>
             <Printer className="w-4 h-4" /> Print QR Code
@@ -389,13 +376,23 @@ function LiveNowPanel() {
         <div className="text-center py-6 text-sm text-muted-foreground">No staff clocked in today yet.</div>
       ) : (
         <div className="divide-y">
-          {present.map(r => (
-            <div key={r.id} className="flex items-center gap-3 px-4 py-2.5">
-              <span className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
-              <span className="font-medium text-sm flex-1">{(r as any).staffName}</span>
-              <span className="text-xs text-muted-foreground">Clocked in {(r as any).clockIn}</span>
-            </div>
-          ))}
+          {present.map(r => {
+            const rec = r as any
+            const today = new Date().toISOString().split('T')[0]
+            const isOvernight = rec.date && rec.date !== today
+            return (
+              <div key={r.id} className="flex items-center gap-3 px-4 py-2.5">
+                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${isOvernight ? 'bg-blue-500' : 'bg-green-500'}`} />
+                <span className="font-medium text-sm flex-1">
+                  {rec.staffName}
+                  {isOvernight && <span className="ml-1.5 text-xs font-normal text-blue-600">overnight</span>}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {isOvernight ? `Since ${rec.date} ${rec.clockIn}` : `Clocked in ${rec.clockIn}`}
+                </span>
+              </div>
+            )
+          })}
           {completed.map(r => (
             <div key={r.id} className="flex items-center gap-3 px-4 py-2.5 opacity-60">
               <span className="w-2 h-2 rounded-full bg-gray-400 flex-shrink-0" />
@@ -416,7 +413,7 @@ function AttendanceTab({ currentStaff }: { currentStaff: any }) {
   const [staffList, setStaffList] = useState<StaffMember[]>([])
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [form, setForm] = useState({ staffId: '', staffName: '', date: '', clockIn: '', clockOut: '', status: 'present', notes: '' })
+  const [form, setForm] = useState({ staffId: '', staffName: '', date: '', clockIn: '', clockOut: '', clockOutDate: '', isOvernightShift: false, status: 'present', notes: '' })
   const [saving, setSaving] = useState(false)
 
   const load = useCallback(async () => {
@@ -462,21 +459,33 @@ function AttendanceTab({ currentStaff }: { currentStaff: any }) {
     }
     setSaving(true)
     try {
-      let hoursWorked = 0
-      if (form.clockIn && form.clockOut) {
-        const [inH, inM] = form.clockIn.split(':').map(Number)
-        const [outH, outM] = form.clockOut.split(':').map(Number)
-        hoursWorked = Math.max(0, (outH * 60 + outM - inH * 60 - inM) / 60)
-      }
+      const hoursWorked = form.clockIn && form.clockOut
+        ? calcHoursWorked(form.clockIn, form.clockOut, form.isOvernightShift)
+        : 0
+      const clockOutDate = form.isOvernightShift && form.date
+        ? (() => {
+            const d = new Date(form.date)
+            d.setDate(d.getDate() + 1)
+            return d.toISOString().split('T')[0]
+          })()
+        : form.date
       await db.hr_attendance.create({
         id: `att_${Date.now()}`,
-        ...form,
+        staffId: form.staffId,
+        staffName: form.staffName,
+        date: form.date,
+        clockIn: form.clockIn,
+        clockOut: form.clockOut,
+        clockOutDate,
         hoursWorked: parseFloat(hoursWorked.toFixed(2)),
-        createdAt: new Date().toISOString()
+        isOvernightShift: form.isOvernightShift,
+        status: form.status,
+        notes: form.notes,
+        createdAt: new Date().toISOString(),
       })
       toast.success('Attendance logged')
       setDialogOpen(false)
-      setForm({ staffId: '', staffName: '', date: '', clockIn: '', clockOut: '', status: 'present', notes: '' })
+      setForm({ staffId: '', staffName: '', date: '', clockIn: '', clockOut: '', clockOutDate: '', isOvernightShift: false, status: 'present', notes: '' })
       load()
     } catch {
       toast.error('Failed to log attendance')
@@ -498,7 +507,7 @@ function AttendanceTab({ currentStaff }: { currentStaff: any }) {
   const handleExport = () => {
     if (records.length === 0) { toast.error('No records to export'); return }
     const today_ = new Date().toISOString().split('T')[0]
-    downloadCsv(records, `attendance_${today_}.csv`)
+    downloadCsv(records as any, `attendance_${today_}.csv`)
     toast.success('Attendance exported')
   }
 
@@ -548,17 +557,35 @@ function AttendanceTab({ currentStaff }: { currentStaff: any }) {
                   <td className="px-4 py-3 whitespace-nowrap">{r.clockOut || '—'}</td>
                   <td className="px-4 py-3 whitespace-nowrap">{r.hoursWorked ? `${r.hoursWorked}h` : '—'}</td>
                   <td className="px-4 py-3"><StatusBadge status={r.status} /></td>
-                  <td className="px-4 py-3 max-w-[200px]">
-                    {r.notes === 'GPS: location access denied' ? (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 text-red-800 text-xs font-medium px-2.5 py-1 border border-red-200">
-                        <MapPin className="w-3 h-3 flex-shrink-0" /> Location denied
+                  <td className="px-4 py-3 max-w-[220px]">
+                    {(() => {
+                      const gps = parseGpsFromNotes(r.notes || '')
+                      if (gps?.denied) return (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 text-red-800 text-xs font-medium px-2.5 py-1 border border-red-200">
+                          <MapPin className="w-3 h-3 flex-shrink-0" /> Location denied
+                        </span>
+                      )
+                      if (gps?.unavailable) return (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 text-gray-600 text-xs font-medium px-2.5 py-1 border border-gray-200">
+                          <MapPin className="w-3 h-3 flex-shrink-0" /> GPS unavailable
+                        </span>
+                      )
+                      if (gps?.coords) return (
+                        <span
+                          title={`${gps.coords}${gps.accuracy ? ` · ±${gps.accuracy}m accuracy` : ''}`}
+                          className={`inline-flex items-center gap-1.5 rounded-full text-xs font-medium px-2.5 py-1 border cursor-help ${gps.withinHotel ? 'bg-green-100 text-green-800 border-green-200' : 'bg-amber-100 text-amber-800 border-amber-200'}`}
+                        >
+                          <MapPin className="w-3 h-3 flex-shrink-0" />
+                          {gps.withinHotel ? 'Within hotel' : `Outside (${gps.distance}m)`}
+                          {gps.accuracy ? <span className="opacity-70">· ±{gps.accuracy}m</span> : null}
+                        </span>
+                      )
+                      return <span className="text-muted-foreground truncate block text-xs">{r.notes || '—'}</span>
+                    })()}
+                    {r.isOvernightShift && (
+                      <span className="mt-1 inline-flex items-center gap-1 text-xs text-blue-600">
+                        <Clock className="w-3 h-3" /> Overnight
                       </span>
-                    ) : r.notes === 'GPS: clocked in outside hotel premises' ? (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 text-amber-800 text-xs font-medium px-2.5 py-1 border border-amber-200">
-                        <MapPin className="w-3 h-3 flex-shrink-0" /> Outside hotel
-                      </span>
-                    ) : (
-                      <span className="text-muted-foreground truncate block">{r.notes || '—'}</span>
                     )}
                   </td>
                   <td className="px-4 py-3">
@@ -600,6 +627,23 @@ function AttendanceTab({ currentStaff }: { currentStaff: any }) {
                 <Input type="time" value={form.clockOut} onChange={e => setForm(f => ({ ...f, clockOut: e.target.value }))} />
               </div>
             </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="overnight-check"
+                checked={form.isOvernightShift}
+                onChange={e => setForm(f => ({ ...f, isOvernightShift: e.target.checked }))}
+                className="rounded border-input w-4 h-4 accent-primary"
+              />
+              <Label htmlFor="overnight-check" className="cursor-pointer text-sm font-normal">
+                Overnight shift (clocked out next day)
+              </Label>
+            </div>
+            {form.isOvernightShift && form.clockIn && form.clockOut && (
+              <p className="text-xs text-muted-foreground">
+                Hours: {calcHoursWorked(form.clockIn, form.clockOut, true).toFixed(2)}h
+              </p>
+            )}
             <div className="grid gap-2">
               <Label>Status</Label>
               <Select onValueChange={v => setForm(f => ({ ...f, status: v }))} value={form.status}>

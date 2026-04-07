@@ -6,7 +6,10 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
-import { Loader2, LogIn, LogOut, CheckCircle2, AlertTriangle, MapPin, Clock, Home } from 'lucide-react'
+import {
+  Loader2, LogIn, LogOut, CheckCircle2, AlertTriangle,
+  MapPin, Clock, Home, Navigation,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
@@ -15,24 +18,36 @@ import {
   isValidToken,
   getCurrentLocation,
   isWithinHotel,
+  distanceFromHotel,
   getTodayRecord,
+  getOpenShiftRecord,
   clockIn,
   clockOut,
+  parseGpsFromNotes,
   type AttendanceRecord,
+  type GpsResult,
 } from '@/services/attendance-service'
+
+type GpsStatus = 'checking' | 'within' | 'outside' | 'denied' | 'unavailable'
 
 export function ClockPage() {
   const { userId, staffRecord, loading: roleLoading } = useStaffRole()
   const [searchParams] = useSearchParams()
   const token = searchParams.get('t')
 
+  // openShift = any unclosed shift (could be from today or yesterday for overnight workers)
+  const [openShift, setOpenShift] = useState<AttendanceRecord | null>(null)
+  // todayRecord = today's record (may be completed)
   const [todayRecord, setTodayRecord] = useState<AttendanceRecord | null>(null)
   const [loading, setLoading] = useState(true)
   const [acting, setActing] = useState(false)
   const [now, setNow] = useState(new Date())
-  const [tokenWarning, setTokenWarning] = useState(false)
-  const [gpsWarning, setGpsWarning] = useState<'outside' | 'denied' | false>(false)
   const [done, setDone] = useState<'in' | 'out' | null>(null)
+
+  // GPS pre-check — runs on mount so user sees location status before tapping
+  const [gpsStatus, setGpsStatus] = useState<GpsStatus>('checking')
+  const [gpsCoords, setGpsCoords] = useState<GpsResult | null>(null)
+  const [actionGpsWarning, setActionGpsWarning] = useState<'outside' | 'denied' | false>(false)
 
   // Live clock tick
   useEffect(() => {
@@ -40,17 +55,34 @@ export function ClockPage() {
     return () => clearInterval(id)
   }, [])
 
-  // Validate token from URL (Phase 2)
+  // Pre-check GPS on mount
   useEffect(() => {
-    if (token && !isValidToken(token)) setTokenWarning(true)
-  }, [token])
+    let cancelled = false
+    getCurrentLocation().then((loc) => {
+      if (cancelled) return
+      if (loc === 'denied') {
+        setGpsStatus('denied')
+      } else if (loc === null) {
+        setGpsStatus('unavailable')
+      } else {
+        setGpsCoords(loc)
+        setGpsStatus(isWithinHotel(loc.lat, loc.lng) ? 'within' : 'outside')
+      }
+    })
+    return () => { cancelled = true }
+  }, [])
 
-  // Load today's record once auth is ready
+
+  // Load shift records once auth is ready
   const load = useCallback(async (uid: string) => {
     setLoading(true)
     try {
-      const rec = await getTodayRecord(uid)
-      setTodayRecord(rec)
+      const [open, today_] = await Promise.all([
+        getOpenShiftRecord(uid),
+        getTodayRecord(uid),
+      ])
+      setOpenShift(open)
+      setTodayRecord(today_)
     } finally {
       setLoading(false)
     }
@@ -66,18 +98,18 @@ export function ClockPage() {
     if (!userId || !staffRecord) return
     setActing(true)
     try {
-      // GPS soft-check (Phase 2)
+      // Re-acquire GPS at the moment of clock-in (freshest reading)
       const location = await getCurrentLocation()
       let clockNotes: string | undefined
       if (location === 'denied') {
-        clockNotes = 'GPS: location access denied'
-        setGpsWarning('denied')
+        clockNotes = 'GPS: permission denied'
+        setActionGpsWarning('denied')
       } else if (location && !isWithinHotel(location.lat, location.lng)) {
-        clockNotes = 'GPS: clocked in outside hotel premises'
-        setGpsWarning('outside')
+        setActionGpsWarning('outside')
       }
       const rec = await clockIn(userId, staffRecord.name, clockNotes ? { notes: clockNotes } : undefined)
       setTodayRecord(rec)
+      setOpenShift(rec)
       setDone('in')
       toast.success('Clocked in! Have a great shift.')
     } catch {
@@ -93,11 +125,12 @@ export function ClockPage() {
     try {
       const updated = await clockOut(userId)
       if (updated) {
+        setOpenShift(null)
         setTodayRecord(updated)
         setDone('out')
-        toast.success('Clocked out. Have a good rest!')
+        toast.success(`Clocked out. ${updated.hoursWorked}h worked. Have a good rest!`)
       } else {
-        toast.error('No clock-in found for today.')
+        toast.error('No open shift found. Please contact an admin.')
       }
     } catch {
       toast.error('Failed to clock out. Please try again.')
@@ -108,9 +141,10 @@ export function ClockPage() {
 
   // ─── Derived state ─────────────────────────────────────────────────────────
 
-  const hasClockIn = Boolean(todayRecord?.clockIn)
-  const hasClockOut = Boolean(todayRecord?.clockOut)
-  const shiftDone = done === 'out' || hasClockOut
+  const today = format(now, 'yyyy-MM-dd')
+  const hasOpenShift = Boolean(openShift?.clockIn)
+  const isOvernightShift = hasOpenShift && openShift!.date !== today
+  const shiftDoneToday = Boolean(todayRecord?.clockIn && todayRecord?.clockOut)
 
   const greeting = () => {
     const h = now.getHours()
@@ -118,6 +152,15 @@ export function ClockPage() {
     if (h < 17) return 'Good afternoon'
     return 'Good evening'
   }
+
+  // GPS indicator config
+  const gpsIndicator = {
+    checking: { color: 'text-muted-foreground', label: 'Checking location…', icon: Navigation },
+    within: { color: 'text-green-600', label: `Within hotel · ±${gpsCoords?.accuracy ?? '?'}m`, icon: MapPin },
+    outside: { color: 'text-amber-600', label: `Outside hotel${gpsCoords ? ` · ~${distanceFromHotel(gpsCoords.lat, gpsCoords.lng)}m away` : ''}`, icon: MapPin },
+    denied: { color: 'text-red-500', label: 'Location access denied', icon: MapPin },
+    unavailable: { color: 'text-muted-foreground', label: 'GPS unavailable', icon: MapPin },
+  }[gpsStatus]
 
   // ─── Loading state ─────────────────────────────────────────────────────────
 
@@ -150,19 +193,13 @@ export function ClockPage() {
       </div>
 
       {/* Warning banners */}
-      {tokenWarning && (
-        <div className="bg-amber-50 border-b border-amber-200 px-5 py-3 flex items-start gap-2 text-sm text-amber-800">
-          <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-          <span>This QR code may be expired. Scan the latest code at the hotel entrance for full security. You can still clock in below.</span>
-        </div>
-      )}
-      {gpsWarning === 'outside' && (
+      {actionGpsWarning === 'outside' && (
         <div className="bg-amber-50 border-b border-amber-200 px-5 py-3 flex items-start gap-2 text-sm text-amber-800">
           <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" />
           <span>You appear to be outside the hotel. Your clock-in has been logged and flagged for admin review.</span>
         </div>
       )}
-      {gpsWarning === 'denied' && (
+      {actionGpsWarning === 'denied' && (
         <div className="bg-red-50 border-b border-red-200 px-5 py-3 flex items-start gap-2 text-sm text-red-800">
           <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" />
           <span>Location access was denied. Your clock-in has been logged and flagged for admin review.</span>
@@ -187,40 +224,72 @@ export function ClockPage() {
             </p>
           </div>
 
-          {/* Today's record summary */}
-          {todayRecord && (
-            <div className="bg-muted/40 rounded-xl px-5 py-4 text-sm space-y-2 border">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Clocked in</span>
-                <span className="font-semibold">{todayRecord.clockIn}</span>
-              </div>
-              {todayRecord.clockOut && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Clocked out</span>
-                  <span className="font-semibold">{todayRecord.clockOut}</span>
-                </div>
-              )}
-              {todayRecord.hoursWorked > 0 && (
-                <div className="flex justify-between border-t pt-2 mt-1">
-                  <span className="text-muted-foreground">Hours worked</span>
-                  <span className="font-semibold text-primary">{todayRecord.hoursWorked}h</span>
-                </div>
-              )}
+          {/* GPS status indicator */}
+          <div className={`flex items-center justify-center gap-1.5 text-xs ${gpsIndicator.color}`}>
+            <gpsIndicator.icon className="w-3.5 h-3.5" />
+            <span>{gpsIndicator.label}</span>
+          </div>
+
+          {/* Overnight shift notice */}
+          {isOvernightShift && (
+            <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-800 flex items-start gap-2">
+              <Clock className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <span>
+                You started your shift on <strong>{openShift!.date}</strong> at <strong>{openShift!.clockIn}</strong>.
+                Tap Clock Out to end your overnight shift.
+              </span>
             </div>
           )}
 
+          {/* Shift record summary */}
+          {(openShift || todayRecord) && (() => {
+            const displayRec = openShift || todayRecord!
+            const gps = parseGpsFromNotes(displayRec.notes || '')
+            return (
+              <div className="bg-muted/40 rounded-xl px-5 py-4 text-sm space-y-2 border">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Shift started</span>
+                  <span className="font-semibold">
+                    {isOvernightShift ? `${displayRec.date} ` : ''}{displayRec.clockIn}
+                  </span>
+                </div>
+                {displayRec.clockOut && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Clocked out</span>
+                    <span className="font-semibold">{displayRec.clockOut}</span>
+                  </div>
+                )}
+                {displayRec.hoursWorked > 0 && (
+                  <div className="flex justify-between border-t pt-2 mt-1">
+                    <span className="text-muted-foreground">Hours worked</span>
+                    <span className="font-semibold text-primary">{displayRec.hoursWorked}h</span>
+                  </div>
+                )}
+                {gps && !gps.denied && !gps.unavailable && gps.coords && (
+                  <div className="flex justify-between border-t pt-2 mt-1">
+                    <span className="text-muted-foreground">Clock-in location</span>
+                    <span className={`text-xs font-medium ${gps.withinHotel ? 'text-green-600' : 'text-amber-600'}`}>
+                      {gps.withinHotel ? '✓ Within hotel' : `⚠ ${gps.distance}m away`}
+                      {gps.accuracy ? ` · ±${gps.accuracy}m` : ''}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )
+          })()}
+
           {/* Action area */}
-          {shiftDone ? (
+          {(shiftDoneToday && !hasOpenShift) ? (
             <div className="text-center space-y-2 py-4">
               <div className="flex items-center justify-center gap-2 text-green-600">
                 <CheckCircle2 className="w-6 h-6" />
                 <span className="text-lg font-semibold">Shift complete!</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                You worked {todayRecord?.hoursWorked ?? 0}h today. Have a good rest!
+                You worked {todayRecord?.hoursWorked ?? 0}h. Have a good rest!
               </p>
             </div>
-          ) : hasClockIn ? (
+          ) : hasOpenShift ? (
             <div className="space-y-3">
               <Button
                 size="lg"
@@ -235,7 +304,9 @@ export function ClockPage() {
                 Clock Out
               </Button>
               <p className="text-center text-xs text-muted-foreground">
-                Clocked in at {todayRecord?.clockIn} · tap to end your shift
+                {isOvernightShift
+                  ? `Overnight shift · started ${openShift!.date} at ${openShift!.clockIn}`
+                  : `Clocked in at ${openShift!.clockIn} · tap to end your shift`}
               </p>
             </div>
           ) : (
@@ -257,7 +328,7 @@ export function ClockPage() {
             </div>
           )}
 
-          {done === 'in' && !shiftDone && (
+          {done === 'in' && !shiftDoneToday && (
             <p className="text-center text-sm text-muted-foreground">
               ✓ Clocked in at {todayRecord?.clockIn}. Have a productive shift!
             </p>

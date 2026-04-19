@@ -191,7 +191,7 @@ export function AnalyticsPage() {
     const d = new Date(b.dates.checkIn)
     return d >= activePeriod.start && d <= activePeriod.end
   })
-  const breakdownTotal = breakdownBookings.reduce((s, b) => s + Number(b.amount || 0), 0)
+  const breakdownTotal = breakdownBookings.reduce((s, b) => s + Number((b as any).finalAmount ?? b.amount ?? 0), 0)
 
   const normPay = (raw: string) => {
     const s = (raw || '').trim().toLowerCase()
@@ -210,7 +210,7 @@ export function AnalyticsPage() {
       }
     } else {
       const m = normPay(b.paymentMethod || b.payment?.method || '')
-      if (m in bdAmounts) { bdAmounts[m as keyof typeof bdAmounts] += Number(b.amount) || 0; bdCounts[m as keyof typeof bdCounts]++ }
+      if (m in bdAmounts) { bdAmounts[m as keyof typeof bdAmounts] += Number((b as any).finalAmount ?? b.amount) || 0; bdCounts[m as keyof typeof bdCounts]++ }
     }
   }
   const bdPayMethods = [
@@ -239,7 +239,7 @@ export function AnalyticsPage() {
   const computeRevForPeriod = (period: { start: Date; end: Date }) => {
     const roomRev = allRevenueBookings
       .filter(b => { const d = new Date(b.dates.checkIn); return d >= period.start && d <= period.end })
-      .reduce((s: number, b: any) => s + Number(b.amount || 0), 0)
+      .reduce((s: number, b: any) => s + Number(b.finalAmount ?? b.amount ?? 0), 0)
     const chargesRev = allChargesRaw
       .filter(c => { const d = new Date(c.createdAt || c.created_at || ''); return !isNaN(d.getTime()) && d >= period.start && d <= period.end })
       .reduce((s: number, c: any) => s + Number(c.amount || 0), 0)
@@ -807,7 +807,7 @@ export function AnalyticsPage() {
                               {b.status === 'checked-out' ? 'Checked Out' : 'Checked In'}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-right font-semibold tabular-nums">{formatCurrencySync(Number(b.amount || 0), currency)}</td>
+                          <td className="px-4 py-3 text-right font-semibold tabular-nums">{formatCurrencySync(Number((b as any).finalAmount ?? b.amount ?? 0), currency)}</td>
                         </tr>
                       )
                     })}

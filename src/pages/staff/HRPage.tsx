@@ -1638,7 +1638,7 @@ function StaffRevenueRow({
                       .reduce((a: number, s: any) => a + Number(s.amount || 0), 0)
                     if (splitAmt > 0) { count++; revenue += splitAmt }
                   } else if (b.paymentMethod === m.key) {
-                    count++; revenue += b.totalPrice
+                    count++; revenue += b.effectiveRoomRate
                   }
                 }
                 return { ...m, count, revenue }

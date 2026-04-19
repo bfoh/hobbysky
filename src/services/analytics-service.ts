@@ -179,7 +179,7 @@ class AnalyticsService {
             .filter((s: any) => s.method && s.method !== 'not_paid')
         }
         const m = normalizePayMethod(b.paymentMethod || b.payment?.method || (b as any).payment_method || '')
-        return m && m !== 'not_paid' ? [{ method: m, amount: Number(b.amount || 0) }] : []
+        return m && m !== 'not_paid' ? [{ method: m, amount: effectiveAmt(b) }] : []
       }
 
       let _cash = 0, _cashCount = 0, _momo = 0, _momoCount = 0, _card = 0, _cardCount = 0
@@ -286,8 +286,8 @@ class AnalyticsService {
 
       // Revenue by source
       const revenueBySource = {
-        online:    revenueBookings.filter(b => b.source === 'online').reduce((s, b) => s + Number(b.amount || 0), 0),
-        reception: revenueBookings.filter(b => b.source === 'reception').reduce((s, b) => s + Number(b.amount || 0), 0),
+        online:    revenueBookings.filter(b => b.source === 'online').reduce((s, b) => s + effectiveAmt(b), 0),
+        reception: revenueBookings.filter(b => b.source === 'reception').reduce((s, b) => s + effectiveAmt(b), 0),
       }
 
       // ADR and RevPAR
@@ -450,12 +450,12 @@ class AnalyticsService {
         const nights = Math.max(1, Math.ceil((new Date(b.dates.checkOut).getTime() - new Date(b.dates.checkIn).getTime()) / (1000 * 60 * 60 * 24)))
         const existing = guestRevenueMap.get(email)
         if (existing) {
-          existing.totalRevenue += Number(b.amount || 0)
+          existing.totalRevenue += Number((b as any).finalAmount ?? b.amount ?? 0)
           existing.bookingCount += 1
           existing.totalNights  += nights
           if (b.dates.checkIn > existing.lastVisit) existing.lastVisit = b.dates.checkIn
         } else {
-          guestRevenueMap.set(email, { id: email, name: b.guest.fullName, email: b.guest.email, totalRevenue: Number(b.amount || 0), bookingCount: 1, lastVisit: b.dates.checkIn, totalNights: nights })
+          guestRevenueMap.set(email, { id: email, name: b.guest.fullName, email: b.guest.email, totalRevenue: Number((b as any).finalAmount ?? b.amount ?? 0), bookingCount: 1, lastVisit: b.dates.checkIn, totalNights: nights })
         }
       })
 

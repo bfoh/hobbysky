@@ -383,11 +383,15 @@ export async function getOrCreateWeekReport(
   } catch (e) {
     console.warn('[getOrCreateWeekReport] list failed (table may not exist yet):', e)
   }
-  const existing = allRows.find((r) => {
+  const matches = allRows.filter((r) => {
     const sid = (r as any).staffId || (r as any).staff_id || ''
     const ws  = (r as any).weekStart || (r as any).week_start || ''
     return sid === staffId && ws === week.weekStart && ((r as any).status) !== 'init'
   })
+  // Pick most recently updated row to avoid stale duplicates
+  const existing = matches.length > 0
+    ? matches.sort((a, b) => ((b as any).updatedAt || (b as any).updated_at || '').localeCompare((a as any).updatedAt || (a as any).updated_at || ''))[0]
+    : undefined
 
   // Always recalculate from live bookings
   const { bookings, totalRevenue, bookingCount } = await fetchBookingsForStaffWeek(
@@ -477,11 +481,21 @@ export async function getAllStaffReportsForWeek(weekStart: string): Promise<Week
   const db = blink.db as any
   try {
     const rows = await db.hr_weekly_revenue.list({ limit: 500 })
-    return ((rows || []) as WeeklyRevenueReport[])
+    const filtered = ((rows || []) as WeeklyRevenueReport[])
       .filter((r) => {
         const ws = (r as any).weekStart || (r as any).week_start || ''
         return ws === weekStart && ((r as any).status) !== 'init'
       })
+    // Deduplicate by staffId — keep most recently updated row per staff member
+    const byStaff = new Map<string, WeeklyRevenueReport>()
+    for (const r of filtered) {
+      const sid = (r as any).staffId || (r as any).staff_id || ''
+      const prev = byStaff.get(sid)
+      if (!prev || ((r as any).updatedAt || (r as any).updated_at || '') > ((prev as any).updatedAt || (prev as any).updated_at || '')) {
+        byStaff.set(sid, r)
+      }
+    }
+    return Array.from(byStaff.values())
       .sort((a, b) => b.totalRevenue - a.totalRevenue)
   } catch (e) {
     console.warn('[getAllStaffReportsForWeek] failed:', e)

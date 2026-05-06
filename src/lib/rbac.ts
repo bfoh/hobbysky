@@ -72,7 +72,8 @@ export const ROUTE_ACCESS: Record<string, StaffRole[]> = {
   '/staff/requests': ['owner', 'admin', 'manager', 'staff'],
   '/staff/hr': ['owner', 'admin'],
   '/staff/my-revenue': ['owner', 'admin', 'manager', 'staff'],
-  '/staff/clock': ['owner', 'admin', 'manager', 'staff']
+  '/staff/clock': ['owner', 'admin', 'manager', 'staff'],
+  '/staff/inventory': ['owner', 'admin', 'manager', 'staff']
 }
 
 // Navigation items visibility by role

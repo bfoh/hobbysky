@@ -1,5 +1,6 @@
 import { blink } from '@/blink/client'
 import { format } from 'date-fns'
+import { inventoryService } from './inventory-service'
 
 const db = blink.db as any
 
@@ -19,6 +20,7 @@ export interface StandaloneSale {
   staffName: string
   saleDate: string      // YYYY-MM-DD
   paymentMethod: PaymentMethod
+  itemId?: string       // Link to inventory item
   createdAt: string
 }
 
@@ -32,6 +34,7 @@ export interface CreateSaleData {
   staffName: string
   saleDate?: string
   paymentMethod: PaymentMethod
+  itemId?: string
 }
 
 export const SALE_CATEGORIES: Record<SaleCategory, string> = {
@@ -62,8 +65,28 @@ class StandaloneSalesService {
       staffName: data.staffName,
       saleDate: data.saleDate || format(new Date(), 'yyyy-MM-dd'),
       paymentMethod: data.paymentMethod,
+      itemId: data.itemId || null,
       createdAt: new Date().toISOString(),
     })
+
+    // If linked to an inventory item, adjust stock
+    if (data.itemId) {
+      try {
+        await inventoryService.adjustStock(
+          data.itemId,
+          -data.quantity,
+          'sale',
+          data.staffId,
+          data.staffName,
+          `Sale: ${data.description}`
+        )
+      } catch (err: any) {
+        console.error('[StandaloneSalesService] Failed to adjust stock:', err)
+        // We don't throw here to avoid failing the sale if stock adjustment fails
+        // but the item might have already been checked in the UI
+      }
+    }
+
     return sale
   }
 

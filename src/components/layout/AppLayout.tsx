@@ -29,6 +29,7 @@ import {
   Megaphone,
   DollarSign,
   QrCode,
+  Package,
 } from '@/components/icons'
 import { blink } from '../../blink/client'
 import { cn } from '../../lib/utils'
@@ -46,6 +47,7 @@ const navigation = [
   { name: 'Marketing', href: '/staff/marketing', icon: Megaphone },
   { name: 'Guest Requests', href: '/staff/requests', icon: Bell },
   { name: 'My Revenue', href: '/staff/my-revenue', icon: DollarSign },
+  { name: 'Inventory', href: '/staff/inventory', icon: Package },
 ]
 
 export function AppLayout() {

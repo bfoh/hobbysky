@@ -105,6 +105,33 @@ export interface PropertySchema {
   updatedAt: string
 }
 
+export interface InventoryItemSchema {
+  id: string
+  name: string
+  category: string
+  unitPrice: number
+  costPrice: number
+  stockQuantity: number
+  minThreshold: number
+  imageUrl?: string
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface InventoryLogSchema {
+  id: string
+  itemId: string
+  staffId: string
+  staffName: string
+  type: 'sale' | 'restock' | 'adjustment' | 'damage'
+  quantityChange: number
+  previousQuantity: number
+  newQuantity: number
+  notes?: string
+  createdAt: string
+}
+
 /**
  * Initialize database schema and ensure all tables are accessible
  */
@@ -122,7 +149,10 @@ export async function initializeDatabaseSchema(): Promise<void> {
       'guests',
       'invoices',
       'contactMessages',
-      'properties'
+      'properties',
+      'inventoryItems',
+      'inventoryLogs',
+      'standaloneSales'
     ]
     
     for (const tableName of tables) {

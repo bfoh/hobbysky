@@ -99,6 +99,7 @@ export const Moon = createIcon('ri-moon-line');
 export const MoreHorizontal = createIcon('ri-more-line');
 export const MoreVertical = createIcon('ri-more-2-line');
 export const Network = createIcon('ri-node-tree');
+export const Package = createIcon('ri-package-line');
 export const PanelLeft = createIcon('ri-layout-left-line');
 export const Pencil = createIcon('ri-pencil-line');
 export const Percent = createIcon('ri-percent-line');

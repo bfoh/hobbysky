@@ -503,7 +503,7 @@ export function AppLayout() {
                   {location.pathname === '/staff/inventory' && (
                     <div className="absolute left-0 inset-y-0 w-1 bg-primary shadow-[0_0_10px_currentColor] rounded-r-full" />
                   )}
-                  <Package className={cn("w-5 h-5 flex-shrink-0 transition-transform z-10 relative", location.pathname === '/staff/inventory' ? "scale-110 drop-shadow-md text-primary" : "group-hover:text-foreground")} />
+                  <LayoutDashboard className={cn("w-5 h-5 flex-shrink-0 transition-transform z-10 relative", location.pathname === '/staff/inventory' ? "scale-110 drop-shadow-md text-primary" : "group-hover:text-foreground")} />
                   <span className="z-10 relative tracking-wide">Inventory</span>
                 </Link>
               </div>

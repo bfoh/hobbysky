@@ -47,7 +47,6 @@ const navigation = [
   { name: 'Marketing', href: '/staff/marketing', icon: Megaphone },
   { name: 'Guest Requests', href: '/staff/requests', icon: Bell },
   { name: 'My Revenue', href: '/staff/my-revenue', icon: DollarSign },
-  { name: 'Inventory', href: '/staff/inventory', icon: Package },
 ]
 
 export function AppLayout() {
@@ -489,6 +488,23 @@ export function AppLayout() {
                   )}
                   <Settings className={cn("w-5 h-5 flex-shrink-0 transition-transform z-10 relative", location.pathname === '/staff/settings' ? "scale-110 drop-shadow-md text-primary" : "group-hover:text-foreground")} />
                   <span className="z-10 relative tracking-wide">Settings</span>
+                </Link>
+
+                <Link
+                  to="/staff/inventory"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={cn(
+                    'group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ease-out border border-transparent relative overflow-hidden',
+                    location.pathname === '/staff/inventory'
+                      ? 'bg-primary/10 text-primary border-primary/20 shadow-[0_0_15px_rgba(0,0,0,0.1)] translate-x-1'
+                      : 'text-muted-foreground hover:bg-white/5 hover:text-foreground hover:border-white/10'
+                  )}
+                >
+                  {location.pathname === '/staff/inventory' && (
+                    <div className="absolute left-0 inset-y-0 w-1 bg-primary shadow-[0_0_10px_currentColor] rounded-r-full" />
+                  )}
+                  <Package className={cn("w-5 h-5 flex-shrink-0 transition-transform z-10 relative", location.pathname === '/staff/inventory' ? "scale-110 drop-shadow-md text-primary" : "group-hover:text-foreground")} />
+                  <span className="z-10 relative tracking-wide">Inventory</span>
                 </Link>
               </div>
             </div>

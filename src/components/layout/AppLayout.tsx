@@ -6,6 +6,7 @@ import { ScrollArea } from '../ui/scroll-area'
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '../ui/sheet'
 import { activityLogService } from '@/services/activity-log-service'
 import { useGuestRequestAlerts } from '@/hooks/use-guest-request-alerts'
+import { MobileTabBar } from './MobileTabBar'
 import {
   LayoutDashboard,
   Calendar,
@@ -594,12 +595,13 @@ export function AppLayout() {
           </Button>
         </div>
 
-        <div className="flex-1 overflow-auto pt-16 lg:pt-0">
+        <div className="flex-1 overflow-auto pt-16 lg:pt-0 pb-20 md:pb-0">
           <div className="px-4 lg:px-6 py-4 lg:py-6">
             <Outlet />
           </div>
         </div>
       </main>
+      <MobileTabBar />
     </div>
   )
 }

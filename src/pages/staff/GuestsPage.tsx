@@ -218,14 +218,16 @@ export function GuestsPage() {
       const user = await blink.auth.me()
       if (editingId) {
         const oldGuest = guests.find(g => g.id === editingId)
+        // Do NOT overwrite the original userId — it identifies the guest's
+        // owning user/staff. Re-stamping it on every edit was reassigning
+        // ownership and could trigger RLS rejections that swallowed silently.
         await blink.db.guests.update(editingId, {
           ...formData,
-          userId: user.id,
           updatedAt: new Date().toISOString()
         })
         // Log activity
         await activityLogService.logGuestUpdated(editingId, {
-          name: { old: oldGuest?.name, new: formData.name },
+          name:  { old: oldGuest?.name,  new: formData.name },
           email: { old: oldGuest?.email, new: formData.email },
           phone: { old: oldGuest?.phone, new: formData.phone },
         }, user.id).catch(err => console.error('Failed to log guest update:', err))
@@ -247,10 +249,10 @@ export function GuestsPage() {
       setDialogOpen(false)
       setEditingId(null)
       setFormData({ name: '', email: '', phone: '', address: '', country: '', notes: '' })
-      loadGuests()
-    } catch (error) {
+      await loadGuests()   // await so the list refresh completes before any subsequent action
+    } catch (error: any) {
       console.error('Failed to save guest:', error)
-      toast.error('Failed to save guest')
+      toast.error(`Failed to save guest: ${error?.message || 'Unknown error'}`)
     }
   }
 

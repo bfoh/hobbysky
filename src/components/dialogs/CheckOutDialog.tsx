@@ -9,7 +9,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Loader2, CheckCircle2 } from '@/components/icons'
+import { Loader2, CheckCircle2, Tag, DollarSign } from '@/components/icons'
 import { toast } from 'sonner'
 import { formatCurrencySync } from '@/lib/utils'
 import { useCurrency } from '@/hooks/use-currency'
@@ -111,7 +111,7 @@ export function CheckOutDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-lg">
                 <DialogHeader>
                     <DialogTitle>Confirm Guest Check-Out</DialogTitle>
                     <DialogDescription>
@@ -119,7 +119,7 @@ export function CheckOutDialog({
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="space-y-4 py-4">
+                <div className="space-y-3 py-4">
                     {/* Guest & Room Info */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
@@ -148,9 +148,9 @@ export function CheckOutDialog({
 
                     {/* Discount Applied at Check-In */}
                     {discountAtCheckIn > 0 && (
-                        <div className="rounded-lg border border-violet-500/25 bg-violet-500/8 p-3 space-y-1">
+                        <div className="rounded-lg border border-violet-500/25 bg-violet-500/8 px-4 py-3 space-y-1">
                             <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-violet-400">🏷 Discount Applied at Check-In</span>
+                                <span className="text-sm font-medium text-violet-400 inline-flex items-center gap-1.5"><Tag className="w-4 h-4" /> Discount Applied at Check-In</span>
                                 {discountReasonAtCheckIn && (
                                     <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-violet-500/15 text-violet-400 capitalize">
                                         {discountReasonAtCheckIn}
@@ -166,9 +166,9 @@ export function CheckOutDialog({
 
                     {/* Prior Payment Info */}
                     {priorAmountPaid > 0 && (
-                        <div className="rounded-lg border border-emerald-500/25 bg-emerald-500/8 p-3 space-y-1">
+                        <div className="rounded-lg border border-emerald-500/25 bg-emerald-500/8 px-4 py-3 space-y-1">
                             <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-emerald-400">💰 Prior Payment</span>
+                                <span className="text-sm font-medium text-emerald-400 inline-flex items-center gap-1.5"><DollarSign className="w-4 h-4" /> Prior Payment</span>
                                 <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${priorPaymentStatus === 'full' ? 'bg-emerald-500/15 text-emerald-400' :
                                     priorPaymentStatus === 'part' ? 'bg-amber-500/15 text-amber-400' :
                                         'bg-red-500/15 text-red-400'
@@ -244,19 +244,19 @@ export function CheckOutDialog({
                                 </span>
                             </div>
                             {remainingBalance === 0 && (priorAmountPaid > 0 || discountAtCheckIn > 0) && (
-                                <p className="text-xs text-emerald-400 font-medium">✓ Fully settled — no balance to collect</p>
+                                <p className="text-xs text-emerald-400 font-medium inline-flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5" /> Fully settled — no balance to collect</p>
                             )}
                         </div>
                     )}
 
                     {/* What happens next */}
-                    <div className="rounded-lg bg-sky-500/8 p-4 border border-sky-500/25">
+                    <div className="rounded-lg bg-sky-500/8 px-4 py-3 border border-sky-500/25">
                         <p className="text-sm font-medium text-sky-300">What happens next?</p>
-                        <ul className="mt-2 text-sm text-sky-400/80 space-y-1">
-                            <li>✓ Booking status updated to "Checked-Out"</li>
-                            <li>✓ Room status set to "Cleaning"</li>
-                            <li>✓ Housekeeping task automatically created</li>
-                            <li>✓ Invoice generated with all charges</li>
+                        <ul className="mt-2 text-sm text-sky-400/80 space-y-1.5">
+                            <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0 text-emerald-400" /> Booking status updated to "Checked-Out"</li>
+                            <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0 text-emerald-400" /> Room status set to "Cleaning"</li>
+                            <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0 text-emerald-400" /> Housekeeping task automatically created</li>
+                            <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0 text-emerald-400" /> Invoice generated with all charges</li>
                         </ul>
                     </div>
                 </div>

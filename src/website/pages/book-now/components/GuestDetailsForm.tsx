@@ -171,7 +171,7 @@ export default function GuestDetailsForm({ selectedRoom, searchParams, onBack, o
 
               <button
                 type="submit"
-                className="w-full bg-resort-gold-500 hover:bg-resort-gold-600 text-white py-3 rounded-lg font-semibold text-sm transition-colors cursor-pointer mt-2"
+                className="w-full min-h-[48px] bg-resort-gold-500 hover:bg-resort-gold-600 text-white py-3.5 rounded-lg font-semibold text-base transition-colors cursor-pointer mt-2"
               >
                 Continue to Review
               </button>

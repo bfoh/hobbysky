@@ -161,7 +161,7 @@ export default function BookingReviewSection({
         <button
           onClick={onConfirm}
           disabled={loading}
-          className="w-full bg-resort-gold-500 hover:bg-resort-gold-600 disabled:opacity-60 disabled:cursor-not-allowed text-white py-4 rounded-xl font-bold text-base transition-colors cursor-pointer flex items-center justify-center gap-3"
+          className="w-full min-h-[52px] bg-resort-gold-500 hover:bg-resort-gold-600 disabled:opacity-60 disabled:cursor-not-allowed text-white py-4 rounded-xl font-bold text-base transition-colors cursor-pointer flex items-center justify-center gap-3"
         >
           {loading ? (
             <>

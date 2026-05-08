@@ -49,7 +49,7 @@ export default function AvailableRoomsSection({ rooms, searchParams, onSelect, o
     new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
   return (
-    <section className="py-14 px-4 bg-white min-h-[60vh]">
+    <section className="py-10 md:py-14 px-4 bg-white min-h-[60vh]">
       <div className="max-w-5xl mx-auto">
         {/* Back link */}
         <button
@@ -122,6 +122,8 @@ export default function AvailableRoomsSection({ rooms, searchParams, onSelect, o
                       <img
                         src={image}
                         alt={room.name}
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
                       />
                       {/* Availability chip */}
@@ -158,7 +160,7 @@ export default function AvailableRoomsSection({ rooms, searchParams, onSelect, o
 
                         <button
                           onClick={() => onSelect(room)}
-                          className="w-full bg-resort-gold-500 hover:bg-resort-gold-600 text-white py-2.5 rounded-lg font-semibold text-sm transition-colors cursor-pointer"
+                          className="w-full min-h-[48px] bg-resort-gold-500 hover:bg-resort-gold-600 text-white py-3 rounded-lg font-semibold text-base transition-colors cursor-pointer"
                         >
                           Select This Room
                         </button>

@@ -53,6 +53,7 @@ export default function GalleryGrid() {
               title={`Hobbysky Guest House Kumasi Ghana gallery image ${index + 1}`}
               className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-110"
               loading="lazy"
+              decoding="async"
             />
             <div className="absolute inset-0 bg-resort-green-900/0 group-hover:bg-resort-green-900/20 transition-all duration-300" />
           </button>
@@ -63,7 +64,7 @@ export default function GalleryGrid() {
         <div className="flex justify-center py-10">
           <button
             onClick={handleLoadMore}
-            className="w-full sm:w-auto inline-flex items-center justify-center whitespace-nowrap cursor-pointer px-10 py-3 bg-gradient-to-r from-resort-gold-500 to-resort-gold-600 hover:from-resort-gold-600 hover:to-resort-gold-700 text-white font-semibold rounded-md transition-all duration-300 shadow-lg hover:shadow-xl text-sm mx-auto"
+            className="w-full sm:w-auto inline-flex items-center justify-center min-h-[48px] whitespace-nowrap cursor-pointer px-10 py-3 bg-gradient-to-r from-resort-gold-500 to-resort-gold-600 hover:from-resort-gold-600 hover:to-resort-gold-700 text-white font-semibold rounded-md transition-all duration-300 shadow-lg hover:shadow-xl text-sm mx-auto"
           >
             View More
           </button>

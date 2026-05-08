@@ -45,6 +45,9 @@ export default function AboutPage() {
         <img
           src="/hotelview-enhanced.png"
           alt="Hobbysky Guest House exterior"
+          loading="eager"
+          decoding="async"
+          fetchPriority="high"
           className="absolute inset-0 w-full h-full object-cover object-center"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-black/50" />
@@ -156,14 +159,14 @@ export default function AboutPage() {
           <Link
             to="/book-now"
             onClick={() => window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })}
-            className="inline-flex w-full sm:w-auto items-center justify-center bg-gradient-to-r from-resort-gold-500 to-resort-gold-600 hover:from-resort-gold-600 hover:to-resort-gold-700 text-white px-8 py-3.5 rounded-md font-semibold transition-all duration-300 shadow-lg hover:shadow-xl text-base"
+            className="inline-flex w-full sm:w-auto items-center justify-center bg-gradient-to-r from-resort-gold-500 to-resort-gold-600 hover:from-resort-gold-600 hover:to-resort-gold-700 text-white min-h-[48px] px-8 py-3.5 rounded-md font-semibold transition-all duration-300 shadow-lg hover:shadow-xl text-base"
           >
             Book a Room
           </Link>
           <Link
             to="/contact-us"
             onClick={() => window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })}
-            className="inline-flex w-full sm:w-auto items-center justify-center border-2 border-resort-green-700 text-resort-green-800 hover:bg-resort-green-50 px-8 py-3.5 rounded-md font-semibold transition-all duration-300 text-base"
+            className="inline-flex w-full sm:w-auto items-center justify-center border-2 border-resort-green-700 text-resort-green-800 hover:bg-resort-green-50 min-h-[48px] px-8 py-3.5 rounded-md font-semibold transition-all duration-300 text-base"
           >
             Contact Us
           </Link>

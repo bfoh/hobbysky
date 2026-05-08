@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "../../components/ui/alert-dialog"
-import { Plus, Calendar, User, Home, Search, Trash2, Users, QrCode, ExternalLink, Smartphone, Printer, X } from '@/components/icons'
+import { Plus, Calendar, User, Home, Search, Trash2, Users, QrCode, ExternalLink, Smartphone, Printer, X, Pencil } from '@/components/icons'
 import { QRCodeSVG } from 'qrcode.react'
 import { blink } from '../../blink/client'
 import { toast } from 'sonner'
@@ -291,6 +291,25 @@ export function BookingsPage() {
         ? `\n<!-- PAYMENT_SPLITS:${JSON.stringify(activeSplits)} -->`
         : '')
 
+      // Edit branch — partial update only (do not re-run createBooking)
+      if (editingId) {
+        await bookingEngine.updateBooking(editingId, {
+          checkIn: formData.checkIn,
+          checkOut: formData.checkOut,
+          totalPrice: formData.totalPrice,
+          paymentMethod: finalPaymentMethod as any,
+          numGuests: formData.adults + formData.children,
+          roomId: selectedProperty?.id,
+          specialRequests: notesWithSplits
+        })
+        toast.success('Booking updated')
+        setDialogOpen(false)
+        setEditingId(null)
+        resetForm()
+        loadData()
+        return
+      }
+
       const bookingPayload: any = {
         guest: {
           fullName: formData.guestName,
@@ -381,6 +400,28 @@ export function BookingsPage() {
 
   const handleDeleteClick = (id: string) => {
     setDeleteId(id)
+  }
+
+  const handleEditClick = (booking: any) => {
+    setEditingId(booking.id)
+    setFormData({
+      propertyId: booking.roomId || '',
+      guestName: booking.guestName || '',
+      guestEmail: booking.guestEmail || '',
+      guestPhone: booking.guestPhone || '',
+      guestAddress: booking.guestAddress || '',
+      checkIn: booking.checkIn,
+      checkOut: booking.checkOut,
+      adults: booking.numGuests || 1,
+      children: 0,
+      totalPrice: Number(booking.totalPrice) || 0,
+      notes: '',
+      paymentMethod: booking.paymentMethod || 'cash',
+      paymentType: 'full',
+      amountPaid: Number(booking.totalPrice) || 0,
+      paymentSplits: [{ method: booking.paymentMethod || 'cash', amount: Number(booking.totalPrice) || 0 }]
+    })
+    setDialogOpen(true)
   }
 
   const confirmDelete = async () => {
@@ -921,16 +962,29 @@ export function BookingsPage() {
                         {booking.paymentMethod?.replace('_', ' ') || 'Not paid'}
                       </p>
                     </div>
-                    {canDeleteBookings && (
+                    <div className="flex items-center gap-1">
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleDeleteClick(booking.id)}
-                        className="text-destructive hover:text-destructive"
+                        onClick={() => handleEditClick(booking)}
+                        aria-label="Edit booking"
+                        title="Edit booking"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Pencil className="h-4 w-4" />
                       </Button>
-                    )}
+                      {canDeleteBookings && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteClick(booking.id)}
+                          className="text-destructive hover:text-destructive"
+                          aria-label="Delete booking"
+                          title="Delete booking"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </CardContent>

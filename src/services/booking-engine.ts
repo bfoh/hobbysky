@@ -921,7 +921,7 @@ class BookingEngine {
   // Update editable fields on an existing booking. Status, payment, and
   // date-extension changes go through dedicated methods (checkInBooking,
   // recordPayment, extendStay) — do not overwrite them here.
-  async updateBooking(id: string, updates: Partial<LocalBooking> & { checkIn?: string; checkOut?: string; totalPrice?: number; specialRequests?: string }): Promise<void> {
+  async updateBooking(id: string, updates: Partial<LocalBooking> & { checkIn?: string; checkOut?: string; totalPrice?: number; specialRequests?: string; roomId?: string }): Promise<void> {
     const db = blink.db as any
 
     // Convert local-style ID to remote ID format if needed

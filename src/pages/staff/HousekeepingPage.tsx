@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { MobileSheet } from '@/components/ui/mobile-sheet'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -506,53 +506,50 @@ export default function HousekeepingPage() {
         )}
       </div>
 
-      {/* Complete Task Dialog */}
-      <Dialog open={!!selectedTask} onOpenChange={(open) => !open && setSelectedTask(null)}>
-        <DialogContent className="border-white/10 bg-card/95 backdrop-blur-xl">
-          <DialogHeader>
-            <DialogTitle className="font-serif">Complete Housekeeping Task</DialogTitle>
-            <DialogDescription>
-              Mark the cleaning task for Room {selectedTask?.roomNumber} as completed.
-              {rooms.find(r => r.roomNumber === selectedTask?.roomNumber)?.status === 'cleaning' && (
-                <span className="block mt-2 text-emerald-400 font-medium">
-                  ✓ Room will automatically be marked as available
-                </span>
-              )}
-            </DialogDescription>
-          </DialogHeader>
+      {/* Complete Task — bottom sheet on mobile, modal on md+ */}
+      <MobileSheet
+        open={!!selectedTask}
+        onOpenChange={(open) => !open && setSelectedTask(null)}
+        title="Complete Housekeeping Task"
+        description={selectedTask ? `Mark the cleaning task for Room ${selectedTask.roomNumber} as completed.` : undefined}
+      >
+        {rooms.find(r => r.roomNumber === selectedTask?.roomNumber)?.status === 'cleaning' && (
+          <p className="mb-3 text-sm text-emerald-500 font-medium">
+            ✓ Room will automatically be marked as available
+          </p>
+        )}
 
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label className="uppercase text-[10px] tracking-widest text-muted-foreground font-bold">Completion Notes (Optional)</Label>
-              <Textarea
-                placeholder="Add any notes about the completed task..."
-                value={completionNotes}
-                onChange={(e) => setCompletionNotes(e.target.value)}
-                rows={4}
-                className="resize-none bg-background/50 border-white/10 rounded-xl focus:border-emerald-500/50 focus:ring-emerald-500/20"
-              />
-            </div>
+        <div className="space-y-4 py-2">
+          <div className="space-y-2">
+            <Label className="uppercase text-[10px] tracking-widest text-muted-foreground font-bold">Completion Notes (Optional)</Label>
+            <Textarea
+              placeholder="Add any notes about the completed task..."
+              value={completionNotes}
+              onChange={(e) => setCompletionNotes(e.target.value)}
+              rows={4}
+              className="resize-none bg-background/50 border-white/10 rounded-xl focus:border-emerald-500/50 focus:ring-emerald-500/20"
+            />
           </div>
+        </div>
 
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setSelectedTask(null)}
-              disabled={isCompleting}
-              className="rounded-xl border-white/10"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleCompleteTask}
-              disabled={isCompleting}
-              className="rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white"
-            >
-              {isCompleting ? 'Completing...' : 'Complete Task'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 mt-4 pt-4 border-t border-border">
+          <Button
+            variant="outline"
+            onClick={() => setSelectedTask(null)}
+            disabled={isCompleting}
+            className="w-full sm:w-auto min-h-[44px] rounded-xl border-white/10"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleCompleteTask}
+            disabled={isCompleting}
+            className="w-full sm:w-auto min-h-[44px] rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white"
+          >
+            {isCompleting ? 'Completing...' : 'Complete Task'}
+          </Button>
+        </div>
+      </MobileSheet>
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent className="border-white/10 bg-card/95 backdrop-blur-xl">

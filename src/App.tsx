@@ -7,45 +7,48 @@ import Footer from './website/components/feature/Footer'
 import { blink } from './blink/client'
 import { initializeDatabaseSchema } from './blink/database-schema'
 import { activityLogService } from './services/activity-log-service'
+// Eager — needed for first paint or auth gate
 import { StaffLoginPage } from './pages/staff/StaffLoginPage'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { AppLayout } from './components/layout/AppLayout'
 import { ErrorBoundary } from './components/ErrorBoundary'
-import { DashboardPage } from './pages/staff/DashboardPage'
-import { CalendarPage as StaffCalendarPage } from './pages/staff/CalendarPage'
-import { PropertiesPage } from './pages/staff/PropertiesPage'
-import { BookingsPage as StaffBookingsPage } from './pages/staff/BookingsPage'
-import { GuestsPage as StaffGuestsPage } from './pages/staff/GuestsPage'
-import { ChannelsPage } from './pages/staff/ChannelsPage'
-import { ReportsPage } from './pages/staff/ReportsPage'
-import { SettingsPage } from './pages/staff/SettingsPage'
-import { SetPricesPage } from './pages/staff/SetPricesPage'
-import { ReservationsPage as StaffReservationsPage } from './pages/staff/ReservationsPage'
-import { ReservationHistoryPage } from './pages/staff/ReservationHistoryPage'
-import HousekeepingPage from './pages/staff/HousekeepingPage'
-import { EmployeesPage } from './pages/staff/EmployeesPage'
-import { CleanupToolPage } from './pages/staff/CleanupToolPage'
-import { OnsiteBookingPage } from './pages/staff/OnsiteBookingPage'
-import { TaskCompletionPage } from './pages/TaskCompletionPage'
-import { InvoicePage } from './pages/InvoicePage'
-import { InvoicesPage } from './pages/staff/InvoicesPage'
-import { ReviewSubmissionPage } from './pages/ReviewSubmissionPage'
-import { AnalyticsPage } from './pages/staff/AnalyticsPage'
-import { ActivityLogsPage } from './pages/staff/ActivityLogsPage'
-import { DiagnoseEmailPage } from './pages/staff/DiagnoseEmailPage'
-import { ReviewsPage } from './pages/staff/ReviewsPage'
-import MarketingPage from './pages/staff/MarketingPage'
-import { ServiceRequestsPage } from './pages/staff/ServiceRequestsPage'
-import { HRPage } from './pages/staff/HRPage'
-import { MyRevenuePage } from './pages/staff/MyRevenuePage'
-import { ClockPage } from './pages/staff/ClockPage'
-import { InventoryPage } from './pages/staff/InventoryPage'
-import GuestLayout from './layouts/GuestLayout'
-import GuestDashboard from './pages/guest/GuestDashboard'
-import { ConciergePage } from './pages/guest/ConciergePage'
-import { ServicesPage } from './pages/guest/ServicesPage'
-import { GuestLoginPage } from './pages/guest/GuestLoginPage'
 import VoiceWidget from './components/voice-agent/VoiceWidget'
+
+// Lazy — admin pages only load when staff route is hit
+const DashboardPage = lazy(() => import('./pages/staff/DashboardPage').then(m => ({ default: m.DashboardPage })))
+const StaffCalendarPage = lazy(() => import('./pages/staff/CalendarPage').then(m => ({ default: m.CalendarPage })))
+const PropertiesPage = lazy(() => import('./pages/staff/PropertiesPage').then(m => ({ default: m.PropertiesPage })))
+const StaffBookingsPage = lazy(() => import('./pages/staff/BookingsPage').then(m => ({ default: m.BookingsPage })))
+const StaffGuestsPage = lazy(() => import('./pages/staff/GuestsPage').then(m => ({ default: m.GuestsPage })))
+const ChannelsPage = lazy(() => import('./pages/staff/ChannelsPage').then(m => ({ default: m.ChannelsPage })))
+const ReportsPage = lazy(() => import('./pages/staff/ReportsPage').then(m => ({ default: m.ReportsPage })))
+const SettingsPage = lazy(() => import('./pages/staff/SettingsPage').then(m => ({ default: m.SettingsPage })))
+const SetPricesPage = lazy(() => import('./pages/staff/SetPricesPage').then(m => ({ default: m.SetPricesPage })))
+const StaffReservationsPage = lazy(() => import('./pages/staff/ReservationsPage').then(m => ({ default: m.ReservationsPage })))
+const ReservationHistoryPage = lazy(() => import('./pages/staff/ReservationHistoryPage').then(m => ({ default: m.ReservationHistoryPage })))
+const HousekeepingPage = lazy(() => import('./pages/staff/HousekeepingPage'))
+const EmployeesPage = lazy(() => import('./pages/staff/EmployeesPage').then(m => ({ default: m.EmployeesPage })))
+const CleanupToolPage = lazy(() => import('./pages/staff/CleanupToolPage').then(m => ({ default: m.CleanupToolPage })))
+const OnsiteBookingPage = lazy(() => import('./pages/staff/OnsiteBookingPage').then(m => ({ default: m.OnsiteBookingPage })))
+const TaskCompletionPage = lazy(() => import('./pages/TaskCompletionPage').then(m => ({ default: m.TaskCompletionPage })))
+const InvoicePage = lazy(() => import('./pages/InvoicePage').then(m => ({ default: m.InvoicePage })))
+const InvoicesPage = lazy(() => import('./pages/staff/InvoicesPage').then(m => ({ default: m.InvoicesPage })))
+const ReviewSubmissionPage = lazy(() => import('./pages/ReviewSubmissionPage').then(m => ({ default: m.ReviewSubmissionPage })))
+const AnalyticsPage = lazy(() => import('./pages/staff/AnalyticsPage').then(m => ({ default: m.AnalyticsPage })))
+const ActivityLogsPage = lazy(() => import('./pages/staff/ActivityLogsPage').then(m => ({ default: m.ActivityLogsPage })))
+const DiagnoseEmailPage = lazy(() => import('./pages/staff/DiagnoseEmailPage').then(m => ({ default: m.DiagnoseEmailPage })))
+const ReviewsPage = lazy(() => import('./pages/staff/ReviewsPage').then(m => ({ default: m.ReviewsPage })))
+const MarketingPage = lazy(() => import('./pages/staff/MarketingPage'))
+const ServiceRequestsPage = lazy(() => import('./pages/staff/ServiceRequestsPage').then(m => ({ default: m.ServiceRequestsPage })))
+const HRPage = lazy(() => import('./pages/staff/HRPage').then(m => ({ default: m.HRPage })))
+const MyRevenuePage = lazy(() => import('./pages/staff/MyRevenuePage').then(m => ({ default: m.MyRevenuePage })))
+const ClockPage = lazy(() => import('./pages/staff/ClockPage').then(m => ({ default: m.ClockPage })))
+const InventoryPage = lazy(() => import('./pages/staff/InventoryPage').then(m => ({ default: m.InventoryPage })))
+const GuestLayout = lazy(() => import('./layouts/GuestLayout'))
+const GuestDashboard = lazy(() => import('./pages/guest/GuestDashboard'))
+const ConciergePage = lazy(() => import('./pages/guest/ConciergePage').then(m => ({ default: m.ConciergePage })))
+const ServicesPage = lazy(() => import('./pages/guest/ServicesPage').then(m => ({ default: m.ServicesPage })))
+const GuestLoginPage = lazy(() => import('./pages/guest/GuestLoginPage').then(m => ({ default: m.GuestLoginPage })))
 
 
 
@@ -157,7 +160,14 @@ function App() {
         <BrowserRouter>
           <Toaster position="top-right" />
           <VoiceWidget />
-          <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
+          <Suspense fallback={
+            <div className="flex items-center justify-center min-h-[60vh] px-4">
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-10 h-10 border-4 border-resort-gold-400 border-t-transparent rounded-full animate-spin" />
+                <p className="text-sm text-resort-green-700">Loading…</p>
+              </div>
+            </div>
+          }>
             <Routes>
               {/* Guest Portal Routes */}
               <Route path="/guest" element={<GuestLoginPage />} />

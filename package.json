@@ -48,8 +48,6 @@
     "@radix-ui/react-toggle": "^1.1.10",
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
-    "@react-three/drei": "^10.7.5",
-    "@react-three/fiber": "^9.3.0",
     "@stripe/react-stripe-js": "^5.6.0",
     "@stripe/stripe-js": "^8.8.0",
     "@supabase/supabase-js": "^2.87.1",
@@ -126,9 +124,25 @@
   },
   "reactSnap": {
     "source": "dist",
-    "include": ["/", "/gallery", "/contact-us", "/book-now", "/about"],
-    "exclude": ["/staff", "/guest", "/invoice", "/task-complete", "/invoice-debug", "/review"],
-    "puppeteerArgs": ["--no-sandbox", "--disable-setuid-sandbox"],
+    "include": [
+      "/",
+      "/gallery",
+      "/contact-us",
+      "/book-now",
+      "/about"
+    ],
+    "exclude": [
+      "/staff",
+      "/guest",
+      "/invoice",
+      "/task-complete",
+      "/invoice-debug",
+      "/review"
+    ],
+    "puppeteerArgs": [
+      "--no-sandbox",
+      "--disable-setuid-sandbox"
+    ],
     "skipThirdPartyRequests": true,
     "inlineCss": false,
     "headless": true,

@@ -273,6 +273,40 @@ Time: ${date} ${time}`
 }
 
 /**
+ * Send manager notification when a guest's stay is extended
+ */
+export async function sendManagerExtensionSMS(params: {
+    phone: string
+    guestName: string
+    roomNumber: string
+    additionalNights: number
+    newCheckout: string
+    extensionCost: string
+    staffName?: string
+}): Promise<SMSResult> {
+    const { phone, guestName, roomNumber, additionalNights, newCheckout, extensionCost, staffName } = params
+
+    const now = new Date()
+    const time = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+    const date = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
+
+    let message = `🔔 STAY EXTENSION
+Guest: ${guestName}
+Room: ${roomNumber}
++${additionalNights} night${additionalNights > 1 ? 's' : ''} → ${newCheckout}
+Charge: ${extensionCost}
+Time: ${date} ${time}`
+
+    if (staffName) {
+        message += `\nStaff: ${staffName}`
+    }
+
+    message += `\n\nHobbysky Guest House`
+
+    return sendSMS(phone, message, 'Manager Extension Alert')
+}
+
+/**
  * Send stay extension notification SMS to guest
  */
 export async function sendStayExtensionSMS(params: {

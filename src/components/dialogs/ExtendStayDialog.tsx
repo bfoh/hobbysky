@@ -244,7 +244,8 @@ export function ExtendStayDialog({
                         },
                         additionalNights,
                         result.extensionCost || displayCost,
-                        result.roomChanged ? selectedRoomId : undefined
+                        result.roomChanged ? selectedRoomId : undefined,
+                        user?.email || (user as any)?.name || 'Staff'
                     )
                 } catch (notifError) {
                     console.error('Failed to send extension notification:', notifError)

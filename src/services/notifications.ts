@@ -637,6 +637,64 @@ export async function sendManagerCheckInNotification(
 }
 
 /**
+ * Send manager notification when a guest's stay is extended.
+ * Mirrors sendManagerCheckInNotification: same hardcoded owner phones,
+ * same hotel-settings gating, same sequential-SMS pattern (avoids
+ * Arkesel V1 rate-limit race that drops one of two near-simultaneous calls).
+ */
+export async function sendManagerExtensionNotification(
+  guest: Guest,
+  room: Room,
+  details: { additionalNights: number; newCheckout: string; extensionCost: number },
+  staffName?: string
+): Promise<void> {
+  try {
+    const settings = await hotelSettingsService.getHotelSettings()
+    const currency = settings.currency || 'GHS'
+
+    if (!settings.managerNotificationsEnabled) {
+      console.log('📧 [ManagerExtension] Manager notifications disabled, skipping')
+      return
+    }
+
+    const ownerPhones = ['+233243512529', '+233552515787']
+    const allPhones = Array.from(new Set([
+      ...(settings.managerPhone ? [settings.managerPhone] : []),
+      ...ownerPhones
+    ])).filter(Boolean)
+
+    if (allPhones.length === 0) {
+      console.log('📧 [ManagerExtension] No manager phones configured, skipping')
+      return
+    }
+
+    const { sendManagerExtensionSMS } = await import('@/services/sms-service')
+    const newCheckoutStr = new Date(details.newCheckout).toLocaleDateString()
+    const extensionCostStr = formatCurrencySync(details.extensionCost, currency)
+
+    // Sequential to avoid Arkesel V1 rate-limit race
+    for (const phone of allPhones) {
+      try {
+        await sendManagerExtensionSMS({
+          phone,
+          guestName: guest.name,
+          roomNumber: room.roomNumber,
+          additionalNights: details.additionalNights,
+          newCheckout: newCheckoutStr,
+          extensionCost: extensionCostStr,
+          staffName
+        })
+      } catch (err) {
+        console.error(`❌ [ManagerExtension] SMS failed for ${phone}:`, err)
+      }
+    }
+    console.log(`✅ [ManagerExtension] Triggered SMS to ${allPhones.length} stakeholders`)
+  } catch (error) {
+    console.error('❌ [ManagerExtension] Failed:', error)
+  }
+}
+
+/**
  * Send stay extension notification to guest
  */
 export async function sendStayExtensionNotification(
@@ -645,7 +703,8 @@ export async function sendStayExtensionNotification(
   booking: { id: string; checkIn: string; checkOut: string; originalCheckout: string },
   additionalNights: number,
   extensionCost: number,
-  newRoomId?: string
+  newRoomId?: string,
+  staffName?: string
 ): Promise<void> {
   try {
     console.log('📧 [StayExtension] Sending extension notification...', {
@@ -707,6 +766,18 @@ export async function sendStayExtensionNotification(
         extensionCost: formatCurrencySync(extensionCost, currency)
       })
       console.log('✅ [StayExtension] SMS sent successfully')
+    }
+
+    // Manager notification — fires regardless of guest contact info
+    try {
+      await sendManagerExtensionNotification(
+        guest,
+        room,
+        { additionalNights, newCheckout: booking.checkOut, extensionCost },
+        staffName
+      )
+    } catch (e) {
+      console.error('[StayExtension] Manager notification failed:', e)
     }
 
   } catch (error) {

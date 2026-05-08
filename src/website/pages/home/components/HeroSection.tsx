@@ -18,7 +18,7 @@ export default function HeroSection() {
 
   return (
     <>
-      <section className="relative h-screen w-full overflow-hidden flex flex-col">
+      <section className="relative h-[100svh] min-h-[560px] w-full overflow-hidden flex flex-col">
         {/* Background Video */}
         <div className="absolute inset-0">
           <video
@@ -26,6 +26,8 @@ export default function HeroSection() {
             loop
             muted
             playsInline
+            preload="metadata"
+            poster="/hotelview-enhanced.png"
             className="w-full h-full object-cover object-[25%_center] md:object-center"
           >
             <source src="/hotelone_optimized.mp4" type="video/mp4" />
@@ -36,11 +38,11 @@ export default function HeroSection() {
 
         {/* Hero Text Overlay — padding adjusted for mobile since widget is moved below */}
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-4 pt-16 md:pt-8 md:pb-24">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 md:mb-6 drop-shadow-xl tracking-tight leading-tight transition-transform duration-700 hover:scale-[1.02]">
+          <h1 className="text-[clamp(2rem,7vw,4.5rem)] font-bold text-white mb-4 md:mb-6 drop-shadow-xl tracking-tight leading-[1.1] transition-transform duration-700 hover:scale-[1.02]">
             Experience Serenity & <br className="hidden md:block" />
             <span className="text-resort-gold-400">Unmatched Comfort</span>
           </h1>
-          <p className="text-sm sm:text-base md:text-xl lg:text-2xl text-gray-100 max-w-3xl drop-shadow-lg font-medium leading-relaxed">
+          <p className="text-[clamp(0.95rem,2.2vw,1.4rem)] text-gray-100 max-w-3xl drop-shadow-lg font-medium leading-relaxed">
             Discover a perfect blend of luxury and tranquility at Hobbysky Guest House. Your premier destination for relaxation.
           </p>
         </div>

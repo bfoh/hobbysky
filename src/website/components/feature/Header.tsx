@@ -16,8 +16,8 @@ export default function Header() {
   return (
     <>
       {/* Desktop Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-resort-green-900 shadow-md border-b border-resort-green-800">
-        <div className="container mx-auto px-4">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-resort-green-900 shadow-md border-b border-resort-green-800" style={{ paddingTop: 'var(--safe-area-top)' }}>
+        <div className="container mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
             <Link
@@ -100,7 +100,7 @@ export default function Header() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden p-2 cursor-pointer"
+              className="lg:hidden p-3 -mr-2 cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="Toggle menu"
             >
               <div className="space-y-1.5">
@@ -117,6 +117,7 @@ export default function Header() {
       <div
         className={`fixed inset-0 bg-resort-green-900 z-40 transform transition-transform duration-300 ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
+        style={{ paddingTop: 'var(--safe-area-top)', paddingBottom: 'var(--safe-area-bottom)' }}
       >
         <div className="flex flex-col h-full border-l border-resort-green-800 shadow-2xl">
           <div className="flex items-center justify-between p-4 border-b border-resort-green-800">

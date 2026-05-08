@@ -2,7 +2,7 @@
 export default function BookingCTA() {
   return (
     <section
-      className="relative py-20 md:py-32 px-4 bg-cover bg-center"
+      className="relative py-16 md:py-32 px-4 bg-cover bg-center"
       style={{
         backgroundImage: 'url(/room-deluxe.jpg)'
       }}
@@ -14,7 +14,7 @@ export default function BookingCTA() {
         </h2>
         <a
           href="/book-now"
-          className="inline-flex w-full sm:w-auto items-center justify-center whitespace-nowrap bg-gradient-to-r from-resort-gold-500 to-resort-gold-600 hover:from-resort-gold-600 hover:to-resort-gold-700 text-white px-10 py-4 rounded-md font-semibold transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer text-lg mx-auto"
+          className="inline-flex w-full sm:w-auto items-center justify-center min-h-[48px] whitespace-nowrap bg-gradient-to-r from-resort-gold-500 to-resort-gold-600 hover:from-resort-gold-600 hover:to-resort-gold-700 text-white px-8 sm:px-10 py-3.5 sm:py-4 rounded-md font-semibold transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer text-base sm:text-lg mx-auto"
         >
           BOOK NOW
         </a>

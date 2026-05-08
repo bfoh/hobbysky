@@ -1,7 +1,7 @@
 
 export default function AboutSection() {
   return (
-    <section className="py-20 px-4 bg-resort-green-50">
+    <section className="py-12 md:py-20 px-4 bg-resort-green-50">
       <div className="max-w-6xl mx-auto">
         <div className="prose prose-lg max-w-none text-resort-green-900 leading-relaxed text-center md:text-left">
           <p className="mb-6 text-base md:text-lg">

@@ -40,7 +40,9 @@ export default function ImageGalleryGrid() {
                   <img
                     src={image}
                     alt={`Gallery image ${colIndex}-${imgIndex}`}
-                    className="w-full h-40 sm:h-52 md:h-64 object-cover transition-transform duration-500 group-hover:scale-110"
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-32 sm:h-52 md:h-64 object-cover transition-transform duration-500 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-resort-green-900/0 group-hover:bg-resort-green-900/20 transition-all duration-300"></div>
                 </div>

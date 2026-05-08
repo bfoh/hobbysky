@@ -33,20 +33,22 @@ export default function GallerySection() {
   };
 
   return (
-    <section className="py-20 px-4 bg-resort-green-50">
+    <section className="py-12 md:py-20 px-4 bg-resort-green-50">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
           {/* Image Slider */}
-          <div className="relative h-[280px] sm:h-[380px] md:h-[500px] rounded-lg overflow-hidden shadow-2xl border-2 border-resort-gold-300/30">
+          <div className="relative h-[260px] sm:h-[380px] md:h-[500px] rounded-lg overflow-hidden shadow-2xl border-2 border-resort-gold-300/30">
             <img
               src={galleryImages[currentImageIndex]}
               alt="Hobbysky Guest House Gallery"
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover"
             />
 
             <button
               onClick={prevImage}
-              className="absolute left-4 top-1/2 -translate-y-1/2 bg-resort-green-900/60 hover:bg-resort-green-900/80 text-white p-3 rounded-full transition-all duration-300 cursor-pointer"
+              className="absolute left-3 top-1/2 -translate-y-1/2 bg-resort-green-900/60 hover:bg-resort-green-900/80 text-white p-3 rounded-full transition-all duration-300 cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="Previous image"
             >
               <i className="ri-arrow-left-s-line text-2xl"></i>
@@ -54,7 +56,7 @@ export default function GallerySection() {
 
             <button
               onClick={nextImage}
-              className="absolute right-4 top-1/2 -translate-y-1/2 bg-resort-green-900/60 hover:bg-resort-green-900/80 text-white p-3 rounded-full transition-all duration-300 cursor-pointer"
+              className="absolute right-3 top-1/2 -translate-y-1/2 bg-resort-green-900/60 hover:bg-resort-green-900/80 text-white p-3 rounded-full transition-all duration-300 cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="Next image"
             >
               <i className="ri-arrow-right-s-line text-2xl"></i>

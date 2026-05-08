@@ -1,7 +1,7 @@
 
 export default function LocationSection() {
   return (
-    <section className="py-20 px-4 bg-resort-green-50">
+    <section className="py-12 md:py-20 px-4 bg-resort-green-50">
       <div className="max-w-6xl mx-auto">
         <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center text-resort-green-900 mb-6">
           OUR LOCATION
@@ -12,7 +12,7 @@ export default function LocationSection() {
         </p>
 
         {/* Google Map */}
-        <div className="rounded-lg overflow-hidden shadow-2xl border-2 border-resort-gold-300/30 h-[300px] sm:h-[400px] md:h-[550px]">
+        <div className="rounded-lg overflow-hidden shadow-2xl border-2 border-resort-gold-300/30 h-[260px] sm:h-[400px] md:h-[550px]">
           <iframe
             src="https://maps.google.com/maps?q=Hobbysky%20Guest%20House,%20Kumasi&t=&z=15&ie=UTF8&iwloc=&output=embed"
             width="100%"

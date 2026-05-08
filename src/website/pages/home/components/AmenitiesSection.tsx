@@ -10,18 +10,18 @@ export default function AmenitiesSection() {
     const displayedAmenities = showAll ? safeAmenities : safeAmenities.slice(0, 8);
 
     return (
-        <section className="py-24 px-4 bg-[#f3faf6]">
+        <section className="py-14 md:py-24 px-4 bg-[#f3faf6]">
             <div className="max-w-7xl mx-auto">
-                <div className="text-center mb-14">
+                <div className="text-center mb-10 md:mb-14">
                     <span className="inline-block text-resort-gold-600 text-xs font-semibold tracking-widest uppercase mb-3">
                         At Your Service
                     </span>
-                    <h2 className="text-center text-4xl md:text-5xl font-bold text-resort-green-900">
+                    <h2 className="text-center text-3xl sm:text-4xl md:text-5xl font-bold text-resort-green-900">
                         Our Amenities
                     </h2>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-5">
                     {displayedAmenities.map((amenity) => (
                         <div
                             key={amenity.name}

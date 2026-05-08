@@ -46,14 +46,14 @@ export default function TestimonialsSection() {
   };
 
   return (
-    <section className="py-20 px-4 bg-gradient-to-br from-resort-green-800 to-resort-green-900">
+    <section className="py-14 md:py-20 px-4 bg-gradient-to-br from-resort-green-800 to-resort-green-900">
       <div className="max-w-5xl mx-auto">
         <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center text-resort-gold-400 mb-10 md:mb-16">
           What Our Guests Say
         </h2>
 
         <div className="relative">
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 md:p-12 text-center border border-resort-gold-500/20">
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-5 sm:p-6 md:p-12 text-center border border-resort-gold-500/20">
             <div className="flex justify-center mb-6">
               {[...Array(testimonials[currentIndex].rating)].map((_, i) => (
                 <i key={i} className="ri-star-fill text-resort-gold-400 text-xl md:text-2xl"></i>
@@ -72,7 +72,7 @@ export default function TestimonialsSection() {
           {/* Navigation Arrows */}
           <button
             onClick={prevTestimonial}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-12 bg-resort-gold-500/20 hover:bg-resort-gold-500/40 text-white p-3 rounded-full transition-all duration-300 cursor-pointer"
+            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-12 bg-resort-gold-500/20 hover:bg-resort-gold-500/40 text-white p-3 rounded-full transition-all duration-300 cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
             aria-label="Previous testimonial"
           >
             <i className="ri-arrow-left-s-line text-2xl"></i>
@@ -80,7 +80,7 @@ export default function TestimonialsSection() {
           
           <button
             onClick={nextTestimonial}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-12 bg-resort-gold-500/20 hover:bg-resort-gold-500/40 text-white p-3 rounded-full transition-all duration-300 cursor-pointer"
+            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-12 bg-resort-gold-500/20 hover:bg-resort-gold-500/40 text-white p-3 rounded-full transition-all duration-300 cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
             aria-label="Next testimonial"
           >
             <i className="ri-arrow-right-s-line text-2xl"></i>

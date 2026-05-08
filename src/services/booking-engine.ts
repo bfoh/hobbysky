@@ -114,6 +114,26 @@ class BookingEngine {
 
     console.log('[BookingEngine] Starting booking creation with data:', bookingData)
 
+    // Date validation — check-in cannot be earlier than today
+    const requestedCheckInRaw = (bookingData as any).dates?.checkIn || (bookingData as any).checkIn
+    const requestedCheckOutRaw = (bookingData as any).dates?.checkOut || (bookingData as any).checkOut
+    if (requestedCheckInRaw) {
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const ci = new Date(requestedCheckInRaw)
+      ci.setHours(0, 0, 0, 0)
+      if (ci < today) {
+        throw new Error(`Check-in date (${ci.toISOString().slice(0, 10)}) cannot be earlier than today (${today.toISOString().slice(0, 10)}).`)
+      }
+      if (requestedCheckOutRaw) {
+        const co = new Date(requestedCheckOutRaw)
+        co.setHours(0, 0, 0, 0)
+        if (co <= ci) {
+          throw new Error('Check-out date must be after check-in date.')
+        }
+      }
+    }
+
     // Check for duplicate bookings before creating
     const normalizedEmail = (bookingData.guest.email || '').trim().toLowerCase()
 

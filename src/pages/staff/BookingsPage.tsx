@@ -234,6 +234,17 @@ export function BookingsPage() {
       return
     }
 
+    // Date validation — check-in cannot be earlier than today
+    const todayStr = new Date().toISOString().slice(0, 10)
+    if (formData.checkIn < todayStr) {
+      toast.error('Check-in date cannot be earlier than today')
+      return
+    }
+    if (formData.checkOut <= formData.checkIn) {
+      toast.error('Check-out date must be after check-in date')
+      return
+    }
+
     try {
       // Find the selected property (room from Rooms page)
       const selectedProperty = properties.find((p: any) => p.id === formData.propertyId)
@@ -555,6 +566,7 @@ export function BookingsPage() {
                       id="checkIn"
                       type="date"
                       value={formData.checkIn}
+                      min={new Date().toISOString().slice(0, 10)}
                       onChange={(e) => setFormData({ ...formData, checkIn: e.target.value })}
                       required
                     />
@@ -565,6 +577,7 @@ export function BookingsPage() {
                       id="checkOut"
                       type="date"
                       value={formData.checkOut}
+                      min={formData.checkIn || new Date().toISOString().slice(0, 10)}
                       onChange={(e) => setFormData({ ...formData, checkOut: e.target.value })}
                       required
                     />

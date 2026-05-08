@@ -295,7 +295,7 @@ class StayExtensionService {
             const charge = await bookingChargesService.addCharge({
                 bookingId,
                 description: `Stay Extension (${additionalNights} night${additionalNights > 1 ? 's' : ''})`,
-                category: 'other',
+                category: 'room_extension',
                 quantity: additionalNights,
                 unitPrice: extensionCost / additionalNights,
                 notes: chargeNotes,

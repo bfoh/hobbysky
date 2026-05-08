@@ -232,11 +232,11 @@ export function DashboardPage() {
     return (
       <div className="space-y-8 animate-fade-in pb-12">
         <div className="h-[104px] rounded-2xl animate-shimmer" />
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-3 md:gap-5 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="h-[130px] rounded-xl animate-shimmer" />
           ))}
-          <div className="md:col-span-2 h-[150px] rounded-xl animate-shimmer" />
+          <div className="sm:col-span-2 h-[150px] rounded-xl animate-shimmer" />
         </div>
         <div className="space-y-2">
           <div className="h-10 w-48 rounded-lg animate-shimmer" />
@@ -291,7 +291,7 @@ export function DashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 md:gap-5 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
 
         {/* Available Rooms */}
         <Card className="animate-card-enter stagger-1 relative overflow-hidden border-t-2 border-t-primary border-x border-b border-white/8 bg-card/70 backdrop-blur-xl hover:bg-card/90 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-0.5 transition-all duration-300">

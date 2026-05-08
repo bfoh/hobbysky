@@ -223,17 +223,21 @@ export function useCheckIn() {
                     ? `${paymentMethod} (Discount: ${discountAmount})`
                     : paymentMethod
 
-                sendManagerCheckInNotification(
-                    guest,
-                    room,
-                    bookingForNotification,
-                    user?.email || user?.name || 'Staff',
-                    {
-                        method: paymentInfo,
-                        amount: finalAmount
-                    }
-                ).catch(err => console.error('❌ [useCheckIn] Manager notification failed:', err))
-                console.log('✅ [useCheckIn] Manager notification triggered')
+                try {
+                    await sendManagerCheckInNotification(
+                        guest,
+                        room,
+                        bookingForNotification,
+                        user?.email || user?.name || 'Staff',
+                        {
+                            method: paymentInfo,
+                            amount: finalAmount
+                        }
+                    )
+                    console.log('✅ [useCheckIn] Manager notification dispatched')
+                } catch (err) {
+                    console.error('❌ [useCheckIn] Manager notification failed:', err)
+                }
             } catch (notificationError) {
                 console.error('❌ [useCheckIn] Notification failed:', notificationError)
             }

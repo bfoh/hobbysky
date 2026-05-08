@@ -611,19 +611,23 @@ export async function sendManagerCheckInNotification(
     }
 
     // Send SMS notification to all managers/owners
+    // Sequential (not Promise.all) to avoid Arkesel V1 rate-limit race that
+    // intermittently drops the second number. Adds ~500ms latency, prevents drops.
     if (allPhones.length > 0) {
-      const smsPromises = allPhones.map(phone =>
-        sendManagerCheckInSMS({
-          phone: phone,
-          guestName: guest.name,
-          roomNumber: room.roomNumber,
-          staffName,
-          paymentAmount: paymentDetails ? formatCurrencySync(Number(paymentDetails.amount), currency) : undefined,
-          paymentMethod: paymentDetails?.method
-        }).catch(err => console.error(`❌ [ManagerNotification] SMS failed for ${phone}:`, err))
-      )
-
-      await Promise.all(smsPromises)
+      for (const phone of allPhones) {
+        try {
+          await sendManagerCheckInSMS({
+            phone: phone,
+            guestName: guest.name,
+            roomNumber: room.roomNumber,
+            staffName,
+            paymentAmount: paymentDetails ? formatCurrencySync(Number(paymentDetails.amount), currency) : undefined,
+            paymentMethod: paymentDetails?.method
+          })
+        } catch (err) {
+          console.error(`❌ [ManagerNotification] SMS failed for ${phone}:`, err)
+        }
+      }
       console.log(`✅ [ManagerNotification] Triggered SMS to ${allPhones.length} stakeholders`)
     }
 

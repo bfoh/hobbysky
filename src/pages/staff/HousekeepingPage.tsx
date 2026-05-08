@@ -114,14 +114,15 @@ export default function HousekeepingPage() {
       )
 
       if (result.success) {
-        // Log the task completion
+        // Log the task completion (pass userId so logs show actor, not 'system')
+        const currentUser = await blink.auth.me().catch(() => null)
         await activityLogService.logTaskCompleted(selectedTask.id, {
           title: `Room ${selectedTask.roomNumber} Cleaning`,
           roomNumber: selectedTask.roomNumber,
           completedBy: getStaffName(selectedTask.assignedTo),
           completedAt: new Date().toISOString(),
           notes: completionNotes
-        }).catch(err => console.error('Failed to log task completion:', err))
+        }, currentUser?.id).catch(err => console.error('Failed to log task completion:', err))
 
         toast.success(`Task completed! Room ${selectedTask.roomNumber} is likely available now.`)
 
@@ -184,7 +185,8 @@ export default function HousekeepingPage() {
         toast.success('Task assigned successfully')
       }
 
-      // Log the task assignment
+      // Log the task assignment (pass userId so logs show actor, not 'system')
+      const currentUser = await blink.auth.me().catch(() => null)
       await activityLogService.log({
         action: 'assigned',
         entityType: 'task',
@@ -194,7 +196,8 @@ export default function HousekeepingPage() {
           roomNumber: task.roomNumber,
           assignedTo: assignedStaff.name,
           assignedToEmail: assignedStaff.email
-        }
+        },
+        userId: currentUser?.id
       }).catch(err => console.error('Failed to log task assignment:', err))
 
       await loadData()
@@ -217,8 +220,9 @@ export default function HousekeepingPage() {
     try {
       await blink.db.housekeepingTasks.delete(deleteId)
 
-      // Log the task deletion
+      // Log the task deletion (pass userId so logs show actor, not 'system')
       if (task) {
+        const currentUser = await blink.auth.me().catch(() => null)
         await activityLogService.log({
           action: 'deleted',
           entityType: 'task',
@@ -228,7 +232,8 @@ export default function HousekeepingPage() {
             roomNumber: task.roomNumber,
             status: task.status,
             deletedAt: new Date().toISOString()
-          }
+          },
+          userId: currentUser?.id
         }).catch(err => console.error('Failed to log task deletion:', err))
       }
 

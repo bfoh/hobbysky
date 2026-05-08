@@ -1489,7 +1489,8 @@ class BookingEngine {
                 guestName: guest?.name || 'Guest',
                 reason: 'checkout',
                 createdAt: new Date().toISOString()
-              }
+              },
+              userId: currentUser?.id
             }).catch(err => console.error('Failed to log task creation:', err))
           } catch (e) {
             console.warn('[BookingEngine] Failed to auto-update room/task on check-out:', e)

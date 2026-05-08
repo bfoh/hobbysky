@@ -918,9 +918,69 @@ class BookingEngine {
     }
   }
 
-  // No-op compatibility for existing calls
-  async updateBooking(_id: string, _updates: Partial<LocalBooking>): Promise<void> {
-    return
+  // Update editable fields on an existing booking. Status, payment, and
+  // date-extension changes go through dedicated methods (checkInBooking,
+  // recordPayment, extendStay) — do not overwrite them here.
+  async updateBooking(id: string, updates: Partial<LocalBooking> & { checkIn?: string; checkOut?: string; totalPrice?: number; specialRequests?: string }): Promise<void> {
+    const db = blink.db as any
+
+    // Convert local-style ID to remote ID format if needed
+    let remoteId = id
+    if (id.startsWith('booking_')) {
+      remoteId = id.replace(/^booking_/, 'booking-')
+    }
+
+    // Whitelist editable columns
+    const editable: Record<string, any> = {}
+    const ci = (updates as any).checkIn ?? updates.dates?.checkIn
+    const co = (updates as any).checkOut ?? updates.dates?.checkOut
+    const total = (updates as any).totalPrice ?? updates.amount
+    if (ci    !== undefined) editable.checkIn        = ci
+    if (co    !== undefined) editable.checkOut       = co
+    if (total !== undefined) editable.totalPrice     = total
+    if ((updates as any).specialRequests !== undefined) editable.specialRequests = (updates as any).specialRequests
+    if (updates.paymentMethod  !== undefined) editable.paymentMethod  = updates.paymentMethod
+    if (updates.numGuests      !== undefined) editable.numGuests      = updates.numGuests
+    if ((updates as any).roomId !== undefined) editable.roomId        = (updates as any).roomId
+
+    if (Object.keys(editable).length === 0) {
+      console.warn('[BookingEngine] updateBooking called with no editable fields')
+      return
+    }
+
+    // Date sanity — checkIn >= today, checkOut > checkIn
+    if (editable.checkIn) {
+      const today = new Date(); today.setHours(0, 0, 0, 0)
+      const checkIn = new Date(editable.checkIn); checkIn.setHours(0, 0, 0, 0)
+      if (checkIn < today) {
+        throw new Error('Check-in date cannot be earlier than today')
+      }
+      if (editable.checkOut) {
+        const checkOut = new Date(editable.checkOut); checkOut.setHours(0, 0, 0, 0)
+        if (checkOut <= checkIn) {
+          throw new Error('Check-out date must be after check-in date')
+        }
+      }
+    }
+
+    editable.updatedAt = new Date().toISOString()
+
+    console.log('[BookingEngine] Updating booking:', remoteId, editable)
+    await db.bookings.update(remoteId, editable)
+
+    // Activity log (fire-and-forget — never block)
+    try {
+      const currentUser = await blink.auth.me().catch(() => null)
+      await activityLogService.log({
+        action: 'updated',
+        entityType: 'booking',
+        entityId: remoteId,
+        details: { updatedFields: Object.keys(editable).filter(k => k !== 'updatedAt') },
+        userId: currentUser?.id
+      })
+    } catch (e) {
+      console.warn('[BookingEngine] Activity log for update failed:', e)
+    }
   }
 
   // Delete a booking from the database

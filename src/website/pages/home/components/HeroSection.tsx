@@ -27,7 +27,7 @@ export default function HeroSection() {
             muted
             playsInline
             preload="metadata"
-            poster="/hotelview-enhanced.png"
+            poster="/hotelview-enhanced.webp"
             className="w-full h-full object-cover object-[25%_center] md:object-center"
           >
             <source src="/hotelone_optimized.mp4" type="video/mp4" />

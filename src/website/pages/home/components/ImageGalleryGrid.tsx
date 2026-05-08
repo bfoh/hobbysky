@@ -2,25 +2,25 @@
 const galleryColumns = [
   [
     '/room-standard.jpg',
-    '/executive-enhanced.jpeg',
+    '/executive-enhanced.webp',
     '/room-deluxe.jpg',
-    '/corridor-enhanced.png',
-    '/Car_parking_left_storey_building_0831b9e5ad.jpeg',
+    '/corridor-enhanced.webp',
+    '/Car_parking_left_storey_building_0831b9e5ad.webp',
     '/gallery-livingarea.jpg'
   ],
   [
     '/room-executive.jpg',
-    '/deluxe-enhanced.jpeg',
-    '/stand1-enhanced.jpeg',
-    '/hotelview-enhanced.png',
-    '/Please_make_the_ceiling_perfectly_smooth_54295b0e58.jpeg',
+    '/deluxe-enhanced.webp',
+    '/stand1-enhanced.webp',
+    '/hotelview-enhanced.webp',
+    '/Please_make_the_ceiling_perfectly_smooth_54295b0e58.webp',
     '/gallery-bedroom.jpg'
   ],
   [
-    '/standard-enhanced.jpeg',
-    '/exec1-enhanced.jpeg',
-    '/exec2-enhanced.jpeg',
-    '/livingarearecep-enhanced.jpeg',
+    '/standard-enhanced.webp',
+    '/exec1-enhanced.webp',
+    '/exec2-enhanced.webp',
+    '/livingarearecep-enhanced.webp',
     '/gallery-rooms-bathroom.jpg'
   ]
 ];

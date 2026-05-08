@@ -43,7 +43,7 @@ export default function AboutPage() {
       {/* Hero — min-h accounts for mobile header (h-20) */}
       <section className="relative min-h-[260px] md:min-h-[360px] overflow-hidden">
         <img
-          src="/hotelview-enhanced.png"
+          src="/hotelview-enhanced.webp"
           alt="Hobbysky Guest House exterior"
           loading="eager"
           decoding="async"

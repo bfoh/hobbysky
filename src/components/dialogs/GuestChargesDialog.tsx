@@ -21,6 +21,8 @@ import { formatCurrencySync } from '@/lib/utils'
 import { useCurrency } from '@/hooks/use-currency'
 import { BookingCharge, ChargeCategory } from '@/types'
 import { bookingChargesService, CHARGE_CATEGORIES, CreateChargeData } from '@/services/booking-charges-service'
+import { inventoryService, type InventoryItem } from '@/services/inventory-service'
+import { blink } from '@/blink/client'
 
 interface GuestChargesDialogProps {
     open: boolean
@@ -54,10 +56,15 @@ export function GuestChargesDialog({
     const [notes, setNotes] = useState('')
     const [paymentMethod, setPaymentMethod] = useState<'cash' | 'mobile_money' | 'card'>('cash')
 
-    // Fetch charges when dialog opens
+    // Inventory linkage
+    const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([])
+    const [selectedInventoryItemId, setSelectedInventoryItemId] = useState<string>('none')
+
+    // Fetch charges + inventory when dialog opens
     useEffect(() => {
         if (open && booking) {
             fetchCharges()
+            inventoryService.getItems().then(setInventoryItems).catch(() => setInventoryItems([]))
         }
     }, [open, booking])
 
@@ -85,6 +92,7 @@ export function GuestChargesDialog({
         setPaymentMethod('cash')
         setEditingChargeId(null)
         setShowAddForm(false)
+        setSelectedInventoryItemId('none')
     }
 
     const handleAddCharge = async () => {
@@ -111,6 +119,37 @@ export function GuestChargesDialog({
             }
 
             await bookingChargesService.addCharge(chargeData)
+
+            // If a real inventory item was selected, decrement stock and
+            // create an inventory_logs entry — that feed is what the recent-stock
+            // panel reads from.
+            if (selectedInventoryItemId && selectedInventoryItemId !== 'none') {
+                const item = inventoryItems.find(i => i.id === selectedInventoryItemId)
+                if (item) {
+                    if (item.stockQuantity < quantity) {
+                        toast.error(`Only ${item.stockQuantity} of ${item.name} in stock — charge created but stock not adjusted`)
+                    } else {
+                        try {
+                            const user = await blink.auth.me().catch(() => null)
+                            await inventoryService.adjustStock(
+                                item.id,
+                                -quantity,
+                                'sale',
+                                user?.id || 'system',
+                                (user as any)?.email || 'Staff',
+                                `Guest purchase — Booking ${bookingId} (${description.trim()})`
+                            )
+                            // Refresh local copy so the picker reflects new stock
+                            const updated = await inventoryService.getItems()
+                            setInventoryItems(updated)
+                        } catch (stockErr: any) {
+                            console.error('[GuestCharges] Stock adjust failed:', stockErr)
+                            toast.error(`Stock adjustment failed: ${stockErr?.message || 'Unknown error'}`)
+                        }
+                    }
+                }
+            }
+
             toast.success('Charge added successfully')
             resetForm()
             fetchCharges()
@@ -235,6 +274,42 @@ export function GuestChargesDialog({
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
+                                        {/* Inventory item picker — when chosen, auto-fills the
+                                            description/price/category and decrements stock on save */}
+                                        {!editingChargeId && inventoryItems.length > 0 && (
+                                            <div className="col-span-2">
+                                                <Label htmlFor="inventoryItem">Inventory Item (optional)</Label>
+                                                <Select
+                                                    value={selectedInventoryItemId}
+                                                    onValueChange={(v) => {
+                                                        setSelectedInventoryItemId(v)
+                                                        if (v && v !== 'none') {
+                                                            const item = inventoryItems.find(i => i.id === v)
+                                                            if (item) {
+                                                                setDescription(item.name)
+                                                                setUnitPrice(Number(item.unitPrice) || 0)
+                                                                if (item.category) {
+                                                                    setCategory(item.category as ChargeCategory)
+                                                                }
+                                                            }
+                                                        }
+                                                    }}
+                                                >
+                                                    <SelectTrigger id="inventoryItem">
+                                                        <SelectValue placeholder="None — manual entry" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="none">None — manual entry</SelectItem>
+                                                        {inventoryItems.map(item => (
+                                                            <SelectItem key={item.id} value={item.id} disabled={item.stockQuantity <= 0}>
+                                                                {item.name} — {item.stockQuantity} in stock
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        )}
+
                                         <div className="col-span-2">
                                             <Label htmlFor="description">Description</Label>
                                             <Input

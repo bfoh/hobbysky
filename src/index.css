@@ -204,6 +204,41 @@
     --brand: 31 97% 72%;
     --brand-foreground: 27 96% 61%;
   }
+
+  /* Mobile safe-area + horizontal-scroll guard */
+  html, body {
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  :root {
+    --safe-area-top: env(safe-area-inset-top, 0px);
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-area-left: env(safe-area-inset-left, 0px);
+    --safe-area-right: env(safe-area-inset-right, 0px);
+    --mobile-tabbar-height: 64px;
+  }
+
+  /* iOS auto-zoom prevention: form inputs must be ≥16px */
+  @media (max-width: 767px) {
+    input, select, textarea {
+      font-size: 16px;
+    }
+  }
+
+  /* Sticky bottom CTA respects iOS home-indicator */
+  .pb-safe {
+    padding-bottom: calc(0.75rem + var(--safe-area-bottom));
+  }
+
+  .pt-safe {
+    padding-top: calc(0.75rem + var(--safe-area-top));
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { scrollbar-width: none; -ms-overflow-style: none; }
 }
 
 /* Card stagger entrance animation */

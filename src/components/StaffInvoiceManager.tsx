@@ -27,7 +27,7 @@ interface InvoiceRecord {
   checkIn: string
   checkOut: string
   totalAmount: number
-  status: 'paid' | 'pending'
+  status: 'paid' | 'pending' | 'live'
   createdAt: string
   isPreInvoice: boolean
   groupId?: string
@@ -42,14 +42,21 @@ function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     paid: 'bg-emerald-50 text-emerald-700 border-emerald-200 ring-emerald-600/20',
     pending: 'bg-amber-50 text-amber-700 border-amber-200 ring-amber-600/20',
+    live: 'bg-sky-50 text-sky-700 border-sky-200 ring-sky-600/20',
   }
 
   const defaultStyle = 'bg-gray-50 text-gray-700 border-gray-200 ring-gray-600/20'
   const style = styles[status] || defaultStyle
 
+  const label =
+    status === 'pending' ? 'Pre-Invoice' :
+    status === 'live'    ? 'Live'        :
+    status === 'paid'    ? 'Paid'        :
+    status
+
   return (
     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ring-1 ring-inset ${style} capitalize shadow-sm`}>
-      {status === 'pending' ? 'Pre-Invoice' : 'Paid'}
+      {label}
     </span>
   )
 }
@@ -61,7 +68,7 @@ export function StaffInvoiceManager() {
   const [downloading, setDownloading] = useState<string | null>(null)
   const [printing, setPrinting] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
-  const [filter, setFilter] = useState<'all' | 'pending' | 'paid'>('all')
+  const [filter, setFilter] = useState<'all' | 'pending' | 'live' | 'paid'>('all')
 
   // Fetch real invoice data from database
   const loadInvoices = async () => {
@@ -70,10 +77,17 @@ export function StaffInvoiceManager() {
 
       const db = blink.db as any
 
-      // Fetch BOTH confirmed bookings (pre-invoices) AND checked-out bookings (paid invoices)
-      const [confirmedBookings, checkedOutBookings] = await Promise.all([
+      // Fetch confirmed (pre-invoices), checked-in (live invoices), and
+      // checked-out (paid invoices) so the page reflects every booking that
+      // has any invoice state — owners said in-stay bookings were missing.
+      const [confirmedBookings, checkedInBookings, checkedOutBookings] = await Promise.all([
         db.bookings.list({
           where: { status: 'confirmed' },
+          limit: 100,
+          orderBy: { createdAt: 'desc' }
+        }),
+        db.bookings.list({
+          where: { status: 'checked-in' },
           limit: 100,
           orderBy: { createdAt: 'desc' }
         }),
@@ -84,10 +98,11 @@ export function StaffInvoiceManager() {
         })
       ])
 
-      const allBookings = [...confirmedBookings, ...checkedOutBookings]
+      const allBookings = [...confirmedBookings, ...checkedInBookings, ...checkedOutBookings]
 
       console.log('📊 [StaffInvoiceManager] Found bookings:', {
         confirmed: confirmedBookings.length,
+        checkedIn: checkedInBookings.length,
         checkedOut: checkedOutBookings.length,
         total: allBookings.length
       })
@@ -115,11 +130,21 @@ export function StaffInvoiceManager() {
       const invoiceRecords: InvoiceRecord[] = allBookings.map((booking: any) => {
         const guest = booking.guestId ? guestMap.get(booking.guestId) as any : undefined
         const room = booking.roomId ? roomMap.get(booking.roomId) as any : undefined
-        const isPreInvoice = booking.status === 'confirmed'
+        const isConfirmed  = booking.status === 'confirmed'
+        const isCheckedIn  = booking.status === 'checked-in'
+        const isPreInvoice = isConfirmed   // legacy flag kept for downstream consumers
 
-        // Generate invoice number
+        // Generate invoice number — prefix by status for quick scan
         const baseInvoiceNumber = booking.invoiceNumber || `INV-${booking.createdAt ? new Date(booking.createdAt).getTime() : Date.now()}`
-        const invoiceNumber = isPreInvoice ? `PRE-${baseInvoiceNumber}` : baseInvoiceNumber
+        const invoiceNumber =
+          isConfirmed  ? `PRE-${baseInvoiceNumber}` :
+          isCheckedIn  ? `LIVE-${baseInvoiceNumber}` :
+          baseInvoiceNumber
+
+        const mappedStatus: 'pending' | 'live' | 'paid' =
+          isConfirmed  ? 'pending' :
+          isCheckedIn  ? 'live'    :
+          'paid'
 
         // Parse metadata from specialRequests if present
         let groupId = (booking as any).groupId // Try direct property first
@@ -144,7 +169,7 @@ export function StaffInvoiceManager() {
           checkIn: booking.checkIn,
           checkOut: booking.actualCheckOut || booking.checkOut,
           totalAmount: booking.totalPrice || 0,
-          status: isPreInvoice ? 'pending' as const : 'paid' as const,
+          status: mappedStatus,
           createdAt: booking.createdAt,
           isPreInvoice,
           groupId
@@ -299,7 +324,7 @@ export function StaffInvoiceManager() {
         }
       }
 
-      if (invoice.isPreInvoice || invoice.invoiceNumber.startsWith('PRE-')) {
+      if (invoice.isPreInvoice || invoice.status === 'live' || invoice.invoiceNumber.startsWith('PRE-') || invoice.invoiceNumber.startsWith('LIVE-')) {
         // Use pre-invoice generation for confirmed bookings
         console.log('📋 [StaffInvoiceManager] Using PRE-INVOICE template')
         const preInvoiceData = await createPreInvoiceData(bookingWithDetails, room)
@@ -354,7 +379,7 @@ export function StaffInvoiceManager() {
         }
       }
 
-      if (invoice.isPreInvoice || invoice.invoiceNumber.startsWith('PRE-')) {
+      if (invoice.isPreInvoice || invoice.status === 'live' || invoice.invoiceNumber.startsWith('PRE-') || invoice.invoiceNumber.startsWith('LIVE-')) {
         // Use same pre-invoice template as download
         console.log('📋 [StaffInvoiceManager] Using PRE-INVOICE template for printing')
         const preInvoiceData = await createPreInvoiceData(bookingWithDetails, room)
@@ -449,6 +474,14 @@ export function StaffInvoiceManager() {
                   Pre-Invoice ({invoices.filter(i => i.status === 'pending').length})
                 </Button>
                 <Button
+                  variant={filter === 'live' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFilter('live')}
+                  className={filter === 'live' ? 'bg-sky-500 hover:bg-sky-600' : ''}
+                >
+                  Live ({invoices.filter(i => i.status === 'live').length})
+                </Button>
+                <Button
                   variant={filter === 'paid' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setFilter('paid')}
@@ -527,7 +560,7 @@ export function StaffInvoiceManager() {
 
                               <DropdownMenuItem onClick={() => handleDownloadInvoice(invoice)} disabled={downloading === invoice.id}>
                                 {downloading === invoice.id ? <LoadingSpinner /> : <Download className="w-4 h-4 mr-2" />}
-                                <span>{invoice.isPreInvoice ? 'Download Pre-Invoice' : 'Download Invoice'}</span>
+                                <span>{invoice.status === 'live' ? 'Download Live Invoice' : invoice.isPreInvoice ? 'Download Pre-Invoice' : 'Download Invoice'}</span>
                               </DropdownMenuItem>
 
                               {invoice.groupId && (

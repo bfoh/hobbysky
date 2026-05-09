@@ -1,13 +1,6 @@
 import { useState, useEffect } from 'react'
 import { format } from 'date-fns'
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog'
+import { MobileSheet } from '@/components/ui/mobile-sheet'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -215,24 +208,21 @@ export function GuestChargesDialog({
     const isCheckedOut = booking?.status === 'checked-out'
     const canEdit = !isCheckoutMode && !isCheckedOut
 
+    const headerSubtitle = `Room ${booking?.roomNumber || 'N/A'}${booking?.checkIn ? ` • ${format(new Date(booking.checkIn), 'MMM d')} - ` : ''}${booking?.checkOut ? format(new Date(booking.checkOut), 'MMM d, yyyy') : ''}`
+
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle>
-                        Guest Charges - {guest?.name || 'Guest'}
-                    </DialogTitle>
-                    <DialogDescription>
-                        Room {booking?.roomNumber || 'N/A'} •
-                        {booking?.checkIn && ` ${format(new Date(booking.checkIn), 'MMM d')} - `}
-                        {booking?.checkOut && format(new Date(booking.checkOut), 'MMM d, yyyy')}
-                    </DialogDescription>
-                </DialogHeader>
+        <MobileSheet
+            open={open}
+            onOpenChange={onOpenChange}
+            title={`Guest Charges - ${guest?.name || 'Guest'}`}
+            description={headerSubtitle}
+            className="md:max-w-2xl"
+        >
 
                 {/* Summary Card */}
                 <Card className="bg-muted/50">
                     <CardContent className="pt-4">
-                        <div className="grid grid-cols-3 gap-4 text-center">
+                        <div className="grid grid-cols-3 gap-2 sm:gap-4 text-center">
                             <div>
                                 <p className="text-sm text-muted-foreground">Room Cost</p>
                                 <p className="text-lg font-semibold">{formatCurrencySync(roomCost, currency)}</p>
@@ -481,12 +471,11 @@ export function GuestChargesDialog({
                     )}
                 </div>
 
-                <DialogFooter>
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>
+                <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 mt-4 pt-4 border-t border-border">
+                    <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto min-h-[44px]">
                         Close
                     </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+                </div>
+        </MobileSheet>
     )
 }

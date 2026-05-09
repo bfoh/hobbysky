@@ -1,13 +1,6 @@
 import { useState, useEffect } from 'react'
 import { format } from 'date-fns'
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog'
+import { MobileSheet } from '@/components/ui/mobile-sheet'
 import { Button } from '@/components/ui/button'
 import { Loader2, CheckCircle2, Tag, DollarSign } from '@/components/icons'
 import { toast } from 'sonner'
@@ -110,18 +103,15 @@ export function CheckOutDialog({
     const nights = checkIn && checkOut ? calculateNights(checkIn, checkOut) : 1
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-lg">
-                <DialogHeader>
-                    <DialogTitle>Confirm Guest Check-Out</DialogTitle>
-                    <DialogDescription>
-                        Complete the checkout process and create cleaning task
-                    </DialogDescription>
-                </DialogHeader>
-
-                <div className="space-y-3 py-4">
+        <MobileSheet
+            open={open}
+            onOpenChange={onOpenChange}
+            title="Confirm Guest Check-Out"
+            description="Complete the checkout process and create cleaning task"
+        >
+                <div className="space-y-3 py-2">
                     {/* Guest & Room Info */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                         <div>
                             <p className="text-sm font-medium text-muted-foreground">Guest Name</p>
                             <p className="text-base font-semibold">{guestName}</p>
@@ -133,7 +123,7 @@ export function CheckOutDialog({
                     </div>
 
                     {/* Dates Info */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                         <div>
                             <p className="text-sm font-medium text-muted-foreground">Stay Duration</p>
                             <p className="text-base">{nights} nights</p>
@@ -261,15 +251,14 @@ export function CheckOutDialog({
                     </div>
                 </div>
 
-                <DialogFooter>
-                    <Button variant="outline" onClick={() => onOpenChange(false)} disabled={processing}>
+                <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 mt-4 pt-4 border-t border-border">
+                    <Button variant="outline" onClick={() => onOpenChange(false)} disabled={processing} className="w-full sm:w-auto min-h-[44px]">
                         Cancel
                     </Button>
-                    <Button onClick={onConfirm} disabled={processing}>
+                    <Button onClick={onConfirm} disabled={processing} className="w-full sm:w-auto min-h-[44px]">
                         {processing ? 'Processing...' : 'Confirm Check-Out'}
                     </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+                </div>
+        </MobileSheet>
     )
 }

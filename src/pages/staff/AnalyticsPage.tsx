@@ -327,7 +327,7 @@ export function AnalyticsPage() {
       </div>
 
       {/* ── Primary KPI Cards ──────────────────────────────────────────────── */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
         {/* Total Revenue */}
         <div className="relative overflow-hidden rounded-xl border bg-card p-5 shadow-sm">
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/6 via-transparent to-transparent pointer-events-none" />
@@ -403,7 +403,7 @@ export function AnalyticsPage() {
       </div>
 
       {/* ── Secondary Metrics Strip ───────────────────────────────────────── */}
-      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {[
           { label: 'Total Bookings',    value: (performance?.totalBookings || 0).toString(), sub: 'Checked-in / checked-out', icon: Calendar,  color: 'text-sky-500' },
           { label: 'Avg Stay Length',   value: `${occupancy?.averageLengthOfStay || 0} nights`, sub: 'Average per booking',  icon: Clock,     color: 'text-teal-500' },
@@ -422,7 +422,7 @@ export function AnalyticsPage() {
       </div>
 
       {/* ── Charts Row ──────────────────────────────────────────────────────── */}
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-4 lg:gap-5 grid-cols-1 lg:grid-cols-2">
         <Card className="shadow-sm">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
@@ -438,7 +438,7 @@ export function AnalyticsPage() {
           </CardHeader>
           <CardContent className="pt-1">
             {revenue?.dailyRevenueHistory?.length ? (
-              <ResponsiveContainer width="100%" height={220}>
+              <ResponsiveContainer width="100%" height={180} className="!h-[180px] md:!h-[220px]">
                 <AreaChart data={revenue.dailyRevenueHistory} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
@@ -474,7 +474,7 @@ export function AnalyticsPage() {
           </CardHeader>
           <CardContent className="pt-1">
             {occupancy?.occupancyTrend?.length ? (
-              <ResponsiveContainer width="100%" height={220}>
+              <ResponsiveContainer width="100%" height={180} className="!h-[180px] md:!h-[220px]">
                 <AreaChart data={occupancy.occupancyTrend} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="occGrad" x1="0" y1="0" x2="0" y2="1">
@@ -497,7 +497,7 @@ export function AnalyticsPage() {
       </div>
 
       {/* ── Revenue Breakdown Row ────────────────────────────────────────────── */}
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-4 lg:gap-5 grid-cols-1 lg:grid-cols-2">
         {/* Revenue by Room Type */}
         <Card className="shadow-sm">
           <CardHeader className="pb-2">
@@ -875,7 +875,7 @@ export function AnalyticsPage() {
       </Card>
 
       {/* ── Summary Cards ───────────────────────────────────────────────────── */}
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 lg:gap-5 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
         {/* Revenue Summary */}
         <Card className="shadow-sm">
           <CardHeader className="pb-3">

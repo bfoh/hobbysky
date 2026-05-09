@@ -576,14 +576,14 @@ export function OnsiteBookingPage() {
           <CardContent>
             {/* Step 1: Search & Add Rooms */}
             {step === 1 && (
-              <div className="grid md:grid-cols-3 gap-6">
-                <div className="md:col-span-2 space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+                <div className="lg:col-span-2 space-y-6">
                   {/* Search Criteria */}
                   <div className="bg-secondary/10 p-4 rounded-lg space-y-4">
                     <h3 className="font-semibold text-lg flex items-center gap-2">
                       <CalendarIcon className="h-5 w-5" /> Select Dates for Your Room
                     </h3>
-                    <div className="grid md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                       <div>
                         <label className="block text-sm font-medium mb-1">Check-in</label>
                         <Popover>
@@ -896,7 +896,7 @@ export function OnsiteBookingPage() {
                             </label>
                           </div>
 
-                          <div className="grid md:grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                             <div>
                               <label className="block text-sm font-medium mb-1">Guest Name *</label>
                               <Input
